@@ -89,7 +89,7 @@ export default function Sidebar({ config, setConfig }: any) {
         <section>
           <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4">04. Event Location</label>
           <GooglePlacesAutocomplete
-            apiKey="AIzaSyBIXK_wGVOHMSZhKmuCT9LuR6EYJN2_BL4"
+            apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
             selectProps={{
               onChange: (place: any) => setConfig({...config, location: place.label}),
               placeholder: "📍 Search venue...",
