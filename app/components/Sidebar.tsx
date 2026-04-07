@@ -9,6 +9,12 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
   const [showDateStyle, setShowDateStyle] = useState(false);
   const [showMessageStyle, setShowMessageStyle] = useState(false);
 
+  // 📍 PRICING LOGIC
+  const basePrice = 50;
+  const selectedBg = BACKGROUNDS.find(bg => bg.id === config.animationId);
+  const bgPrice = selectedBg?.price || 0;
+  const totalPrice = basePrice + bgPrice;
+
   const FONT_OPTIONS = [
     { id: 'font-serif', name: 'Elegant Serif', class: 'font-serif' },
     { id: 'font-sans', name: 'Modern Sans', class: 'font-sans' },
@@ -30,7 +36,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
     });
   };
 
-  // 📍 NEW: CHARACTER LIMIT LOGIC (250 MAX)
   const handleMessageChange = (val: string) => {
     if (val.length <= 250) {
       setConfig({ ...config, welcomeMessage: val });
@@ -74,7 +79,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
             <button onClick={() => setShowAllStyles(!showAllStyles)} className="text-[10px] font-bold text-amber-600 hover:underline">{showAllStyles ? 'Hide' : 'Style +'}</button>
           </div>
           <div className="space-y-2">
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900">
               <input type="text" className="bg-transparent outline-none w-full font-bold text-slate-800 text-xs uppercase" placeholder="TITLE" value={config.title} onChange={(e) => setConfig({...config, title: e.target.value})} />
             </div>
             {showAllStyles && (
@@ -97,15 +102,13 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
           </div>
           <div className="space-y-3">
             <input type="date" className="p-3 bg-slate-50 border border-slate-200 rounded-xl w-full font-bold text-xs text-slate-900" value={config.eventDate} onChange={(e) => setConfig({...config, eventDate: e.target.value})} />
-            
             {showDateStyle && (
-              <select className="p-3 bg-white border border-amber-200 rounded-xl w-full font-bold text-[10px] text-slate-900 animate-in fade-in slide-in-from-top-1" value={config.dateFormat} onChange={(e) => setConfig({...config, dateFormat: e.target.value})}>
+              <select className="p-3 bg-white border border-amber-200 rounded-xl w-full font-bold text-[10px] text-slate-900 animate-in fade-in slide-in-from-top-1 outline-none" value={config.dateFormat} onChange={(e) => setConfig({...config, dateFormat: e.target.value})}>
                 <option value="long">Elegant (April 07, 2026)</option>
                 <option value="short">Modern (04 / 07 / 2026)</option>
                 <option value="minimal">Minimalist (04.07.26)</option>
               </select>
             )}
-
             <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
               <span className="text-[10px] font-bold text-slate-600">Include Time?</span>
               <button onClick={() => setConfig({...config, showTime: !config.showTime})} className={`w-8 h-4 rounded-full relative transition-all ${config.showTime ? 'bg-amber-500' : 'bg-slate-300'}`}><div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${config.showTime ? 'right-0.5' : 'left-0.5'}`} /></button>
@@ -130,22 +133,15 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
           />
         </section>
 
-        {/* 05. WELCOME MESSAGE (WITH CHARACTER LIMIT) */}
+        {/* 05. WELCOME MESSAGE */}
         <section>
           <div className="flex justify-between items-center mb-4">
             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">05. Welcome Message</label>
             <button onClick={() => setShowMessageStyle(!showMessageStyle)} className="text-[10px] font-bold text-amber-600 hover:underline">{showMessageStyle ? 'Hide' : 'Style +'}</button>
           </div>
           <div className="relative">
-            <textarea 
-              rows={3} 
-              className="p-3 bg-slate-50 border border-slate-200 rounded-xl w-full font-bold text-xs resize-none text-slate-900" 
-              value={config.welcomeMessage} 
-              onChange={(e) => handleMessageChange(e.target.value)} 
-            />
-            <span className={`absolute bottom-2 right-3 text-[9px] font-bold ${config.welcomeMessage.length >= 250 ? 'text-rose-500' : 'text-slate-400'}`}>
-              {config.welcomeMessage.length}/250
-            </span>
+            <textarea rows={3} className="p-3 bg-slate-50 border border-slate-200 rounded-xl w-full font-bold text-xs resize-none text-slate-900" value={config.welcomeMessage} onChange={(e) => handleMessageChange(e.target.value)} />
+            <span className={`absolute bottom-2 right-3 text-[9px] font-bold ${config.welcomeMessage.length >= 250 ? 'text-rose-500' : 'text-slate-400'}`}>{config.welcomeMessage.length}/250</span>
           </div>
           {showMessageStyle && (
             <div className="grid grid-cols-2 gap-2 mt-2 animate-in fade-in zoom-in-95 duration-200">
@@ -168,8 +164,30 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
         </section>
       </div>
 
-      <div className="p-8 border-t bg-slate-50">
-        <button onClick={onPublish} disabled={isPublishing} className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs tracking-widest shadow-lg hover:bg-amber-900 transition-all active:scale-95 disabled:bg-slate-400">
+      {/* 💰 PRICING SUMMARY SECTION */}
+      <div className="p-6 bg-slate-50 border-t space-y-3">
+        <div className="space-y-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+          <div className="flex justify-between">
+            <span>Publishing Fee</span>
+            <span className="text-slate-900">₱{basePrice.toFixed(2)}</span>
+          </div>
+          {bgPrice > 0 && (
+            <div className="flex justify-between text-amber-600 animate-in fade-in slide-in-from-bottom-1">
+              <span>{selectedBg?.name} Effect</span>
+              <span>+₱{bgPrice.toFixed(2)}</span>
+            </div>
+          )}
+          <div className="flex justify-between border-t pt-2 text-[12px] text-slate-900 font-black">
+            <span>Total to pay</span>
+            <span className="text-amber-600">₱{totalPrice.toFixed(2)}</span>
+          </div>
+        </div>
+
+        <button 
+          onClick={() => onPublish(totalPrice)} 
+          disabled={isPublishing} 
+          className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs tracking-widest shadow-lg hover:bg-amber-900 transition-all active:scale-95 disabled:bg-slate-400"
+        >
           {isPublishing ? 'GENERATING LINK...' : 'PUBLISH INVITATION'}
         </button>
       </div>

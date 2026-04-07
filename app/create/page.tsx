@@ -2,6 +2,7 @@
 import React, { useState } from 'react'; 
 import Sidebar from '../components/Sidebar';
 import Preview from '../components/Preview';
+import { BACKGROUNDS } from '../constants/backgrounds';
 
 export default function NvitadoEditor() {
   const [viewMode, setViewMode] = useState<'mobile' | 'desktop'>('mobile');
@@ -9,8 +10,8 @@ export default function NvitadoEditor() {
   
   const [config, setConfig] = useState({
     background: '#ffffff',
-    useAnimation: false, // Animation Toggle State
-    animationId: 'none',  // Current Animation Selection
+    useAnimation: false,
+    animationId: 'none',
     title: 'Juan & Maria',
     titleFont: 'font-serif', 
     eventDate: '2026-04-07',
@@ -23,15 +24,23 @@ export default function NvitadoEditor() {
     slug: '',
   });
 
-  const handlePublish = async () => {
+  const handlePublish = async (calculatedTotal: number) => {
     if (!config.slug) return alert("Hoy Chief! Paki-set muna ang Custom URL sa Step 06.");
     
     setIsPublishing(true);
+    
+    // Get background name for display on payment page
+    const selectedBg = BACKGROUNDS.find(bg => bg.id === config.animationId);
+    
     try {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config }),
+        body: JSON.stringify({ 
+          config,
+          amount: calculatedTotal, // Sending the 55 (or whatever total)
+          bgName: selectedBg?.name || 'Standard'
+        }),
       });
 
       const data = await res.json();
