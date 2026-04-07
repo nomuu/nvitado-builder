@@ -3,7 +3,7 @@ import React from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { 
-  Palette, Sparkles, HeartHandshake, ArrowRight, 
+  Sparkles, ArrowRight, 
   Zap, Globe, Clock, CheckCircle2
 } from 'lucide-react';
 import { Poppins } from 'next/font/google';
@@ -47,7 +47,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 w-full z-50 bg-[#FFFDF8]/80 backdrop-blur-md border-b border-slate-100/50">
         <div className="flex justify-between items-center px-6 lg:px-12 py-4 max-w-[1400px] mx-auto relative z-10 font-sans">
           <img src="/assets/images/logo2.png" alt="Nvitado" className="h-7 w-auto" />
-          <Link href="/create" className="text-[10px] font-black tracking-widest uppercase bg-slate-900 text-white px-7 py-3 rounded-full hover:bg-rose-500 transition-all flex items-center gap-2 group shadow-lg shadow-slate-200/50">
+          <Link href="/create" className="text-[10px] font-black tracking-widest uppercase bg-slate-900 text-white px-7 py-3 rounded-full hover:bg-rose-500 transition-all flex items-center gap-2 group shadow-lg">
             GET STARTED
             <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
           </Link>
@@ -71,9 +71,8 @@ export default function LandingPage() {
           Why wait for prints? Create a breathtaking, mobile-first wedding invitation in minutes. Secure your custom nvitado.com link instantly with our intuitive tools.
         </motion.p>
         
-        {/* FIXED: relative at z-10 moved inside className */}
         <motion.div custom={3} initial="hidden" animate="visible" variants={fadeInUp} className="relative z-10">
-          <Link href="/create" className="bg-rose-500 text-white px-10 py-4.5 rounded-2xl font-black text-sm tracking-widest shadow-xl shadow-rose-200 hover:bg-rose-600 transition-all flex items-center justify-center gap-3 active:scale-95 group">
+          <Link href="/create" className="bg-rose-500 text-white px-10 py-4.5 rounded-2xl font-black text-sm tracking-widest shadow-xl hover:bg-rose-600 transition-all flex items-center justify-center gap-3 active:scale-95 group">
             CREATE YOUR INVITATION
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
@@ -81,20 +80,20 @@ export default function LandingPage() {
       </section>
 
       {/* PREVIEW IMAGE SECTION */}
-      <section className="px-6 lg:px-12 pb-32">
+      <section className="px-6 lg:px-12 pb-32 relative z-10">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95, y: 40 }}
           whileInView={{ opacity: 1, scale: 1, y: 0 }}
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 1 }}
-          className="max-w-6xl mx-auto rounded-[3.5rem] p-3 bg-white shadow-3xl shadow-rose-100 border border-slate-50 overflow-hidden relative group"
+          className="max-w-6xl mx-auto rounded-[3.5rem] p-3 bg-white shadow-3xl shadow-rose-100 border border-slate-50 overflow-hidden group"
         >
           <img src="/assets/images/builder-preview.png" alt="Nvitado Builder" className="w-full h-auto rounded-[3rem] group-hover:scale-[1.01] transition-transform duration-1000" />
         </motion.div>
       </section>
 
-      {/* FEATURES SECTION */}
-      <section className="py-32 px-6 lg:px-12 bg-white/50 border-y border-slate-100/50 backdrop-blur-sm">
+      {/* WHY DIGITAL SECTION */}
+      <section className="py-32 px-6 lg:px-12 bg-white/50 border-y border-slate-100/50 backdrop-blur-sm relative z-10">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-black tracking-tighter mb-6 uppercase italic">Why Digital?</h2>
@@ -104,17 +103,13 @@ export default function LandingPage() {
             {[
               { icon: Globe, title: "Global Reach", desc: "Traditional invitations require months. Send your premium digital link instantly via Messenger, Viber, or SMS globally." },
               { icon: Zap, title: "Instant Publishing", desc: "No more long wait times or printing delays. Your breathtaking link is active the moment you're done designing." },
-              { icon: Clock, title: "Unlimited Edits", desc: "Unexpected change of plans? No problem. Update your details anytime and it refreshes matik for all your guests." }
+              { icon: Clock, title: "Unlimited Edits", desc: "Unexpected change of plans? No problem. Update your details anytime and it refreshes instantly for all your guests." }
             ].map((feature, i) => (
-              <motion.div 
-                key={i}
-                whileHover={{ y: -8 }}
-                className="p-10 rounded-[2.5rem] bg-white border border-slate-100/50 space-y-5 shadow-sm hover:shadow-xl transition-all"
-              >
-                <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center text-rose-500">
+              <motion.div key={i} whileHover={{ y: -8 }} className="p-10 rounded-[2.5rem] bg-white border border-slate-100/50 space-y-5 shadow-sm hover:shadow-xl transition-all">
+                <div className="w-12 h-12 bg-rose-100 rounded-xl flex items-center justify-center text-rose-500 shadow-inner">
                   <feature.icon className="w-6 h-6" />
                 </div>
-                <h3 className="font-black text-lg uppercase italic">{feature.title}</h3>
+                <h3 className="font-black text-lg uppercase italic tracking-tight">{feature.title}</h3>
                 <p className="text-slate-500 text-sm leading-relaxed font-medium">{feature.desc}</p>
               </motion.div>
             ))}
@@ -122,8 +117,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* STEPS SECTION */}
-      <section className="py-32 px-6 lg:px-12 relative overflow-hidden bg-[#FFFDF8]/30">
+      {/* HOW IT WORKS SECTION */}
+      <section className="py-32 px-6 lg:px-12 relative overflow-hidden bg-[#FFFDF8]/30 z-10">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center gap-20">
             <div className="flex-1">
@@ -153,8 +148,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* FINAL CTA */}
-      <section className="py-40 px-6 text-center">
+      {/* FINAL CTA SECTION */}
+      <section className="py-40 px-6 text-center relative z-10">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
           <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-10 uppercase italic leading-none">Ready to start <br/>your story?</h2>
           <Link href="/create" className="inline-flex bg-slate-900 text-white px-14 py-6 rounded-[1.8rem] font-black text-sm tracking-widest hover:bg-rose-600 transition-all shadow-xl active:scale-95 group items-center gap-4">
