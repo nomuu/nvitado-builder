@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import { BACKGROUNDS } from '../constants/backgrounds';
 
-export default function Sidebar({ config, setConfig }: any) {
+export default function Sidebar({ config, setConfig, onPublish, isPublishing }: any) {
   const [showAllBgs, setShowAllBgs] = useState(false);
   const [showAllStyles, setShowAllStyles] = useState(false);
   const [showDateStyle, setShowDateStyle] = useState(false);
@@ -15,6 +15,12 @@ export default function Sidebar({ config, setConfig }: any) {
     { id: 'italic', name: 'Script Style', class: 'italic font-serif' },
     { id: 'font-mono', name: 'Minimalist', class: 'font-mono' },
   ];
+
+  const handleSlugChange = (val: string) => {
+    // URL-friendly: lowercase, no spaces, no special chars
+    const cleaned = val.toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    setConfig({...config, slug: cleaned});
+  };
 
   return (
     <aside className="w-[380px] bg-white border-r flex flex-col z-20 overflow-hidden font-sans text-slate-900">
@@ -44,7 +50,7 @@ export default function Sidebar({ config, setConfig }: any) {
           </div>
           <div className="space-y-2">
             <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-              <input type="text" className="bg-transparent outline-none w-full font-bold text-xs uppercase" value={config.title} onChange={(e) => setConfig({...config, title: e.target.value})} />
+              <input type="text" className="bg-transparent outline-none w-full font-bold text-slate-800 text-xs uppercase" placeholder="TITLE" value={config.title} onChange={(e) => setConfig({...config, title: e.target.value})} />
             </div>
             {showAllStyles && (
               <div className="grid grid-cols-2 gap-2 animate-in fade-in zoom-in-95 duration-200">
@@ -60,28 +66,24 @@ export default function Sidebar({ config, setConfig }: any) {
 
         {/* 03. DATE & TIME */}
         <section>
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-4 text-slate-900">
             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">03. Date & Time</label>
             <button onClick={() => setShowDateStyle(!showDateStyle)} className="text-[10px] font-bold text-amber-600 hover:underline">{showDateStyle ? 'Hide' : 'Format +'}</button>
           </div>
           <div className="space-y-3">
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-              <input type="date" className="bg-transparent outline-none w-full font-bold text-xs cursor-pointer" value={config.eventDate} onChange={(e) => setConfig({...config, eventDate: e.target.value})} />
-            </div>
+            <input type="date" className="p-3 bg-slate-50 border border-slate-200 rounded-xl w-full font-bold text-xs" value={config.eventDate} onChange={(e) => setConfig({...config, eventDate: e.target.value})} />
             {showDateStyle && (
-              <div className="p-3 bg-white border border-amber-200 rounded-xl animate-in fade-in slide-in-from-top-2 duration-300">
-                <select className="bg-transparent outline-none w-full font-bold text-slate-800 text-[10px] cursor-pointer" value={config.dateFormat} onChange={(e) => setConfig({...config, dateFormat: e.target.value})}>
-                  <option value="long">Elegant (April 07, 2026)</option>
-                  <option value="short">Modern (04 / 07 / 2026)</option>
-                  <option value="minimal">Minimalist (04.07.26)</option>
-                </select>
-              </div>
+              <select className="p-3 bg-white border border-amber-200 rounded-xl w-full font-bold text-[10px]" value={config.dateFormat} onChange={(e) => setConfig({...config, dateFormat: e.target.value})}>
+                <option value="long">Elegant (April 07, 2026)</option>
+                <option value="short">Modern (04 / 07 / 2026)</option>
+                <option value="minimal">Minimalist (04.07.26)</option>
+              </select>
             )}
             <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
-              <span className="text-[10px] font-bold text-slate-600 uppercase tracking-tighter">Include Time?</span>
+              <span className="text-[10px] font-bold text-slate-600">Include Time?</span>
               <button onClick={() => setConfig({...config, showTime: !config.showTime})} className={`w-8 h-4 rounded-full relative transition-all ${config.showTime ? 'bg-amber-500' : 'bg-slate-300'}`}><div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${config.showTime ? 'right-0.5' : 'left-0.5'}`} /></button>
             </div>
-            {config.showTime && <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl"><input type="time" className="bg-transparent outline-none w-full font-bold text-xs" value={config.eventTime} onChange={(e) => setConfig({...config, eventTime: e.target.value})} /></div>}
+            {config.showTime && <input type="time" className="p-3 bg-amber-50 border border-amber-200 rounded-xl w-full font-bold text-xs" value={config.eventTime} onChange={(e) => setConfig({...config, eventTime: e.target.value})} />}
           </div>
         </section>
 
@@ -106,41 +108,35 @@ export default function Sidebar({ config, setConfig }: any) {
             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">05. Welcome Message</label>
             <button onClick={() => setShowMessageStyle(!showMessageStyle)} className="text-[10px] font-bold text-amber-600 hover:underline">{showMessageStyle ? 'Hide' : 'Style +'}</button>
           </div>
-          <div className="space-y-2">
-            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl group focus-within:border-amber-500 transition-all shadow-sm">
-              <textarea 
-                rows={3}
-                className="bg-transparent outline-none w-full font-bold text-slate-800 text-xs resize-none" 
-                placeholder="Enter message..." 
-                value={config.welcomeMessage} 
-                onChange={(e) => setConfig({...config, welcomeMessage: e.target.value})} 
-              />
+          <textarea rows={3} className="p-3 bg-slate-50 border border-slate-200 rounded-xl w-full font-bold text-xs resize-none" value={config.welcomeMessage} onChange={(e) => setConfig({...config, welcomeMessage: e.target.value})} />
+          {showMessageStyle && (
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {FONT_OPTIONS.map((f) => (
+                <button key={f.id} onClick={() => setConfig({...config, messageFont: f.id})} className={`p-2 rounded-lg border text-[10px] font-bold ${config.messageFont === f.id ? 'border-amber-500 bg-amber-50' : 'bg-white'}`}>
+                  <span className={f.class}>Abc</span>
+                </button>
+              ))}
             </div>
-            {showMessageStyle && (
-              <div className="grid grid-cols-2 gap-2 animate-in fade-in zoom-in-95 duration-200">
-                {FONT_OPTIONS.map((f) => (
-                  <button key={f.id} onClick={() => setConfig({...config, messageFont: f.id})} className={`p-2 rounded-lg border text-[10px] font-bold transition-all ${config.messageFont === f.id ? 'border-amber-500 bg-amber-50 text-amber-900 shadow-sm' : 'border-slate-100 bg-white hover:border-slate-300'}`}>
-                    <span className={f.class}>Abc</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          )}
         </section>
 
         {/* 06. URL */}
         <section>
           <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">06. Custom URL</label>
-          <div className="flex items-center p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-sm">
+          <div className="flex items-center p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700">
             <span className="text-slate-400 font-bold">nvitado.com/</span>
-            <input type="text" className="bg-transparent outline-none flex-1 ml-1 text-slate-800 font-bold uppercase" placeholder="EVENT-NAME" onChange={(e) => setConfig({...config, slug: e.target.value})} />
+            <input type="text" className="bg-transparent outline-none flex-1 ml-1 text-slate-800 font-bold uppercase" placeholder="EVENT-NAME" value={config.slug} onChange={(e) => handleSlugChange(e.target.value)} />
           </div>
         </section>
       </div>
 
       <div className="p-8 border-t bg-slate-50">
-        <button className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs tracking-widest shadow-lg hover:bg-amber-900 transition-all active:scale-95">
-          PUBLISH INVITATION (₱50)
+        <button 
+          onClick={onPublish}
+          disabled={isPublishing}
+          className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs tracking-widest shadow-lg hover:bg-amber-900 transition-all active:scale-95 disabled:bg-slate-400"
+        >
+          {isPublishing ? 'GENERATING LINK...' : 'PUBLISH INVITATION (₱50)'}
         </button>
       </div>
     </aside>
