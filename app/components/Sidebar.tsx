@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from 'react';
+import Link from 'next/link';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import { BACKGROUNDS } from '../constants/backgrounds';
 
@@ -45,7 +46,9 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
   return (
     <aside className="w-[380px] bg-white border-r flex flex-col z-20 overflow-hidden font-sans text-slate-900 shadow-xl">
       <div className="p-8 border-b flex justify-center bg-white text-slate-900">
-        <img src="/assets/images/logo2.png" alt="Nvitado" className="h-10 w-auto object-contain" />
+        <Link href="/" className="hover:opacity-80 transition-opacity">
+          <img src="/assets/images/logo2.png" alt="Nvitado" className="h-10 w-auto object-contain cursor-pointer" />
+        </Link>
       </div>
 
       <div className="p-8 overflow-y-auto flex-1 space-y-10 custom-scrollbar">
