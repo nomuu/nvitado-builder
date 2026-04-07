@@ -1,5 +1,4 @@
 "use client";
-// Dito tayo nagka-error, kailangang i-import si useState sa tabi ni React
 import React, { useState } from 'react'; 
 import Sidebar from '../components/Sidebar';
 import Preview from '../components/Preview';
@@ -10,6 +9,8 @@ export default function NvitadoEditor() {
   
   const [config, setConfig] = useState({
     background: '#ffffff',
+    useAnimation: false, // Animation Toggle State
+    animationId: 'none',  // Current Animation Selection
     title: 'Juan & Maria',
     titleFont: 'font-serif', 
     eventDate: '2026-04-07',
@@ -36,7 +37,6 @@ export default function NvitadoEditor() {
       const data = await res.json();
 
       if (data.checkout_url) {
-        // Lilipat na si user sa PayMongo GCash/Maya portal
         window.location.href = data.checkout_url;
       } else {
         alert("Error: " + (data.error || "Something went wrong"));
