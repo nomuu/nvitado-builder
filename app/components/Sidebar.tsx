@@ -81,7 +81,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
           </div>
         </section>
 
-        {/* 03. DATE & TIME (FIXED: Time Toggle + Time Input) */}
+        {/* 03. DATE & TIME */}
         <section>
           <div className="flex justify-between items-center mb-4">
             <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">03. Date & Time</label>
@@ -90,6 +90,19 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
           <div className="space-y-3">
             <input type="date" className="p-3 bg-slate-50 border border-slate-200 rounded-xl w-full font-bold text-xs text-slate-900" value={config.eventDate} onChange={(e) => setConfig({...config, eventDate: e.target.value})} />
             
+            {/* 📍 FIXED: DATE FORMAT SELECTOR DROPDOWN */}
+            {showDateStyle && (
+              <select 
+                className="p-3 bg-white border border-amber-200 rounded-xl w-full font-bold text-[10px] text-slate-900 animate-in fade-in slide-in-from-top-1" 
+                value={config.dateFormat} 
+                onChange={(e) => setConfig({...config, dateFormat: e.target.value})}
+              >
+                <option value="long">Elegant (April 07, 2026)</option>
+                <option value="short">Modern (04 / 07 / 2026)</option>
+                <option value="minimal">Minimalist (04.07.26)</option>
+              </select>
+            )}
+
             <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
               <span className="text-[10px] font-bold text-slate-600">Include Time?</span>
               <button 

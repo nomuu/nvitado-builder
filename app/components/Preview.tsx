@@ -6,10 +6,15 @@ import { BACKGROUNDS } from '../constants/backgrounds';
 export default function Preview({ config, viewMode }: any) {
   const activeBg = BACKGROUNDS.find(b => b.id === config.animationId) || BACKGROUNDS[0];
 
-  const formatDate = (dateStr: string) => {
+  // 📍 FIXED: DATE FORMATTING LOGIC BASED ON SIDEBAR SELECTION
+  const formatDate = (dateStr: string, format: string) => {
     if (!dateStr) return "SET DATE";
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    switch (format) {
+      case 'short': return date.toLocaleDateString('en-GB').replace(/\//g, ' / '); 
+      case 'minimal': return `${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getDate().toString().padStart(2, '0')}.${date.getFullYear().toString().slice(-2)}`;
+      default: return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+    }
   };
 
   const formatTime = (timeStr: string) => {
@@ -61,29 +66,28 @@ export default function Preview({ config, viewMode }: any) {
 
       {/* CONTENT AREA */}
       <div className="flex flex-col items-center justify-center p-10 text-center relative z-10 w-full max-w-4xl">
-        <span className="text-[10px] tracking-[0.5em] text-amber-700 uppercase mb-6 font-black font-sans">The Celebration</span>
+        <span className="text-[10px] tracking-[0.5em] text-amber-700 uppercase mb-4 font-black font-sans">The Celebration</span>
         
-        <h2 className={`leading-tight transition-all duration-700 whitespace-pre-wrap text-slate-900 mb-8 font-light
+        <h2 className={`leading-tight transition-all duration-700 whitespace-pre-wrap text-slate-900 mb-6 font-light
           ${viewMode === 'mobile' ? 'text-5xl px-4' : 'text-8xl px-12'} 
           ${config.titleFont === 'italic' ? 'italic font-serif' : config.titleFont}`}>
           {config.title || 'Your Event Name'}
         </h2>
         
-        <div className="w-16 h-[1.5px] bg-amber-400 mb-10 mx-auto opacity-50"></div>
+        <div className="w-16 h-[1.5px] bg-amber-400 mb-8 mx-auto opacity-50"></div>
         
-        <div className="space-y-8 w-full px-6">
+        <div className="space-y-6 w-full px-6">
           <div className={`text-center leading-relaxed max-w-2xl mx-auto text-slate-600 font-medium
             ${viewMode === 'mobile' ? 'text-[12px]' : 'text-2xl'} 
             ${config.messageFont === 'italic' ? 'italic font-serif' : config.messageFont}`}>
             {config.welcomeMessage}
           </div>
 
-          <div className="pt-10 space-y-4">
+          <div className="pt-8 space-y-4">
             <p className={`${viewMode === 'mobile' ? 'text-[14px]' : 'text-3xl'} tracking-[0.2em] font-black text-slate-800 uppercase font-sans`}>
-              {formatDate(config.eventDate)}
+              {formatDate(config.eventDate, config.dateFormat)}
             </p>
             
-            {/* FIXED: TIME PREVIEW LOGIC */}
             {config.showTime && (
               <p className={`${viewMode === 'mobile' ? 'text-[12px]' : 'text-2xl'} tracking-[0.4em] font-medium text-amber-800 uppercase font-sans mt-[-10px]`}>
                 {formatTime(config.eventTime)}
