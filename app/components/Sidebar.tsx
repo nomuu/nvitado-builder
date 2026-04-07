@@ -7,6 +7,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
   const [showAllBgs, setShowAllBgs] = useState(false);
   const [showAllStyles, setShowAllStyles] = useState(false);
   const [showDateStyle, setShowDateStyle] = useState(false);
+  const [showMessageStyle, setShowMessageStyle] = useState(false);
 
   const FONT_OPTIONS = [
     { id: 'font-serif', name: 'Elegant Serif', class: 'font-serif' },
@@ -29,9 +30,16 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
     });
   };
 
+  // 📍 NEW: CHARACTER LIMIT LOGIC (250 MAX)
+  const handleMessageChange = (val: string) => {
+    if (val.length <= 250) {
+      setConfig({ ...config, welcomeMessage: val });
+    }
+  };
+
   return (
     <aside className="w-[380px] bg-white border-r flex flex-col z-20 overflow-hidden font-sans text-slate-900 shadow-xl">
-      <div className="p-8 border-b flex justify-center bg-white">
+      <div className="p-8 border-b flex justify-center bg-white text-slate-900">
         <img src="/assets/images/logo2.png" alt="Nvitado" className="h-10 w-auto object-contain" />
       </div>
 
@@ -72,7 +80,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
             {showAllStyles && (
               <div className="grid grid-cols-2 gap-2 animate-in fade-in zoom-in-95 duration-200">
                 {FONT_OPTIONS.map((f) => (
-                  <button key={f.id} onClick={() => setConfig({...config, titleFont: f.id})} className={`p-2 rounded-lg border text-[10px] font-bold ${config.titleFont === f.id ? 'border-amber-500 bg-amber-50 text-amber-900' : 'border-slate-100 bg-white hover:border-slate-300'}`}>
+                  <button key={f.id} onClick={() => setConfig({...config, titleFont: f.id})} className={`p-2 rounded-lg border text-[10px] font-bold ${config.titleFont === f.id ? 'border-amber-500 bg-amber-50 text-amber-900 shadow-sm' : 'border-slate-100 bg-white hover:border-slate-300'}`}>
                     <span className={f.class}>Abc</span>
                   </button>
                 ))}
@@ -90,13 +98,8 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
           <div className="space-y-3">
             <input type="date" className="p-3 bg-slate-50 border border-slate-200 rounded-xl w-full font-bold text-xs text-slate-900" value={config.eventDate} onChange={(e) => setConfig({...config, eventDate: e.target.value})} />
             
-            {/* 📍 FIXED: DATE FORMAT SELECTOR DROPDOWN */}
             {showDateStyle && (
-              <select 
-                className="p-3 bg-white border border-amber-200 rounded-xl w-full font-bold text-[10px] text-slate-900 animate-in fade-in slide-in-from-top-1" 
-                value={config.dateFormat} 
-                onChange={(e) => setConfig({...config, dateFormat: e.target.value})}
-              >
+              <select className="p-3 bg-white border border-amber-200 rounded-xl w-full font-bold text-[10px] text-slate-900 animate-in fade-in slide-in-from-top-1" value={config.dateFormat} onChange={(e) => setConfig({...config, dateFormat: e.target.value})}>
                 <option value="long">Elegant (April 07, 2026)</option>
                 <option value="short">Modern (04 / 07 / 2026)</option>
                 <option value="minimal">Minimalist (04.07.26)</option>
@@ -105,22 +108,9 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
 
             <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
               <span className="text-[10px] font-bold text-slate-600">Include Time?</span>
-              <button 
-                onClick={() => setConfig({...config, showTime: !config.showTime})} 
-                className={`w-8 h-4 rounded-full relative transition-all ${config.showTime ? 'bg-amber-500' : 'bg-slate-300'}`}
-              >
-                <div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${config.showTime ? 'right-0.5' : 'left-0.5'}`} />
-              </button>
+              <button onClick={() => setConfig({...config, showTime: !config.showTime})} className={`w-8 h-4 rounded-full relative transition-all ${config.showTime ? 'bg-amber-500' : 'bg-slate-300'}`}><div className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${config.showTime ? 'right-0.5' : 'left-0.5'}`} /></button>
             </div>
-
-            {config.showTime && (
-              <input 
-                type="time" 
-                className="p-3 bg-amber-50 border border-amber-200 rounded-xl w-full font-bold text-xs text-slate-900 animate-in fade-in slide-in-from-top-1" 
-                value={config.eventTime} 
-                onChange={(e) => setConfig({...config, eventTime: e.target.value})} 
-              />
-            )}
+            {config.showTime && <input type="time" className="p-3 bg-amber-50 border border-amber-200 rounded-xl w-full font-bold text-xs text-slate-900 animate-in fade-in slide-in-from-top-1" value={config.eventTime} onChange={(e) => setConfig({...config, eventTime: e.target.value})} />}
           </div>
         </section>
 
@@ -140,10 +130,32 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing }: 
           />
         </section>
 
-        {/* 05. WELCOME MESSAGE */}
+        {/* 05. WELCOME MESSAGE (WITH CHARACTER LIMIT) */}
         <section>
-          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">05. Welcome Message</label>
-          <textarea rows={3} className="p-3 bg-slate-50 border border-slate-200 rounded-xl w-full font-bold text-xs resize-none text-slate-900" value={config.welcomeMessage} onChange={(e) => setConfig({...config, welcomeMessage: e.target.value})} />
+          <div className="flex justify-between items-center mb-4">
+            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">05. Welcome Message</label>
+            <button onClick={() => setShowMessageStyle(!showMessageStyle)} className="text-[10px] font-bold text-amber-600 hover:underline">{showMessageStyle ? 'Hide' : 'Style +'}</button>
+          </div>
+          <div className="relative">
+            <textarea 
+              rows={3} 
+              className="p-3 bg-slate-50 border border-slate-200 rounded-xl w-full font-bold text-xs resize-none text-slate-900" 
+              value={config.welcomeMessage} 
+              onChange={(e) => handleMessageChange(e.target.value)} 
+            />
+            <span className={`absolute bottom-2 right-3 text-[9px] font-bold ${config.welcomeMessage.length >= 250 ? 'text-rose-500' : 'text-slate-400'}`}>
+              {config.welcomeMessage.length}/250
+            </span>
+          </div>
+          {showMessageStyle && (
+            <div className="grid grid-cols-2 gap-2 mt-2 animate-in fade-in zoom-in-95 duration-200">
+              {FONT_OPTIONS.map((f) => (
+                <button key={f.id} onClick={() => setConfig({...config, messageFont: f.id})} className={`p-2 rounded-lg border text-[10px] font-bold ${config.messageFont === f.id ? 'border-amber-500 bg-amber-50 text-amber-900 shadow-sm' : 'border-slate-100 bg-white hover:border-slate-300'}`}>
+                  <span className={f.class}>Abc</span>
+                </button>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* 06. URL */}
