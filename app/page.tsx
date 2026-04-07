@@ -10,11 +10,17 @@ import { Poppins } from 'next/font/google';
 
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '600', '800', '900'] });
 
-const fadeInUp = {
+// 1. FIXED TYPESCRIPT VARIANTS (PARA HINDI MAG-PULA)
+const fadeInUp: any = {
   hidden: { opacity: 0, y: 30 },
   visible: (i: number) => ({
-    opacity: 1, y: 0,
-    transition: { delay: i * 0.1, duration: 0.7, ease: [0.215, 0.610, 0.355, 1.000] }
+    opacity: 1, 
+    y: 0,
+    transition: { 
+      delay: i * 0.1, 
+      duration: 0.7, 
+      ease: [0.22, 1, 0.36, 1] 
+    }
   })
 };
 
@@ -56,22 +62,34 @@ export default function LandingPage() {
 
       {/* HERO SECTION */}
       <section className="relative flex flex-col items-center justify-center text-center px-6 pt-52 pb-32">
-        <motion.div custom={0} initial="hidden" animate="visible" variants={fadeInUp} className="mb-6 bg-rose-100 text-rose-600 px-5 py-2 rounded-full text-[10px] font-black tracking-[0.3em] uppercase flex items-center gap-2 border border-rose-200 shadow-sm relative z-10">
+        <motion.div 
+          custom={0} initial="hidden" animate="visible" variants={fadeInUp} 
+          className="mb-6 bg-rose-100 text-rose-600 px-5 py-2 rounded-full text-[10px] font-black tracking-[0.3em] uppercase flex items-center gap-2 border border-rose-200 shadow-sm relative z-10"
+        >
           <Sparkles className="w-3.5 h-3.5" />
           Modern invitations for modern couples
         </motion.div>
         
-        <motion.h1 custom={1} initial="hidden" animate="visible" variants={fadeInUp} className="text-5xl md:text-7xl lg:text-9xl font-black tracking-tighter mb-8 leading-[0.88] text-slate-950 mix-blend-multiply relative z-10">
+        <motion.h1 
+          custom={1} initial="hidden" animate="visible" variants={fadeInUp} 
+          className="text-5xl md:text-7xl lg:text-9xl font-black tracking-tighter mb-8 leading-[0.88] text-slate-950 mix-blend-multiply relative z-10"
+        >
           DESIGN. <br />
           PUBLISH. <br />
           <span className="text-rose-500 italic">CELEBRATE.</span>
         </motion.h1>
         
-        <motion.p custom={2} initial="hidden" animate="visible" variants={fadeInUp} className="max-w-2xl text-slate-500 text-base md:text-xl mb-12 font-medium leading-relaxed px-4 mix-blend-multiply relative z-10">
+        <motion.p 
+          custom={2} initial="hidden" animate="visible" variants={fadeInUp} 
+          className="max-w-2xl text-slate-500 text-base md:text-xl mb-12 font-medium leading-relaxed px-4 mix-blend-multiply relative z-10"
+        >
           Why wait for prints? Create a breathtaking, mobile-first wedding invitation in minutes. Secure your custom nvitado.com link instantly with our intuitive tools.
         </motion.p>
         
-        <motion.div custom={3} initial="hidden" animate="visible" variants={fadeInUp} className="relative z-10">
+        <motion.div 
+          custom={3} initial="hidden" animate="visible" variants={fadeInUp} 
+          className="relative z-10"
+        >
           <Link href="/create" className="bg-rose-500 text-white px-10 py-4.5 rounded-2xl font-black text-sm tracking-widest shadow-xl hover:bg-rose-600 transition-all flex items-center justify-center gap-3 active:scale-95 group">
             CREATE YOUR INVITATION
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
@@ -152,7 +170,7 @@ export default function LandingPage() {
       <section className="py-40 px-6 text-center relative z-10">
         <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
           <h2 className="text-5xl md:text-7xl font-black tracking-tighter mb-10 uppercase italic leading-none">Ready to start <br/>your story?</h2>
-          <Link href="/create" className="inline-flex bg-slate-900 text-white px-14 py-6 rounded-[1.8rem] font-black text-sm tracking-widest hover:bg-rose-600 transition-all shadow-xl active:scale-95 group items-center gap-4">
+          <Link href="/create" className="inline-flex bg-slate-900 text-white px-14 py-6 rounded-[1.8rem] font-black text-sm tracking-widest hover:bg-rose-500 transition-all shadow-xl active:scale-95 group items-center gap-4">
             CREATE NOW
             <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
           </Link>
