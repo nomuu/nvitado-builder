@@ -7,38 +7,75 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// 📍 SIGURADONG NANDITO 'TONG GENERATOR
+const generateTokenId = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `nvi-${result}`;
+};
+
 export async function POST(req: Request) {
   try {
     const { config, amount, bgName } = await req.json();
-
-    // 1. I-set natin ang Base Fee
-    const baseAmount = 50 * 100; // ₱50.00 in centavos
     
-    // 2. I-calculate ang Premium Effect fee (Total Amount - 50)
-    // Kung ang amount ay 55, ang effectFee ay 5.
-    const totalAmountCentavos = amount * 100;
-    const effectFee = totalAmountCentavos - baseAmount;
+    // 📍 GENERATE TOKEN FIRST
+    const tokenId = generateTokenId();
 
-    // 3. BUUIN ANG LINE ITEMS ARRAY (BREAKDOWN)
+    const totalAmountCentavos = Math.round(amount * 100);
+    const baseAmountCentavos = 50 * 100;
+    
+    const hasEffect = bgName && bgName !== 'Standard';
+    const bgPriceCentavos = hasEffect ? (amount % 50 === 5 || amount % 50 === 55 ? 500 : 2500) : 0;
+
     const lineItems = [
       {
         currency: 'PHP',
-        amount: baseAmount,
-        name: 'Nvitado Digital Invitation (Base Fee)',
+        amount: baseAmountCentavos,
+        name: 'Nvitado Base Hosting (Event Month)',
         quantity: 1,
       }
     ];
 
-    // 4. KUNG MAY PREMIUM EFFECT, I-DAGDAG BILANG HIWALAY NA LINE ITEM
-    if (effectFee > 0) {
+    if (bgPriceCentavos > 0) {
       lineItems.push({
         currency: 'PHP',
-        amount: effectFee,
-        name: `${bgName || 'Premium Effect'}`, // Lalabas dito e.g. "Floating Hearts Effect"
+        amount: bgPriceCentavos,
+        name: `Effect: ${bgName}`,
         quantity: 1,
       });
     }
 
+    const currentLineItemsTotal = lineItems.reduce((acc, item) => acc + item.amount, 0);
+    const extensionFeeCentavos = totalAmountCentavos - currentLineItemsTotal;
+
+    if (extensionFeeCentavos > 0) {
+      lineItems.push({
+        currency: 'PHP',
+        amount: extensionFeeCentavos,
+        name: 'Advance Booking / Monthly Extension',
+        quantity: 1,
+      });
+    }
+
+    // --- STEP A: SAVE TO SUPABASE WITH TOKEN ---
+    // 📍 SINIGURADO KONG KASAMA ANG token_id DITO
+    const { error: dbError } = await supabase.from('invitations').upsert({
+      slug: config.slug,
+      config_data: config,
+      status: 'waiting_payment',
+      total_paid: amount,
+      token_id: tokenId 
+    }, { onConflict: 'slug' });
+
+    if (dbError) {
+      console.error("SUPABASE ERROR:", dbError.message);
+      return NextResponse.json({ error: "Database save failed" }, { status: 500 });
+    }
+
+    // --- STEP B: PAYMONGO CHECKOUT ---
     const options = {
       method: 'POST',
       url: 'https://api.paymongo.com/v1/checkout_sessions',
@@ -52,12 +89,12 @@ export async function POST(req: Request) {
           attributes: {
             send_email_receipt: true,
             show_description: true,
-            show_line_items: true, // SIGURADUHING TRUE ITO PARA LUMABAS ANG BREAKDOWN
-            line_items: lineItems, // Dito na papasok yung array na binuo natin sa taas
+            show_line_items: true,
+            line_items: lineItems,
             payment_method_types: ['card', 'paymaya', 'gcash', 'grab_pay'], 
-            description: `Event: ${config.title} | URL: nvitado.com/${config.slug}`,
+            description: `Invitation: ${config.title} | Token: ${tokenId}`,
             success_url: `${process.env.NEXT_PUBLIC_URL}/success?slug=${config.slug}`,
-            cancel_url: `${process.env.NEXT_PUBLIC_URL}/`
+            cancel_url: `${process.env.NEXT_PUBLIC_URL}/create`
           }
         }
       }
@@ -65,20 +102,16 @@ export async function POST(req: Request) {
 
     const response = await axios.request(options);
     const checkoutUrl = response.data.data.attributes.checkout_url;
-    
-    // Save to Supabase (No changes here)
-    await supabase.from('invitations').upsert({
-      slug: config.slug,
-      config_data: config,
-      status: 'waiting_payment',
-      checkout_id: response.data.data.id
-    }, { onConflict: 'slug' });
+    const checkoutId = response.data.data.id;
+
+    // --- STEP C: UPDATE RECORD WITH CHECKOUT ID ---
+    await supabase.from('invitations').update({ 
+      checkout_id: checkoutId 
+    }).eq('slug', config.slug);
 
     return NextResponse.json({ checkout_url: checkoutUrl });
 
   } catch (error: any) {
-    const errorMessage = error.response?.data?.errors?.[0]?.detail || error.message;
-    console.error("PAYMONGO ERROR:", errorMessage);
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
