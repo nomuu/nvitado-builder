@@ -6,14 +6,13 @@ import {
   Sparkles, ArrowRight, 
   Zap, Globe, Clock, CheckCircle2,
   Heart, Star, PartyPopper, Cake, User,
-  Users, Layout
+  Users, Smartphone, Monitor
 } from 'lucide-react';
 import { Poppins } from 'next/font/google';
 import { createClient } from '@supabase/supabase-js';
 
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '600', '800', '900'] });
 
-// Initialize Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -118,6 +117,59 @@ const EventSelector = () => {
   );
 };
 
+// --- 📍 UPDATED: SLIDING DEVICE PREVIEW (NO SHAPE CHANGE) ---
+const DevicePreviewSlider = () => {
+  const [index, setIndex] = useState(0);
+  const slides = [
+    { id: 'desktop', title: 'Desktop Builder', icon: <Monitor size={14}/>, img: '/assets/images/desktop-builder.png' },
+    { id: 'mobile', title: 'Mobile Builder', icon: <Smartphone size={14}/>, img: '/assets/images/mobile-builder.png' }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, []);
+
+  return (
+    <section className="px-6 pb-24 relative z-10 max-w-6xl mx-auto">
+      <div className="flex justify-center gap-4 mb-8">
+        {slides.map((slide, i) => (
+          <button 
+            key={slide.id}
+            onClick={() => setIndex(i)}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[10px] font-black tracking-widest uppercase transition-all shadow-sm
+              ${index === i ? 'bg-slate-900 text-white scale-105 shadow-xl' : 'bg-white text-slate-400 hover:text-slate-600'}`}
+          >
+            {slide.icon} {slide.title}
+          </button>
+        ))}
+      </div>
+
+      {/* 📍 Mantained Aspect Ratio for Builder Screenshots */}
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-white shadow-2xl border border-slate-50 p-2">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.5, ease: "easeInOut" }}
+            className="w-full"
+          >
+            <img 
+              src={slides[index].img} 
+              alt={slides[index].title} 
+              className="w-full h-auto rounded-[2rem] block" 
+            />
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </section>
+  );
+};
+
 const AnimatedPastelBackground = () => (
   <div className="fixed inset-0 w-full h-full -z-10 overflow-hidden pointer-events-none bg-[#FFFDF8]">
     <motion.div
@@ -133,7 +185,6 @@ const AnimatedPastelBackground = () => (
   </div>
 );
 
-// --- 📍 NEW: SUPABASE STATS SECTION ---
 const StatsSection = () => {
   const [count, setCount] = useState<number | null>(null);
 
@@ -154,11 +205,7 @@ const StatsSection = () => {
         <div className="absolute top-0 right-0 p-10 opacity-10 text-white">
           <Users size={120} />
         </div>
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
           <p className="text-amber-400 text-[10px] font-black uppercase tracking-[0.4em] mb-4">The Nvitado Community</p>
           <h3 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-4 leading-none">
             {count !== null ? count.toLocaleString() : '--'}
@@ -177,10 +224,9 @@ export default function LandingPage() {
     <div className={`min-h-screen ${poppins.className} text-slate-900 antialiased selection:bg-rose-100`}>
       <AnimatedPastelBackground />
 
-      {/* 1. NAVIGATION (Logo Clickable now) */}
+      {/* 1. NAVIGATION */}
       <nav className="fixed top-0 left-0 w-full z-[60] bg-[#FFFDF8]/80 backdrop-blur-md border-b border-slate-100/50">
         <div className="flex justify-between items-center px-6 lg:px-12 py-3 max-w-[1400px] mx-auto font-sans">
-          {/* Clickable Logo refreshes the view to top */}
           <Link href="/">
             <img src="/assets/images/logo2.png" alt="Nvitado" className="h-6 w-auto cursor-pointer hover:opacity-70 transition-all" />
           </Link>
@@ -220,17 +266,8 @@ export default function LandingPage() {
         <EventSelector />
       </section>
 
-      {/* 3. PREVIEW IMAGE */}
-      <section className="px-6 pb-24 relative z-10">
-        <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="max-w-5xl mx-auto rounded-[2.5rem] p-2 bg-white shadow-2xl border border-slate-50 overflow-hidden"
-        >
-          <img src="/assets/images/builder-preview.png" alt="Nvitado Builder" className="w-full h-auto rounded-[2.2rem]" />
-        </motion.div>
-      </section>
+      {/* 📍 3. UPDATED SLIDER SECTION */}
+      <DevicePreviewSlider />
 
       {/* 4. WHY DIGITAL */}
       <section className="py-24 px-6 bg-white/50 border-y border-slate-100/50 backdrop-blur-sm relative z-10">
@@ -288,7 +325,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* 📍 STATS SECTION (Bago ang Final CTA) */}
       <StatsSection />
 
       {/* 6. FINAL CTA */}
@@ -306,7 +342,6 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* 7. FOOTER */}
       <footer className="py-12 border-t border-slate-100 text-center px-6 bg-white relative z-10">
         <img src="/assets/images/logo2.png" alt="Nvitado" className="h-5 w-auto mx-auto mb-6 opacity-30 grayscale" />
         <p className="text-[9px] font-black text-slate-400 tracking-widest uppercase">© 2026 Nvitado Digital Philippines</p>
