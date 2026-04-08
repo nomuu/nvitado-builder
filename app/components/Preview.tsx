@@ -26,56 +26,57 @@ export default function Preview({ config, viewMode }: any) {
     return `${hh}:${minutes} ${ampm}`;
   };
 
-  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(config.location)}`;
+  const mapsUrl = `http://googleusercontent.com/maps.google.com/q=${encodeURIComponent(config.location)}`;
 
   return (
     <div 
-      className={`transition-all duration-700 ease-in-out relative overflow-hidden flex flex-col items-center bg-white text-slate-900
+      className={`transition-all duration-700 ease-in-out relative overflow-hidden flex flex-col items-center bg-white text-slate-900 shadow-2xl
         ${viewMode === 'mobile' 
-          ? 'w-[360px] h-[720px] rounded-[2.5rem] border-[10px] border-slate-900 shadow-2xl mx-auto my-8' 
-          : 'w-full h-full min-h-screen rounded-none border-none shadow-none' 
+          ? 'w-[360px] h-[720px] rounded-[2.5rem] border-[10px] border-slate-900 mx-auto my-8' 
+          : 'w-full h-full min-h-screen rounded-none border-none' 
         }`}
       style={{ background: config.background }}
     >
       
-      {/* 🎨 FIXED BACKGROUND ANIMATIONS */}
+      {/* 🎨 BACKGROUND ANIMATIONS */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-        {activeBg.type === 'blob' && activeBg.colors?.map((color, i) => (
+        {activeBg.type === 'blob' && activeBg.colors?.map((color: string, i: number) => (
           <motion.div
             key={i} className="absolute rounded-full blur-[80px] opacity-30"
-            style={{ background: color, width: i === 0 ? '450px' : '350px', height: i === 0 ? '450px' : '350px', top: i === 0 ? '-15%' : '55%', left: i === 1 ? '-25%' : '45%' }}
-            animate={{ x: [0, 60, -60, 0], y: [0, 90, -90, 0], scale: [1, 1.2, 0.8, 1] }}
-            transition={{ duration: 15 + (i * 5), repeat: Infinity, ease: "easeInOut" }}
+            style={{ 
+              background: color, 
+              width: i === 0 ? '600px' : '400px', 
+              height: i === 0 ? '600px' : '400px', 
+              top: i === 0 ? '-10%' : '50%', 
+              left: i === 1 ? '-20%' : '40%' 
+            }}
+            animate={{ x: [0, 40, -40, 0], y: [0, 60, -60, 0], scale: [1, 1.1, 0.9, 1] }}
+            transition={{ duration: 12 + (i * 4), repeat: Infinity, ease: "easeInOut" }}
           />
         ))}
 
-        {activeBg.type === 'particle' && [...Array(18)].map((_, i) => (
+        {activeBg.type === 'particle' && [...Array(15)].map((_, i) => (
           <motion.div
             key={i} className="absolute text-2xl"
             initial={{ top: "110%", left: `${Math.random() * 100}%`, opacity: 0 }}
             animate={{ top: "-10%", opacity: [0, 1, 1, 0], rotate: [0, 360] }}
-            transition={{ duration: Math.random() * 6 + 4, repeat: Infinity, delay: Math.random() * 8, ease: "linear" }}
+            transition={{ duration: Math.random() * 5 + 5, repeat: Infinity, delay: Math.random() * 10, ease: "linear" }}
           >
             {activeBg.icon}
           </motion.div>
         ))}
       </div>
 
-      {/* 📜 UPDATED SCROLL ENGINE */}
-      <div className="relative z-10 w-full h-full overflow-y-auto overflow-x-hidden no-scrollbar flex flex-col">
-        
-        {/* Ang 'my-auto' dito ang sikreto. Pag maikli ang text, centered. Pag mahaba, start sa top. */}
-        <div className="flex flex-col items-center w-full my-auto py-24 px-6 md:px-10 text-center min-h-min">
+      {/* 📜 SCROLL ENGINE */}
+      <div className="relative z-10 w-full h-full overflow-y-auto no-scrollbar flex flex-col">
+        <div className={`flex flex-col items-center w-full my-auto py-24 px-6 md:px-10 text-center min-h-min`}>
           
-          <motion.span 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="text-[10px] tracking-[0.5em] text-amber-700 uppercase mb-4 font-black font-sans shrink-0"
-          >
+          <span className="text-[10px] tracking-[0.5em] text-amber-700 uppercase mb-4 font-black shrink-0">
             The Celebration
-          </motion.span>
+          </span>
           
           <h2 className={`leading-tight transition-all duration-700 whitespace-pre-wrap text-slate-900 mb-6 font-light shrink-0
-            ${viewMode === 'mobile' ? 'text-4xl px-2' : 'text-7xl lg:text-8xl px-12'} 
+            ${viewMode === 'mobile' ? 'text-4xl px-2' : 'text-7xl lg:text-9xl px-12'} 
             ${config.titleFont === 'italic' ? 'italic font-serif' : config.titleFont}`}>
             {config.title || 'Your Event Name'}
           </h2>
@@ -90,19 +91,19 @@ export default function Preview({ config, viewMode }: any) {
             </div>
 
             <div className="pt-12 space-y-4 flex flex-col items-center shrink-0">
-              <p className={`${viewMode === 'mobile' ? 'text-base' : 'text-3xl'} tracking-[0.2em] font-black text-slate-800 uppercase font-sans`}>
+              <p className={`${viewMode === 'mobile' ? 'text-base' : 'text-4xl'} tracking-[0.2em] font-black text-slate-800 uppercase`}>
                 {formatDate(config.eventDate, config.dateFormat)}
               </p>
               
               {config.showTime && (
-                <p className={`${viewMode === 'mobile' ? 'text-sm' : 'text-2xl'} tracking-[0.4em] font-medium text-amber-800 uppercase font-sans mt-[-10px]`}>
+                <p className={`${viewMode === 'mobile' ? 'text-sm' : 'text-2xl'} tracking-[0.4em] font-medium text-amber-800 uppercase mt-[-10px]`}>
                   {formatTime(config.eventTime)}
                 </p>
               )}
 
               <div className="pt-8 flex flex-col items-center gap-4 w-full">
-                 <p className={`${viewMode === 'mobile' ? 'text-[11px] max-w-[300px]' : 'text-lg max-w-[700px]'} text-slate-400 uppercase tracking-[0.3em] font-black block font-sans text-center leading-relaxed`}>
-                     📍 {config.location}
+                 <p className={`${viewMode === 'mobile' ? 'text-[11px] max-w-[300px]' : 'text-xl max-w-[800px]'} text-slate-400 uppercase tracking-[0.3em] font-black block text-center leading-relaxed`}>
+                    📍 {config.location}
                  </p>
                  
                  {config.location && (
@@ -110,7 +111,7 @@ export default function Preview({ config, viewMode }: any) {
                      href={mapsUrl} 
                      target="_blank" 
                      rel="noopener noreferrer"
-                     className="flex items-center gap-2 px-8 py-3 bg-slate-900 text-white rounded-full text-[10px] font-black tracking-widest uppercase hover:bg-amber-700 transition-all active:scale-95 shadow-xl"
+                     className="flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-full text-[10px] font-black tracking-widest uppercase hover:bg-amber-700 transition-all active:scale-95 shadow-xl"
                    >
                      <MapPin size={12} />
                      Get Directions
@@ -120,20 +121,13 @@ export default function Preview({ config, viewMode }: any) {
             </div>
           </div>
 
-          {/* Bottom Padding para hindi dikit sa dulo ng screen/frame */}
-          <div className="h-20 shrink-0"></div>
-
+          <div className="h-24 shrink-0"></div>
         </div>
       </div>
 
       <style jsx global>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .no-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );
