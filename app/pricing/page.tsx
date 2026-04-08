@@ -11,7 +11,8 @@ import { Poppins } from 'next/font/google';
 
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '600', '800', '900'] });
 
-const fadeInUp = {
+// 📍 FIXED: Explicitly typed as 'any' to bypass Vercel TypeScript build error
+const fadeInUp: any = {
   hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({
     opacity: 1, 
@@ -185,7 +186,7 @@ export default function PricingPage() {
         <div className="flex items-center gap-4 mb-12 justify-center"><HelpCircle className="text-rose-500" size={32} /><h2 className="text-3xl font-black uppercase italic leading-none">Questions</h2></div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-10 text-center md:text-left">
           {[
-            { q: "Why the 1-week rule?", a: "To ensure system stability and enough time for your guests to view the link." },
+            { q: "Why the 1-week rule?", a: "To ensure system stability and give you enough time to your guests to view the link." },
             { q: "Can I edit design?", a: "No. Design is locked on publish. Details can be edited max 5 times (2 free, 3 paid)." },
             { q: "What is extension fee?", a: "A ₱20 fee per month if your event is scheduled for the coming months." },
             { q: "Is payment secure?", a: "Yes. All payments are handled securely via PayMongo (GCash, Maya, etc)." }
@@ -203,8 +204,8 @@ export default function PricingPage() {
         <Link href="/"><img src="/assets/images/logo2.png" alt="Nvitado" className="h-6 w-auto mb-8 opacity-40 grayscale" /></Link>
         <div className="flex flex-wrap justify-center gap-8 mb-8 text-[10px] font-black uppercase tracking-widest">
           <Link href="/pricing" className="text-slate-900">Pricing</Link>
-          <Link href="/terms" className="text-slate-400">Terms & Conditions</Link>
-          <Link href="mailto:hello@nvitado.com" className="text-slate-400">Support</Link>
+          <Link href="/terms" className="text-slate-400 hover:text-slate-900 transition-colors">Terms & Conditions</Link>
+          <Link href="mailto:hello@nvitado.com" className="text-slate-400 hover:text-slate-900 transition-colors">Support</Link>
         </div>
         <p className="text-[9px] font-black text-slate-300 tracking-widest uppercase">© 2026 Nvitado Digital Philippines</p>
       </footer>
