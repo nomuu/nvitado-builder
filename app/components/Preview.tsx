@@ -26,7 +26,7 @@ export default function Preview({ config, viewMode }: any) {
     return `${hh}:${minutes} ${ampm}`;
   };
 
-  const mapsUrl = `http://googleusercontent.com/maps.google.com/q=${encodeURIComponent(config.location)}`;
+  const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(config.location)}`;
 
   return (
     <div 
