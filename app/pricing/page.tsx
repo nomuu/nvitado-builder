@@ -37,7 +37,7 @@ export default function PricingPage() {
             <div className="hidden lg:flex items-center gap-8 mr-4 text-[9px] font-black tracking-widest uppercase">
               <Link href="/pricing" className="text-slate-900 border-b-2 border-rose-500 pb-1">Pricing</Link>
               <Link href="/terms" className="text-slate-400 hover:text-slate-900 transition-colors">Terms</Link>
-              <Link href="mailto:hello@nvitado.com" className="text-slate-400 hover:text-slate-900 transition-colors">Support</Link>
+              <Link href="/support" className="text-slate-400 hover:text-slate-900 transition-colors">Support</Link>
             </div>
             <Link href="/create" className="text-[9px] font-black tracking-widest uppercase bg-slate-900 text-white px-6 py-2.5 rounded-full hover:bg-rose-500 transition-all flex items-center gap-2 group shadow-md">
               <span>GET STARTED</span>
@@ -205,7 +205,7 @@ export default function PricingPage() {
         <div className="flex flex-wrap justify-center gap-8 mb-8 text-[10px] font-black uppercase tracking-widest">
           <Link href="/pricing" className="text-slate-900">Pricing</Link>
           <Link href="/terms" className="text-slate-400 hover:text-slate-900 transition-colors">Terms & Conditions</Link>
-          <Link href="mailto:hello@nvitado.com" className="text-slate-400 hover:text-slate-900 transition-colors">Support</Link>
+          <Link href="/support" className="text-slate-400 hover:text-slate-900 transition-colors">Support</Link>
         </div>
         <p className="text-[9px] font-black text-slate-300 tracking-widest uppercase">© 2026 Nvitado Digital Philippines</p>
       </footer>
