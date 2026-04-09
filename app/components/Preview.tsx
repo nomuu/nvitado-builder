@@ -1,10 +1,17 @@
 "use client";
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { BACKGROUNDS } from '../constants/backgrounds';
 import { MapPin } from 'lucide-react';
 
 export default function Preview({ config, viewMode }: any) {
+  // 📍 FIX: Hydration Mismatch - Siguraduhing mounted ang client bago gamitin ang Math.random()
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   const activeBg = BACKGROUNDS.find(b => b.id === config.animationId) || BACKGROUNDS[0];
 
   const formatDate = (dateStr: string, format: string) => {
@@ -26,6 +33,7 @@ export default function Preview({ config, viewMode }: any) {
     return `${hh}:${minutes} ${ampm}`;
   };
 
+  // 📍 FIX: Google Maps URL - Official Search API format
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(config.location)}`;
 
   return (
@@ -40,6 +48,7 @@ export default function Preview({ config, viewMode }: any) {
       
       {/* 🎨 BACKGROUND ANIMATIONS */}
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        {/* Blobs: Safe i-render kahit sa server basta fixed values or guarded */}
         {activeBg.type === 'blob' && activeBg.colors?.map((color: string, i: number) => (
           <motion.div
             key={i} className="absolute rounded-full blur-[80px] opacity-30"
@@ -55,7 +64,8 @@ export default function Preview({ config, viewMode }: any) {
           />
         ))}
 
-        {activeBg.type === 'particle' && [...Array(15)].map((_, i) => (
+        {/* 📍 FIX: Guarded by isMounted para hindi mag-error ang Math.random() */}
+        {isMounted && activeBg.type === 'particle' && [...Array(15)].map((_, i) => (
           <motion.div
             key={i} className="absolute text-2xl"
             initial={{ top: "110%", left: `${Math.random() * 100}%`, opacity: 0 }}
@@ -69,7 +79,7 @@ export default function Preview({ config, viewMode }: any) {
 
       {/* 📜 SCROLL ENGINE */}
       <div className="relative z-10 w-full h-full overflow-y-auto no-scrollbar flex flex-col">
-        <div className={`flex flex-col items-center w-full my-auto py-24 px-6 md:px-10 text-center min-h-min`}>
+        <div className={`flex flex-col items-center w-full py-24 px-6 md:px-10 text-center`}>
           
           <span className="text-[10px] tracking-[0.5em] text-amber-700 uppercase mb-4 font-black shrink-0">
             The Celebration
@@ -103,7 +113,7 @@ export default function Preview({ config, viewMode }: any) {
 
               <div className="pt-8 flex flex-col items-center gap-4 w-full">
                  <p className={`${viewMode === 'mobile' ? 'text-[11px] max-w-[300px]' : 'text-xl max-w-[800px]'} text-slate-400 uppercase tracking-[0.3em] font-black block text-center leading-relaxed`}>
-                    📍 {config.location}
+                   📍 {config.location}
                  </p>
                  
                  {config.location && (
@@ -120,9 +130,22 @@ export default function Preview({ config, viewMode }: any) {
               </div>
             </div>
           </div>
-
-          <div className="h-24 shrink-0"></div>
         </div>
+
+        {/* 📍 FOOTER SECTION (One-line branding) */}
+        <div className="mt-auto py-8 flex items-center justify-center gap-2 opacity-30 hover:opacity-100 transition-opacity no-print">
+           <p className="text-[7px] tracking-[0.2em] uppercase font-bold text-slate-400">Powered by</p>
+           <h1 className="text-[8px] font-black tracking-[0.1em] text-slate-500 uppercase">Nvitado</h1>
+        </div>
+      </div>
+
+      {/* 📍 FLOATING LOGO (Bottom Right) */}
+      <div className="absolute bottom-5 right-5 z-20 w-8 h-8 opacity-40 hover:opacity-100 transition-opacity no-print">
+         <img 
+            src="/assets/images/logo.png" 
+            alt="Nvitado Logo" 
+            className="w-full h-full object-contain"
+         />
       </div>
 
       <style jsx global>{`
