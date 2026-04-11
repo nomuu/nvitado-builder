@@ -42,6 +42,7 @@ export default function Footer() {
 
         <div className="flex flex-wrap justify-center gap-x-12 gap-y-4 mb-10">
           {[
+            { name: 'Home', href: '/' }, // 📍 Idinagdag ang Home link
             { name: 'Pricing', href: '/pricing' },
             { name: 'Terms & Conditions', href: '/terms' },
             { name: 'Support', href: '/support' }
