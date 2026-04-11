@@ -3,9 +3,8 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import { BACKGROUNDS } from '../constants/backgrounds';
-import { X, RefreshCcw, Settings2, BookHeart, MessageCircleQuestion } from 'lucide-react';
+import { X, RefreshCcw, Settings2, BookHeart, MessageCircleQuestion, PlusCircle, Trash2 } from 'lucide-react';
 
-// 📍 Ginagamit na ang activeTab at setActiveTab mula sa props para synced sa Preview
 export default function Sidebar({ config, setConfig, onPublish, isPublishing, onClose, activeTab, setActiveTab }: any) {
   const [showAllBgs, setShowAllBgs] = useState(false);
   const [showAllStyles, setShowAllStyles] = useState(false);
@@ -15,7 +14,12 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   const basePrice = 50;
   const selectedBg = BACKGROUNDS.find(bg => bg.id === config.animationId);
   const bgPrice = selectedBg?.price || 0;
-  const totalPrice = basePrice + bgPrice;
+  
+  // 📍 PRICE CALCULATION: 3 default are free, +₱2 for each extra question (max of 2 extra)
+  const extraQuestionsCount = Math.max(0, (config.questions?.length || 3) - 3);
+  const qaPrice = extraQuestionsCount * 2;
+  const storyPrice = config.showStory ? 5 : 0;
+  const totalPrice = basePrice + bgPrice + qaPrice + storyPrice;
 
   const FONT_OPTIONS = [
     { id: 'font-serif', name: 'Elegant Serif', class: 'font-serif' },
@@ -37,7 +41,31 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     if (val.length <= 250) setConfig({ ...config, welcomeMessage: val });
   };
 
-  // 📍 TABS CONFIG
+  // 📍 Q&A UPDATE LOGIC
+  const handleQAChange = (index: number, field: 'q' | 'a', value: string) => {
+    const newQA = [...(config.questions || [{ q: '', a: '' }, { q: '', a: '' }, { q: '', a: '' }])];
+    newQA[index][field] = value;
+    setConfig({ ...config, questions: newQA });
+  };
+
+  // 📍 ADD QUESTION LOGIC (Max 5 total: 3 default + 2 paid)
+  const addQuestion = () => {
+    const currentCount = config.questions?.length || 3;
+    if (currentCount < 5) {
+      const newQA = [...(config.questions || [{ q: '', a: '' }, { q: '', a: '' }, { q: '', a: '' }]), { q: '', a: '' }];
+      setConfig({ ...config, questions: newQA });
+    } else {
+      alert("Maximum of 5 questions only (3 Free + 2 Paid).");
+    }
+  };
+
+  // 📍 REMOVE QUESTION LOGIC (Minimum 3)
+  const removeQuestion = (index: number) => {
+    if ((config.questions?.length || 3) <= 3) return;
+    const newQA = config.questions.filter((_: any, i: number) => i !== index);
+    setConfig({ ...config, questions: newQA });
+  };
+
   const tabs = [
     { id: 'general', label: 'General', icon: Settings2 },
     { id: 'qa', label: 'Q&A', icon: MessageCircleQuestion },
@@ -174,7 +202,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
           </div>
         )}
 
-        {/* 📍 Q&A TAB */}
+        {/* 📍 Q&A TAB WITH PAID ADD-ONS */}
         {activeTab === 'qa' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -191,11 +219,53 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
              </div>
 
              {config.showQA && (
-               <div className="animate-in zoom-in-95 duration-200">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">Frequently Asked Questions</label>
-                  <button className="w-full py-3 border-2 border-dashed border-slate-200 rounded-xl text-[10px] font-black text-slate-400 hover:border-amber-400 hover:text-amber-600 transition-all">
-                    + ADD NEW QUESTION
-                  </button>
+               <div className="animate-in zoom-in-95 duration-200 space-y-6">
+                  <div className="flex justify-between items-center">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">Your FAQ List</label>
+                    <p className="text-[8px] font-black text-amber-600 uppercase italic">3 Free + 2 Paid</p>
+                  </div>
+                  
+                  {(config.questions || [{ q: '', a: '' }, { q: '', a: '' }, { q: '', a: '' }]).map((item: any, index: number) => (
+                    <div key={index} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 relative group">
+                      {index >= 3 && (
+                        <button 
+                          onClick={() => removeQuestion(index)}
+                          className="absolute -top-2 -right-2 p-1 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 size={10} />
+                        </button>
+                      )}
+                      <div className="flex items-center gap-2">
+                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${index >= 3 ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-600'}`}>
+                          {index + 1}
+                        </span>
+                        <input 
+                          type="text" 
+                          placeholder="The Question..." 
+                          className="bg-transparent outline-none w-full font-bold text-slate-800 text-[11px] uppercase"
+                          value={item.q || ''}
+                          onChange={(e) => handleQAChange(index, 'q', e.target.value)}
+                        />
+                      </div>
+                      <textarea 
+                        rows={2} 
+                        placeholder="The Answer..." 
+                        className="p-2 bg-white border border-slate-200 rounded-xl w-full font-medium text-[10px] resize-none text-slate-600"
+                        value={item.a || ''}
+                        onChange={(e) => handleQAChange(index, 'a', e.target.value)}
+                      />
+                    </div>
+                  ))}
+
+                  {(config.questions?.length || 3) < 5 && (
+                    <button 
+                      onClick={addQuestion}
+                      className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-[9px] font-black text-slate-400 hover:border-amber-400 hover:text-amber-600 flex items-center justify-center gap-2 transition-all bg-white shadow-sm"
+                    >
+                      <PlusCircle size={14} />
+                      ADD EXTRA QUESTION (+₱2.00)
+                    </button>
+                  )}
                </div>
              )}
           </div>
@@ -238,6 +308,14 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
           <div className="flex justify-between"><span>Publishing Fee</span><span className="text-slate-900">₱{basePrice.toFixed(2)}</span></div>
           {bgPrice > 0 && <div className="flex justify-between text-amber-600"><span>{selectedBg?.name} Effect</span><span>+₱{bgPrice.toFixed(2)}</span></div>}
           
+          {/* 📍 Q&A ADD-ONS PRICE */}
+          {qaPrice > 0 && (
+            <div className="flex justify-between text-amber-600 animate-in fade-in">
+              <span>Extra FAQ Questions</span>
+              <span>+₱{qaPrice.toFixed(2)}</span>
+            </div>
+          )}
+
           {config.showStory && (
             <div className="flex justify-between text-amber-600 animate-in fade-in">
               <span>Our Story Feature</span>
@@ -247,11 +325,11 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
 
           <div className="flex justify-between border-t pt-2 text-[12px] text-slate-900 font-black">
             <span>Total to pay</span>
-            <span className="text-amber-600">₱{(totalPrice + (config.showStory ? 5 : 0)).toFixed(2)}</span>
+            <span className="text-amber-600">₱{totalPrice.toFixed(2)}</span>
           </div>
         </div>
         <button 
-          onClick={() => onPublish(totalPrice + (config.showStory ? 5 : 0))} 
+          onClick={() => onPublish(totalPrice)} 
           disabled={isPublishing} 
           className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs tracking-widest shadow-lg hover:bg-amber-900 transition-all active:scale-95 disabled:bg-slate-400"
         >
