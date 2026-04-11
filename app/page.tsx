@@ -6,7 +6,7 @@ import {
   Sparkles, ArrowRight, 
   Zap, Globe, Clock, CheckCircle2,
   Heart, Star, PartyPopper, Cake, User,
-  Users, Smartphone, Monitor, Menu, X
+  Users, Smartphone, Monitor
 } from 'lucide-react';
 import { Poppins } from 'next/font/google';
 import { createClient } from '@supabase/supabase-js';
@@ -214,61 +214,11 @@ const StatsSection = () => {
 };
 
 export default function LandingPage() {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  // 📍 Navbar at Footer ay automatic nang nakakabit dahil sa Root Layout logic.
 
   return (
     <div className={`min-h-screen ${poppins.className} text-slate-900 antialiased selection:bg-rose-100`}>
       <AnimatedPastelBackground />
-
-      {/* 1. NAVIGATION (RESPONSIVE) */}
-      <nav className="fixed top-0 left-0 w-full z-[100] bg-[#FFFDF8]/80 backdrop-blur-md border-b border-slate-100/50">
-        <div className="flex justify-between items-center px-6 lg:px-12 py-3 max-w-[1400px] mx-auto font-sans">
-          <Link href="/">
-            <img src="/assets/images/logo2.png" alt="Nvitado" className="h-6 w-auto cursor-pointer hover:opacity-70 transition-all" />
-          </Link>
-          
-          <div className="flex items-center gap-4">
-            {/* Desktop Links (Hidden on Mobile) */}
-            <div className="hidden lg:flex items-center gap-8 mr-4">
-              <Link href="/pricing" className="text-[9px] font-black tracking-widest uppercase text-slate-400 hover:text-slate-900 transition-colors">Pricing</Link>
-              <Link href="/terms" className="text-[9px] font-black tracking-widest uppercase text-slate-400 hover:text-slate-900 transition-colors">Terms</Link>
-              <Link href="/support" className="text-[9px] font-black tracking-widest uppercase text-slate-400 hover:text-slate-900 transition-colors">Support</Link>
-            </div>
-            
-            <Link href="/create" className="text-[9px] font-black tracking-widest uppercase bg-slate-900 text-white px-6 py-2.5 rounded-full hover:bg-rose-500 transition-all flex items-center gap-2 group shadow-md">
-              <span className="hidden sm:inline text-[9px] font-black tracking-widest">GET STARTED</span>
-              <span className="sm:hidden text-[9px] font-black tracking-widest">START</span>
-              <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-            </Link>
-
-            {/* Mobile Menu Toggle */}
-            <button 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 text-slate-900 hover:bg-slate-50 rounded-lg transition-all"
-            >
-              {isMobileMenuOpen ? <X size={20}/> : <Menu size={20}/>}
-            </button>
-          </div>
-        </div>
-
-        {/* Mobile Dropdown Menu */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div 
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              className="lg:hidden bg-white border-b border-slate-100 overflow-hidden"
-            >
-              <div className="flex flex-col p-6 gap-4 text-center">
-                <Link onClick={() => setIsMobileMenuOpen(false)} href="/pricing" className="text-[10px] font-black tracking-widest uppercase text-slate-500 py-2">Pricing</Link>
-                <Link onClick={() => setIsMobileMenuOpen(false)} href="/terms" className="text-[10px] font-black tracking-widest uppercase text-slate-500 py-2">Terms & Conditions</Link>
-                <Link onClick={() => setIsMobileMenuOpen(false)} href="mailto:hello@nvitado.com" className="text-[10px] font-black tracking-widest uppercase text-slate-500 py-2">Support</Link>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </nav>
 
       {/* 2. HERO SECTION */}
       <section className="relative flex flex-col items-center justify-center text-center px-6 pt-40 pb-16">
@@ -370,23 +320,6 @@ export default function LandingPage() {
           </div>
         </motion.div>
       </section>
-
-      {/* 7. FOOTER */}
-      <footer className="py-16 border-t border-slate-100 text-center px-6 bg-white relative z-10 flex flex-col items-center">
-        <Link href="/">
-          <img src="/assets/images/logo2.png" alt="Nvitado" className="h-6 w-auto mb-8 opacity-40 grayscale hover:opacity-100 transition-all cursor-pointer" />
-        </Link>
-        
-        <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 mb-8">
-          <Link href="/pricing" className="text-[10px] font-black tracking-widest uppercase text-slate-400 hover:text-rose-500 transition-colors">Pricing</Link>
-          <Link href="/terms" className="text-[10px] font-black tracking-widest uppercase text-slate-400 hover:text-rose-500 transition-colors">Terms & Conditions</Link>
-          <Link href="/support" className="text-[10px] font-black tracking-widest uppercase text-slate-400 hover:text-rose-500 transition-colors">Support</Link>
-        </div>
-
-        <p className="text-[9px] font-black text-slate-300 tracking-widest uppercase">
-          © 2026 Nvitado Digital Philippines • Crafting Moments Digitally
-        </p>
-      </footer>
     </div>
   );
 }

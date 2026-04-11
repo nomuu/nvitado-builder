@@ -175,9 +175,6 @@ export default function Preview({ config, viewMode, activeTab }: any) {
               exit={{ opacity: 0, y: -10 }}
               className="flex flex-col items-center w-full py-24 text-center max-w-lg mx-auto"
             >
-              <span className="text-[10px] tracking-[0.5em] text-amber-700 uppercase mb-4 font-black">
-                Info Pack
-              </span>
               <h2 className="text-4xl font-serif italic text-slate-900 mb-8">Common Questions</h2>
               
               <div className="w-full space-y-4">
