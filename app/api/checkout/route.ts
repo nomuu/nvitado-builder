@@ -48,7 +48,7 @@ export async function POST(req: Request) {
       lineItems.push({
         currency: 'PHP',
         amount: 500,
-        name: 'Premium Feature: Our Story Section',
+        name: 'Premium Feature: Custom section',
         quantity: 1,
       });
     }

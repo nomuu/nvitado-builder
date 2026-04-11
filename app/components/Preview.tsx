@@ -2,7 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BACKGROUNDS } from '../constants/backgrounds';
-import { MapPin, Home, MessageCircleQuestion, BookHeart } from 'lucide-react';
+import { 
+  MapPin, Home, MessageCircleQuestion, BookHeart, 
+  Star, Heart, PartyPopper, Cake, Info 
+} from 'lucide-react';
+
+// 📍 Icon mapping para sa dynamic rendering
+const ICON_MAP: any = {
+  BookHeart, Heart, Star, PartyPopper, Cake, Info
+};
 
 export default function Preview({ config, viewMode, activeTab }: any) {
   const [isMounted, setIsMounted] = useState(false);
@@ -54,8 +62,10 @@ export default function Preview({ config, viewMode, activeTab }: any) {
 
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(config.location)}`;
 
-  // 📍 Check kung dapat bang ipakita ang Navbar
   const shouldShowNavbar = config.showQA || config.showStory;
+
+  // 📍 Dynamic Icon para sa Navbar Button
+  const CustomIcon = ICON_MAP[config.customIcon] || ICON_MAP['BookHeart'];
 
   return (
     <div 
@@ -95,7 +105,7 @@ export default function Preview({ config, viewMode, activeTab }: any) {
         ))}
       </div>
 
-      <div className="relative z-10 w-full h-full overflow-y-auto no-scrollbar flex flex-col pb-32 px-6">
+      <div className="relative z-10 w-full h-full overflow-y-auto no-scrollbar flex flex-col px-6">
         <AnimatePresence mode="wait">
           {activeSection === 'home' && (
             <motion.div 
@@ -159,12 +169,14 @@ export default function Preview({ config, viewMode, activeTab }: any) {
               className="flex flex-col items-center w-full py-24 text-center max-w-lg mx-auto"
             >
               <span className="text-[10px] tracking-[0.5em] text-rose-500 uppercase mb-4 font-black">
-                Our Journey
+                Featured Details
               </span>
-              <h2 className="text-4xl font-serif italic text-slate-900 mb-8">Our Love Story</h2>
+              <h2 className="text-4xl font-serif italic text-slate-900 mb-8">
+                {config.customTitle || "Our Story"}
+              </h2>
               <div className="w-full bg-white/50 backdrop-blur-sm p-8 rounded-[2rem] border border-white/20 shadow-sm">
                 <p className="text-slate-600 leading-relaxed whitespace-pre-wrap text-sm italic font-serif">
-                  {config.story || "A story is being written..."}
+                  {config.story || "Once upon a time, a beautiful celebration was planned..."}
                 </p>
               </div>
             </motion.div>
@@ -179,7 +191,6 @@ export default function Preview({ config, viewMode, activeTab }: any) {
               className="flex flex-col items-center w-full py-24 text-center max-w-lg mx-auto"
             >
               <h2 className="text-4xl font-serif italic text-slate-900 mb-8">Common Questions</h2>
-              
               <div className="w-full space-y-4">
                  {config.questions && config.questions.some((item:any) => item.q || item.a) ? (
                     config.questions.map((item: any, idx: number) => (
@@ -200,15 +211,16 @@ export default function Preview({ config, viewMode, activeTab }: any) {
           )}
         </AnimatePresence>
 
+        <div className="h-32 w-full flex-shrink-0" />
+
         <div className="mt-auto py-8 flex items-center justify-center gap-2 opacity-30 hover:opacity-100 transition-opacity no-print">
            <p className="text-[7px] tracking-[0.2em] uppercase font-bold text-slate-400">Powered by</p>
            <h1 className="text-[8px] font-black tracking-[0.1em] text-slate-500 uppercase">Nvitado</h1>
         </div>
       </div>
 
-      {/* 📍 DITO ANG LOGIC: Lalabas lang ang <motion.div> navbar kung may showQA o showStory */}
       {shouldShowNavbar && (
-        <div className={`absolute bottom-10 left-1/2 -translate-x-1/2 z-[40] no-print ${viewMode === 'mobile' ? 'scale-90 bottom-6' : ''}`}>
+        <div className={`absolute bottom-10 left-1/2 -translate-x-1/2 z-[50] no-print ${viewMode === 'mobile' ? 'scale-90 bottom-6' : ''}`}>
           <motion.div 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -226,8 +238,10 @@ export default function Preview({ config, viewMode, activeTab }: any) {
             )}
             {config.showStory && (
               <button onClick={() => setActiveSection('story')} className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all animate-in fade-in zoom-in duration-300 ${activeSection === 'story' ? 'bg-white text-slate-900 shadow-lg' : 'text-white hover:bg-white/10'}`}>
-                <BookHeart size={18} />
-                <span className="text-[7px] font-black uppercase mt-1">Story</span>
+                <CustomIcon size={18} />
+                <span className="text-[7px] font-black uppercase mt-1">
+                  {config.iconTitle || "Custom"}
+                </span>
               </button>
             )}
           </motion.div>

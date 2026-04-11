@@ -171,7 +171,7 @@ export default async function SuccessPage(props: {
               {effectPrice > 0 && <div className="flex justify-between items-center gap-1 font-bold"><span><Sparkles size={8}/> Theme Effect</span><span className="text-slate-900">₱{effectPrice.toFixed(2)}</span></div>}
               
               {/* 📍 NEW: STORY BREAKDOWN */}
-              {storyPrice > 0 && <div className="flex justify-between items-center gap-1 font-bold"><span><BookHeart size={8}/> Our Story Feature</span><span className="text-slate-900">₱{storyPrice.toFixed(2)}</span></div>}
+              {storyPrice > 0 && <div className="flex justify-between items-center gap-1 font-bold"><span><BookHeart size={8}/> Custom section</span><span className="text-slate-900">₱{storyPrice.toFixed(2)}</span></div>}
               
               {/* 📍 NEW: Q&A BREAKDOWN */}
               {qaPrice > 0 && <div className="flex justify-between items-center gap-1 font-bold"><span><MessageCircleQuestion size={8}/> Extra Q&A ({extraQACount})</span><span className="text-slate-900">₱{qaPrice.toFixed(2)}</span></div>}

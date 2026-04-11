@@ -3,7 +3,10 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import { BACKGROUNDS } from '../constants/backgrounds';
-import { X, RefreshCcw, Settings2, BookHeart, MessageCircleQuestion, PlusCircle, Trash2 } from 'lucide-react';
+import { 
+  X, Settings2, BookHeart, MessageCircleQuestion, 
+  PlusCircle, Trash2, Star, Heart, PartyPopper, Cake, Info 
+} from 'lucide-react';
 
 export default function Sidebar({ config, setConfig, onPublish, isPublishing, onClose, activeTab, setActiveTab }: any) {
   const [showAllBgs, setShowAllBgs] = useState(false);
@@ -15,11 +18,20 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   const selectedBg = BACKGROUNDS.find(bg => bg.id === config.animationId);
   const bgPrice = selectedBg?.price || 0;
   
-  // 📍 PRICE CALCULATION: 3 default are free, +₱2 for each extra question (max of 2 extra)
   const extraQuestionsCount = Math.max(0, (config.questions?.length || 3) - 3);
   const qaPrice = extraQuestionsCount * 2;
   const storyPrice = config.showStory ? 5 : 0;
   const totalPrice = basePrice + bgPrice + qaPrice + storyPrice;
+
+  // 📍 Icon Options para sa Custom Section
+  const ICON_OPTIONS = [
+    { id: 'BookHeart', icon: BookHeart },
+    { id: 'Heart', icon: Heart },
+    { id: 'Star', icon: Star },
+    { id: 'PartyPopper', icon: PartyPopper },
+    { id: 'Cake', icon: Cake },
+    { id: 'Info', icon: Info },
+  ];
 
   const FONT_OPTIONS = [
     { id: 'font-serif', name: 'Elegant Serif', class: 'font-serif' },
@@ -41,14 +53,12 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     if (val.length <= 250) setConfig({ ...config, welcomeMessage: val });
   };
 
-  // 📍 Q&A UPDATE LOGIC
   const handleQAChange = (index: number, field: 'q' | 'a', value: string) => {
     const newQA = [...(config.questions || [{ q: '', a: '' }, { q: '', a: '' }, { q: '', a: '' }])];
     newQA[index][field] = value;
     setConfig({ ...config, questions: newQA });
   };
 
-  // 📍 ADD QUESTION LOGIC (Max 5 total: 3 default + 2 paid)
   const addQuestion = () => {
     const currentCount = config.questions?.length || 3;
     if (currentCount < 5) {
@@ -59,7 +69,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     }
   };
 
-  // 📍 REMOVE QUESTION LOGIC (Minimum 3)
   const removeQuestion = (index: number) => {
     if ((config.questions?.length || 3) <= 3) return;
     const newQA = config.questions.filter((_: any, i: number) => i !== index);
@@ -69,7 +78,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   const tabs = [
     { id: 'general', label: 'General', icon: Settings2 },
     { id: 'qa', label: 'Q&A', icon: MessageCircleQuestion },
-    { id: 'story', label: 'Our Story', icon: BookHeart, premium: true },
+    { id: 'story', label: 'Custom', icon: PlusCircle, premium: true },
   ];
 
   return (
@@ -202,7 +211,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
           </div>
         )}
 
-        {/* 📍 Q&A TAB WITH PAID ADD-ONS */}
         {activeTab === 'qa' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -271,12 +279,11 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
           </div>
         )}
 
-        {/* 📍 OUR STORY TAB */}
         {activeTab === 'story' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
              <div className="flex items-center justify-between p-4 bg-amber-50/50 rounded-2xl border border-amber-100">
                 <div>
-                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">Enable Our Story</p>
+                   <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">Enable Custom Section</p>
                    <p className="text-[9px] font-bold text-amber-600 uppercase italic">+₱5.00 Premium Feature</p>
                 </div>
                 <button 
@@ -288,15 +295,71 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
              </div>
 
              {config.showStory && (
-               <div className="animate-in zoom-in-95 duration-200">
-                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">Our Love Story</label>
-                  <textarea 
-                    rows={10} 
-                    className="p-3 bg-slate-50 border border-slate-200 rounded-xl w-full font-bold text-xs resize-none text-slate-900" 
-                    placeholder="Tell your story here..."
-                    value={config.story || ''}
-                    onChange={(e) => setConfig({...config, story: e.target.value})}
-                  />
+               <div className="animate-in zoom-in-95 duration-200 space-y-6">
+                  {/* Icon Selector */}
+                  <section>
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">Select Icon</label>
+                    <div className="grid grid-cols-6 gap-2">
+                      {ICON_OPTIONS.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <button 
+                            key={item.id} 
+                            onClick={() => setConfig({...config, customIcon: item.id})}
+                            className={`p-2 rounded-lg border flex items-center justify-center transition-all ${config.customIcon === item.id ? 'border-amber-500 bg-amber-50 text-amber-600 shadow-sm' : 'border-slate-100 bg-white hover:border-slate-200'}`}
+                          >
+                            <Icon size={16} />
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </section>
+
+                  {/* Icon Title Input (Navbar Label) */}
+                  <section>
+                    <div className="flex justify-between items-center mb-4">
+                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">Icon Title (Navbar)</label>
+                      <span className={`text-[9px] font-bold ${(config.iconTitle || '').length >= 8 ? 'text-rose-500' : 'text-slate-400'}`}>
+                        {(config.iconTitle || '').length}/8
+                      </span>
+                    </div>
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                      <input 
+                        type="text" 
+                        maxLength={8}
+                        className="bg-transparent outline-none w-full font-bold text-slate-800 text-xs uppercase" 
+                        placeholder="e.g. STORY" 
+                        value={config.iconTitle || ''} 
+                        onChange={(e) => setConfig({...config, iconTitle: e.target.value})} 
+                      />
+                    </div>
+                  </section>
+
+                  {/* Custom Title Input (Section Heading) */}
+                  <section>
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">Custom Title (Section)</label>
+                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                      <input 
+                        type="text" 
+                        className="bg-transparent outline-none w-full font-bold text-slate-800 text-xs uppercase" 
+                        placeholder="e.g. OUR LOVE STORY" 
+                        value={config.customTitle || ''} 
+                        onChange={(e) => setConfig({...config, customTitle: e.target.value})} 
+                      />
+                    </div>
+                  </section>
+
+                  {/* Content Input */}
+                  <section>
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">Content</label>
+                    <textarea 
+                      rows={8} 
+                      className="p-3 bg-slate-50 border border-slate-200 rounded-xl w-full font-bold text-xs resize-none text-slate-900" 
+                      placeholder="Share your story or extra details here..."
+                      value={config.story || ''}
+                      onChange={(e) => setConfig({...config, story: e.target.value})}
+                    />
+                  </section>
                </div>
              )}
           </div>
@@ -308,7 +371,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
           <div className="flex justify-between"><span>Publishing Fee</span><span className="text-slate-900">₱{basePrice.toFixed(2)}</span></div>
           {bgPrice > 0 && <div className="flex justify-between text-amber-600"><span>{selectedBg?.name} Effect</span><span>+₱{bgPrice.toFixed(2)}</span></div>}
           
-          {/* 📍 Q&A ADD-ONS PRICE */}
           {qaPrice > 0 && (
             <div className="flex justify-between text-amber-600 animate-in fade-in">
               <span>Extra FAQ Questions</span>
@@ -318,7 +380,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
 
           {config.showStory && (
             <div className="flex justify-between text-amber-600 animate-in fade-in">
-              <span>Our Story Feature</span>
+              <span>Custom Section Feature</span>
               <span>+₱5.00</span>
             </div>
           )}
