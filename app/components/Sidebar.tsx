@@ -5,8 +5,8 @@ import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import { BACKGROUNDS } from '../constants/backgrounds';
 import { X, RefreshCcw, Settings2, BookHeart, MessageCircleQuestion } from 'lucide-react';
 
-export default function Sidebar({ config, setConfig, onPublish, isPublishing, onClose }: any) {
-  const [activeTab, setActiveTab] = useState('general');
+// 📍 Ginagamit na ang activeTab at setActiveTab mula sa props para synced sa Preview
+export default function Sidebar({ config, setConfig, onPublish, isPublishing, onClose, activeTab, setActiveTab }: any) {
   const [showAllBgs, setShowAllBgs] = useState(false);
   const [showAllStyles, setShowAllStyles] = useState(false);
   const [showDateStyle, setShowDateStyle] = useState(false);
@@ -238,7 +238,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
           <div className="flex justify-between"><span>Publishing Fee</span><span className="text-slate-900">₱{basePrice.toFixed(2)}</span></div>
           {bgPrice > 0 && <div className="flex justify-between text-amber-600"><span>{selectedBg?.name} Effect</span><span>+₱{bgPrice.toFixed(2)}</span></div>}
           
-          {/* 📍 DINAGDAG KO DITO YUNG PRICE NG PREMIUM STORY */}
           {config.showStory && (
             <div className="flex justify-between text-amber-600 animate-in fade-in">
               <span>Our Story Feature</span>

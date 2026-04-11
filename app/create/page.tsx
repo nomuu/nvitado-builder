@@ -11,6 +11,9 @@ export default function NvitadoEditor() {
   const [isPublishing, setIsPublishing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
   
+  // 📍 New state para sa sync ng tabs
+  const [activeTab, setActiveTab] = useState('general');
+  
   const [config, setConfig] = useState({
     background: '#ffffff',
     useAnimation: false,
@@ -25,6 +28,10 @@ export default function NvitadoEditor() {
     welcomeMessage: 'We invite you to join us as we celebrate our love and begin our new journey together.',
     messageFont: 'font-serif',
     slug: '',
+    // 📍 Siniguro nating nandito itong mga bagong fields
+    showQA: false,
+    showStory: false,
+    story: '',
   });
 
   const handlePublish = async (calculatedTotal: number) => {
@@ -52,19 +59,22 @@ export default function NvitadoEditor() {
         fixed lg:relative inset-y-0 left-0 z-50 w-[380px] max-w-[85vw] transform transition-transform duration-300 ease-in-out
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
+        {/* 📍 Ipinasa natin ang activeTab at setActiveTab sa Sidebar */}
         <Sidebar 
           config={config} 
           setConfig={setConfig} 
           onPublish={handlePublish} 
           isPublishing={isPublishing} 
           onClose={() => setIsSidebarOpen(false)}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
         />
       </div>
       
       {/* 📍 MAIN VIEW */}
       <main className="flex-1 flex flex-col items-center justify-center p-2 md:p-8 bg-slate-200 relative text-slate-900">
         
-        {/* 📍 FIXED SWITCHER: Visible na ito sa Mobile at Desktop */}
+        {/* 📍 FIXED SWITCHER */}
         <div className="absolute top-4 md:top-8 flex gap-1 bg-white p-1 rounded-full shadow-xl z-30 border border-slate-100">
           <button 
             onClick={() => setViewMode('mobile')} 
@@ -106,7 +116,8 @@ export default function NvitadoEditor() {
           )}
         </AnimatePresence>
 
-        <Preview config={config} viewMode={viewMode} />
+        {/* 📍 Ipinasa natin ang activeTab sa Preview para mag-sync ang view */}
+        <Preview config={config} viewMode={viewMode} activeTab={activeTab} />
       </main>
     </div>
   );

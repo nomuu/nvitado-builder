@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BACKGROUNDS } from '../constants/backgrounds';
 import { MapPin, Home, MessageCircleQuestion, BookHeart } from 'lucide-react';
 
-export default function Preview({ config, viewMode }: any) {
+// 📍 Idinagdag ang activeTab sa props
+export default function Preview({ config, viewMode, activeTab }: any) {
   const [isMounted, setIsMounted] = useState(false);
   // 📍 New state para malaman kung anong section ang nakadisplay
   const [activeSection, setActiveSection] = useState('home');
@@ -12,6 +13,17 @@ export default function Preview({ config, viewMode }: any) {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // 📍 SYNC LOGIC: Kapag nagpalit ng tab sa Sidebar, magpapalit din ang view sa Preview
+  useEffect(() => {
+    if (activeTab === 'general') {
+      setActiveSection('home');
+    } else if (activeTab === 'qa' && config.showQA) {
+      setActiveSection('qa');
+    } else if (activeTab === 'story' && config.showStory) {
+      setActiveSection('story');
+    }
+  }, [activeTab, config.showQA, config.showStory]);
 
   // 📍 AUTO-RESET LOGIC: Pag pinatay ang toggle sa sidebar habang active ang section, balik sa Home.
   useEffect(() => {
@@ -149,7 +161,7 @@ export default function Preview({ config, viewMode }: any) {
             </motion.div>
           )}
 
-          {/* 📍 SECTION: OUR STORY - Only shows if config.showStory is ON */}
+          {/* 📍 SECTION: OUR STORY */}
           {activeSection === 'story' && config.showStory && (
             <motion.div 
               key="story"
@@ -170,7 +182,7 @@ export default function Preview({ config, viewMode }: any) {
             </motion.div>
           )}
 
-          {/* 📍 SECTION: Q&A - Only shows if config.showQA is ON */}
+          {/* 📍 SECTION: Q&A */}
           {activeSection === 'qa' && config.showQA && (
             <motion.div 
               key="qa"
@@ -201,7 +213,7 @@ export default function Preview({ config, viewMode }: any) {
         </div>
       </div>
 
-      {/* 📍 FLOATING NAVBAR (Pinababa ang z-index para hindi harang sa Sidebar) */}
+      {/* 📍 FLOATING NAVBAR */}
       <div className={`absolute bottom-10 left-1/2 -translate-x-1/2 z-[40] no-print ${viewMode === 'mobile' ? 'scale-90 bottom-6' : ''}`}>
         <motion.div 
           initial={{ y: 20, opacity: 0 }}
@@ -241,7 +253,7 @@ export default function Preview({ config, viewMode }: any) {
         </motion.div>
       </div>
 
-      {/* 📍 FLOATING LOGO (Bottom Right) */}
+      {/* 📍 FLOATING LOGO */}
       <div className="absolute bottom-5 right-5 z-[35] w-8 h-8 opacity-40 hover:opacity-100 transition-opacity no-print">
          <img 
             src="/assets/images/logo.png" 
