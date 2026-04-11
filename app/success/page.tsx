@@ -1,6 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
-import { PartyPopper, Hash, ReceiptText, Sparkles, CreditCard, User, KeyRound, Mail } from 'lucide-react';
+import { PartyPopper, Hash, ReceiptText, Sparkles, CreditCard, User, KeyRound, Mail, BookHeart, MessageCircleQuestion } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 import PrintButton from '../components/PrintButton'; 
@@ -62,12 +62,19 @@ export default async function SuccessPage(props: {
   const { inv, payerInfo } = data;
 
   // 📍 DITO NATIN HAHATAKIN ANG TITLE MULA SA JSON (config_data)
-  // Base sa route.ts mo, ang "title" ay nasa loob ng config object
-  const eventTitle = inv.config_data?.title || inv.title || "Your Invitation";
+  const config = inv.config_data || {};
+  const eventTitle = config.title || inv.title || "Your Invitation";
 
   const amount = inv.total_paid || 0;
-  const effectPrice = (amount % 50 === 5 || amount % 50 === 55) ? 5 : (amount % 50 === 25) ? 25 : 0;
-  const extensionPrice = Math.max(0, amount - 50 - effectPrice);
+
+  // 📍 BREAKDOWN CALCULATION LOGIC
+  // Base on your route.ts prices:
+  const effectPrice = (amount % 50 === 5 || amount % 50 === 55 || amount % 50 === 25 || amount % 50 === 30) ? (amount % 50 === 25 || amount % 50 === 30 ? 25 : 5) : 0;
+  const storyPrice = config.showStory ? 5 : 0;
+  const extraQACount = Math.max(0, (config.questions?.length || 0) - 3);
+  const qaPrice = extraQACount * 2;
+  const extensionPrice = Math.max(0, amount - 50 - effectPrice - storyPrice - qaPrice);
+
   const dateObj = new Date(inv.created_at);
   const fullUrl = `https://nvitado.com/${slug}`; 
 
@@ -82,7 +89,6 @@ export default async function SuccessPage(props: {
           style={{ width: '450px', height: '450px' }}
         >
           <div className="mb-6 w-full">
-            {/* 📍 DISPLAY NG TOTONG EVENT TITLE */}
             <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight leading-tight mb-6">
                {eventTitle}
             </h1>
@@ -153,6 +159,7 @@ export default async function SuccessPage(props: {
              </div>
           </div>
 
+          {/* 📍 UPDATED ORDER BREAKDOWN */}
           <div className="bg-slate-50 rounded-3xl p-6 mb-6 border border-slate-100 text-slate-500 font-bold">
             <div className="flex items-center gap-2 mb-4 border-b border-slate-200 pb-3 text-slate-400">
               <ReceiptText size={14} />
@@ -160,8 +167,16 @@ export default async function SuccessPage(props: {
             </div>
             <div className="space-y-2 mb-4 font-bold uppercase text-[10px]">
               <div className="flex justify-between font-bold"><span>Base Fee</span><span className="text-slate-900">₱50.00</span></div>
-              {effectPrice > 0 && <div className="flex justify-between items-center gap-1 font-bold"><span><Sparkles size={8}/> Premium Theme</span><span className="text-slate-900">₱{effectPrice.toFixed(2)}</span></div>}
-              {extensionPrice > 0 && <div className="flex justify-between font-bold"><span>Add-ons</span><span className="text-slate-900">₱{extensionPrice.toFixed(2)}</span></div>}
+              
+              {effectPrice > 0 && <div className="flex justify-between items-center gap-1 font-bold"><span><Sparkles size={8}/> Theme Effect</span><span className="text-slate-900">₱{effectPrice.toFixed(2)}</span></div>}
+              
+              {/* 📍 NEW: STORY BREAKDOWN */}
+              {storyPrice > 0 && <div className="flex justify-between items-center gap-1 font-bold"><span><BookHeart size={8}/> Our Story Feature</span><span className="text-slate-900">₱{storyPrice.toFixed(2)}</span></div>}
+              
+              {/* 📍 NEW: Q&A BREAKDOWN */}
+              {qaPrice > 0 && <div className="flex justify-between items-center gap-1 font-bold"><span><MessageCircleQuestion size={8}/> Extra Q&A ({extraQACount})</span><span className="text-slate-900">₱{qaPrice.toFixed(2)}</span></div>}
+              
+              {extensionPrice > 0 && <div className="flex justify-between"><span>Add-ons / Extension</span><span className="text-slate-900">₱{extensionPrice.toFixed(2)}</span></div>}
             </div>
             <div className="flex justify-between border-t border-slate-200 pt-3 text-sm font-black uppercase italic text-slate-900 leading-none font-bold">
               <span>Total Paid</span>

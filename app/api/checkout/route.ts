@@ -7,7 +7,6 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// 📍 SIGURADONG NANDITO 'TONG GENERATOR
 const generateTokenId = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let result = '';
@@ -20,17 +19,10 @@ const generateTokenId = () => {
 export async function POST(req: Request) {
   try {
     const { config, amount, bgName } = await req.json();
-    
-    // 📍 GENERATE TOKEN FIRST
     const tokenId = generateTokenId();
 
-    const totalAmountCentavos = Math.round(amount * 100);
     const baseAmountCentavos = 50 * 100;
-    
-    const hasEffect = bgName && bgName !== 'Standard';
-    const bgPriceCentavos = hasEffect ? (amount % 50 === 5 || amount % 50 === 55 ? 500 : 2500) : 0;
-
-    const lineItems = [
+    const lineItems: any[] = [
       {
         currency: 'PHP',
         amount: baseAmountCentavos,
@@ -39,6 +31,9 @@ export async function POST(req: Request) {
       }
     ];
 
+    // 1. Effects Logic
+    const hasEffect = bgName && bgName !== 'Standard';
+    const bgPriceCentavos = hasEffect ? (amount % 50 === 5 || amount % 50 === 55 ? 500 : 2500) : 0;
     if (bgPriceCentavos > 0) {
       lineItems.push({
         currency: 'PHP',
@@ -48,6 +43,29 @@ export async function POST(req: Request) {
       });
     }
 
+    // 2. Our Story Premium Feature (₱5.00)
+    if (config.showStory) {
+      lineItems.push({
+        currency: 'PHP',
+        amount: 500,
+        name: 'Premium Feature: Our Story Section',
+        quantity: 1,
+      });
+    }
+
+    // 3. Extra Q&A Questions (₱2.00 each beyond first 3)
+    const extraQA = Math.max(0, (config.questions?.length || 0) - 3);
+    if (extraQA > 0) {
+      lineItems.push({
+        currency: 'PHP',
+        amount: 200 * extraQA,
+        name: `Extra Q&A Questions (${extraQA})`,
+        quantity: 1,
+      });
+    }
+
+    // 4. Monthly Extension / Advance Booking (Buffer calculation)
+    const totalAmountCentavos = Math.round(amount * 100);
     const currentLineItemsTotal = lineItems.reduce((acc, item) => acc + item.amount, 0);
     const extensionFeeCentavos = totalAmountCentavos - currentLineItemsTotal;
 
@@ -60,8 +78,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // --- STEP A: SAVE TO SUPABASE WITH TOKEN ---
-    // 📍 SINIGURADO KONG KASAMA ANG token_id DITO
+    // --- STEP A: SAVE TO SUPABASE ---
     const { error: dbError } = await supabase.from('invitations').upsert({
       slug: config.slug,
       config_data: config,
@@ -104,7 +121,6 @@ export async function POST(req: Request) {
     const checkoutUrl = response.data.data.attributes.checkout_url;
     const checkoutId = response.data.data.id;
 
-    // --- STEP C: UPDATE RECORD WITH CHECKOUT ID ---
     await supabase.from('invitations').update({ 
       checkout_id: checkoutId 
     }).eq('slug', config.slug);
