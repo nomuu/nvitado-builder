@@ -54,6 +54,9 @@ export default function Preview({ config, viewMode, activeTab }: any) {
 
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(config.location)}`;
 
+  // 📍 Check kung dapat bang ipakita ang Navbar
+  const shouldShowNavbar = config.showQA || config.showStory;
+
   return (
     <div 
       className={`transition-all duration-700 ease-in-out relative overflow-hidden flex flex-col items-center bg-white text-slate-900 shadow-2xl
@@ -203,30 +206,33 @@ export default function Preview({ config, viewMode, activeTab }: any) {
         </div>
       </div>
 
-      <div className={`absolute bottom-10 left-1/2 -translate-x-1/2 z-[40] no-print ${viewMode === 'mobile' ? 'scale-90 bottom-6' : ''}`}>
-        <motion.div 
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="flex items-center gap-1 p-1.5 bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl"
-        >
-          <button onClick={() => setActiveSection('home')} className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${activeSection === 'home' ? 'bg-white text-slate-900 shadow-lg' : 'text-white hover:bg-white/10'}`}>
-            <Home size={18} />
-            <span className="text-[7px] font-black uppercase mt-1">Home</span>
-          </button>
-          {config.showQA && (
-            <button onClick={() => setActiveSection('qa')} className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all animate-in fade-in zoom-in duration-300 ${activeSection === 'qa' ? 'bg-white text-slate-900 shadow-lg' : 'text-white hover:bg-white/10'}`}>
-              <MessageCircleQuestion size={18} />
-              <span className="text-[7px] font-black uppercase mt-1">Q&A</span>
+      {/* 📍 DITO ANG LOGIC: Lalabas lang ang <motion.div> navbar kung may showQA o showStory */}
+      {shouldShowNavbar && (
+        <div className={`absolute bottom-10 left-1/2 -translate-x-1/2 z-[40] no-print ${viewMode === 'mobile' ? 'scale-90 bottom-6' : ''}`}>
+          <motion.div 
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="flex items-center gap-1 p-1.5 bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl"
+          >
+            <button onClick={() => setActiveSection('home')} className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${activeSection === 'home' ? 'bg-white text-slate-900 shadow-lg' : 'text-white hover:bg-white/10'}`}>
+              <Home size={18} />
+              <span className="text-[7px] font-black uppercase mt-1">Home</span>
             </button>
-          )}
-          {config.showStory && (
-            <button onClick={() => setActiveSection('story')} className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all animate-in fade-in zoom-in duration-300 ${activeSection === 'story' ? 'bg-white text-slate-900 shadow-lg' : 'text-white hover:bg-white/10'}`}>
-              <BookHeart size={18} />
-              <span className="text-[7px] font-black uppercase mt-1">Story</span>
-            </button>
-          )}
-        </motion.div>
-      </div>
+            {config.showQA && (
+              <button onClick={() => setActiveSection('qa')} className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all animate-in fade-in zoom-in duration-300 ${activeSection === 'qa' ? 'bg-white text-slate-900 shadow-lg' : 'text-white hover:bg-white/10'}`}>
+                <MessageCircleQuestion size={18} />
+                <span className="text-[7px] font-black uppercase mt-1">Q&A</span>
+              </button>
+            )}
+            {config.showStory && (
+              <button onClick={() => setActiveSection('story')} className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all animate-in fade-in zoom-in duration-300 ${activeSection === 'story' ? 'bg-white text-slate-900 shadow-lg' : 'text-white hover:bg-white/10'}`}>
+                <BookHeart size={18} />
+                <span className="text-[7px] font-black uppercase mt-1">Story</span>
+              </button>
+            )}
+          </motion.div>
+        </div>
+      )}
 
       <div className="absolute bottom-5 right-5 z-[35] w-8 h-8 opacity-40 hover:opacity-100 transition-opacity no-print">
          <img src="/assets/images/logo.png" alt="Nvitado Logo" className="w-full h-full object-contain" />
