@@ -39,7 +39,7 @@ export default function NvitadoEditor() {
     setIsPublishing(true);
     const selectedBg = BACKGROUNDS.find(bg => bg.id === config.animationId);
     try {
-      const res = await fetch('/api/checkout', {
+      const res = await fetch('/api/checkout_lemon', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ config, amount: calculatedTotal, bgName: selectedBg?.name || 'Standard' }),

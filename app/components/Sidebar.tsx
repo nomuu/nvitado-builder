@@ -23,7 +23,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   const storyPrice = config.showStory ? 5 : 0;
   const totalPrice = basePrice + bgPrice + qaPrice + storyPrice;
 
-  // 📍 Icon Options para sa Custom Section
   const ICON_OPTIONS = [
     { id: 'BookHeart', icon: BookHeart },
     { id: 'Heart', icon: Heart },
@@ -296,7 +295,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
 
              {config.showStory && (
                <div className="animate-in zoom-in-95 duration-200 space-y-6">
-                  {/* Icon Selector */}
                   <section>
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">Select Icon</label>
                     <div className="grid grid-cols-6 gap-2">
@@ -315,7 +313,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                     </div>
                   </section>
 
-                  {/* Icon Title Input (Navbar Label) */}
                   <section>
                     <div className="flex justify-between items-center mb-4">
                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">Icon Title (Navbar)</label>
@@ -335,7 +332,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                     </div>
                   </section>
 
-                  {/* Custom Title Input (Section Heading) */}
                   <section>
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">Custom Title (Section)</label>
                     <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
@@ -349,7 +345,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                     </div>
                   </section>
 
-                  {/* Content Input */}
                   <section>
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">Content</label>
                     <textarea 
