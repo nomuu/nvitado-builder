@@ -7,16 +7,30 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// --- TOKEN GENERATOR (Same as your PayMongo logic) ---
+const generateTokenId = () => {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return `nvi-${result}`;
+};
+
 export async function POST(req: Request) {
   try {
     const { config, amount } = await req.json();
+    
+    // 1. GENERATE TOKEN ID
+    const tokenId = generateTokenId();
 
-    // 1. SAVE/UPSERT SA SUPABASE
+    // 2. SAVE/UPSERT SA SUPABASE (Added token_id here)
     const { error: dbError } = await supabase.from('invitations').upsert({
       slug: config.slug,
       config_data: config,
       status: 'waiting_payment',
       total_paid: amount,
+      token_id: tokenId, // <--- Isinama na natin 'to
     }, { onConflict: 'slug' });
 
     if (dbError) {
@@ -24,8 +38,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Database save failed" }, { status: 500 });
     }
 
-    // 2. LEMON SQUEEZY CHECKOUT CREATION
-    // IMPORTANT: Ang Store ID at Variant ID ay dapat laging STRING sa JSON:API format
+    // 3. LEMON SQUEEZY CHECKOUT CREATION
     const storeId = process.env.LEMONSQUEEZY_STORE_ID?.toString();
     const variantId = process.env.LEMONSQUEEZY_VARIANT_ID?.toString();
     const apiKey = process.env.LEMONSQUEEZY_API_KEY?.trim();
@@ -39,8 +52,8 @@ export async function POST(req: Request) {
             checkout_data: {
               custom: {
                 invitation_slug: config.slug,
+                token_id: tokenId, // <--- Ipinasa rin sa Lemon Squeezy Metadata
               },
-              // Inalis ang parseInt dahil ang ID mo ay string (UUID)
               variant_quantities: [
                 {
                   variant_id: variantId,
@@ -48,31 +61,21 @@ export async function POST(req: Request) {
                 },
               ],
             },
-            // PHP amount to Centavos (50.00 -> 5000)
             custom_price: Math.round(amount * 100), 
             product_options: {
               name: `Invitation: ${config.title}`,
-              description: `Digital Invitation License for ${config.slug}`,
+              // Nilagay din natin sa description para sa resibo
+              description: `License for ${config.slug} | Ref: ${tokenId}`, 
               receipt_button_text: 'Go to Invitation',
-              redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?slug=${config.slug}`,
+              redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?slug=${config.slug}&token=${tokenId}`,
             },
             checkout_options: {
               button_color: '#0f172a',
             }
           },
           relationships: {
-            store: {
-              data: {
-                type: 'stores',
-                id: storeId,
-              },
-            },
-            variant: {
-              data: {
-                type: 'variants',
-                id: variantId,
-              },
-            },
+            store: { data: { type: 'stores', id: storeId } },
+            variant: { data: { type: 'variants', id: variantId } },
           },
         },
       },
@@ -86,13 +89,17 @@ export async function POST(req: Request) {
     );
 
     const checkoutUrl = response.data.data.attributes.url;
+    const checkoutId = response.data.data.id;
+
+    // 4. UPDATE CHECKOUT ID SA SUPABASE (Para match sa flow mo)
+    await supabase.from('invitations').update({ 
+      checkout_id: checkoutId 
+    }).eq('slug', config.slug);
 
     return NextResponse.json({ checkout_url: checkoutUrl });
 
   } catch (error: any) {
-    // Para makita mo sa VS Code Terminal ang exact error kung bakit ayaw
     console.error("LEMON ERROR FULL DETAILS:", error.response?.data || error.message);
-    
     const errorMessage = error.response?.data?.errors?.[0]?.detail || error.message;
     return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
