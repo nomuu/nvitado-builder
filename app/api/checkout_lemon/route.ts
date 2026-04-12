@@ -11,7 +11,7 @@ export async function POST(req: Request) {
   try {
     const { config, amount } = await req.json();
 
-    // 1. SAVE/UPSERT SA SUPABASE (Retain existing logic)
+    // 1. SAVE/UPSERT SA SUPABASE
     const { error: dbError } = await supabase.from('invitations').upsert({
       slug: config.slug,
       config_data: config,
@@ -20,11 +20,16 @@ export async function POST(req: Request) {
     }, { onConflict: 'slug' });
 
     if (dbError) {
+      console.error("SUPABASE ERROR:", dbError.message);
       return NextResponse.json({ error: "Database save failed" }, { status: 500 });
     }
 
     // 2. LEMON SQUEEZY CHECKOUT CREATION
-    // Gagamit tayo ng Custom Price para mag-match sa computation mo
+    // IMPORTANT: Ang Store ID at Variant ID ay dapat laging STRING sa JSON:API format
+    const storeId = process.env.LEMONSQUEEZY_STORE_ID?.toString();
+    const variantId = process.env.LEMONSQUEEZY_VARIANT_ID?.toString();
+    const apiKey = process.env.LEMONSQUEEZY_API_KEY?.trim();
+
     const response = await axios.post(
       'https://api.lemonsqueezy.com/v1/checkouts',
       {
@@ -35,15 +40,15 @@ export async function POST(req: Request) {
               custom: {
                 invitation_slug: config.slug,
               },
-              // Override price: Lemon Squeezy uses Centavos/Sub-units (PHP 50.00 = 5000)
+              // Inalis ang parseInt dahil ang ID mo ay string (UUID)
               variant_quantities: [
                 {
-                  variant_id: parseInt(process.env.LEMONSQUEEZY_VARIANT_ID!),
+                  variant_id: variantId,
                   quantity: 1,
                 },
               ],
             },
-            // Ito ang magic part: binabago natin ang presyo ng variant on-the-fly
+            // PHP amount to Centavos (50.00 -> 5000)
             custom_price: Math.round(amount * 100), 
             product_options: {
               name: `Invitation: ${config.title}`,
@@ -52,20 +57,20 @@ export async function POST(req: Request) {
               redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?slug=${config.slug}`,
             },
             checkout_options: {
-              button_color: '#0f172a', // Slate-900 para match sa UI mo
+              button_color: '#0f172a',
             }
           },
           relationships: {
             store: {
               data: {
                 type: 'stores',
-                id: process.env.LEMONSQUEEZY_STORE_ID, // Kailangan mo itong idagdag sa .env
+                id: storeId,
               },
             },
             variant: {
               data: {
                 type: 'variants',
-                id: process.env.LEMONSQUEEZY_VARIANT_ID,
+                id: variantId,
               },
             },
           },
@@ -73,8 +78,9 @@ export async function POST(req: Request) {
       },
       {
         headers: {
-          Authorization: `Bearer ${process.env.LEMONSQUEEZY_API_KEY}`,
+          'Accept': 'application/vnd.api+json',
           'Content-Type': 'application/vnd.api+json',
+          'Authorization': `Bearer ${apiKey}`,
         },
       }
     );
@@ -84,7 +90,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ checkout_url: checkoutUrl });
 
   } catch (error: any) {
-    console.error("LEMON ERROR:", error.response?.data || error.message);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // Para makita mo sa VS Code Terminal ang exact error kung bakit ayaw
+    console.error("LEMON ERROR FULL DETAILS:", error.response?.data || error.message);
+    
+    const errorMessage = error.response?.data?.errors?.[0]?.detail || error.message;
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
