@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react'; 
+import React, { useState, useEffect } from 'react'; 
 import Sidebar from '../components/Sidebar';
 import Preview from '../components/Preview';
 import { BACKGROUNDS } from '../constants/backgrounds';
@@ -34,6 +34,45 @@ export default function NvitadoEditor() {
     story: '',
   });
 
+  // --- 📍 CHATBOT HIDER LOGIC (HARD VERSION) ---
+  useEffect(() => {
+    // 1. I-check kung galing tayo sa ibang page na may chatbot (Zombie Script)
+    const hasChatbot = document.querySelector('script[src*="tuqlas.com"]') || 
+                      document.querySelector('[class*="tuqlas"]');
+
+    if (hasChatbot) {
+      // Kung may nakitang chatbot elements, mag-hard refresh para malinis ang DOM at Memory
+      window.location.reload();
+      return;
+    }
+
+    // 2. Extra safety: Paulit-ulit na i-check at burahin kung may mag-re-render man
+    const hideChatbot = () => {
+      // Burahin ang script tags
+      const scripts = document.querySelectorAll('script[src*="tuqlas.com"]');
+      scripts.forEach(s => s.remove());
+
+      // Burahin ang visual elements (bubbles, iframes, containers)
+      const chatbotElements = document.querySelectorAll('.tuqlas-chatbot-container, #tuqlas-chatbot, [class*="tuqlas"]');
+      chatbotElements.forEach(el => {
+        if (el instanceof HTMLElement) {
+          el.remove(); 
+        }
+      });
+    };
+
+    hideChatbot();
+    // Check every 500ms sa loob ng 3 seconds para sigurado
+    const interval = setInterval(hideChatbot, 500);
+    const timeout = setTimeout(() => clearInterval(interval), 3000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, []);
+  // ----------------------------------------------
+
   const handlePublish = async (calculatedTotal: number) => {
     if (!config.slug) return alert("Hoy Chief! Paki-set muna ang Custom URL sa Step 06.");
     setIsPublishing(true);
@@ -59,7 +98,6 @@ export default function NvitadoEditor() {
         fixed lg:relative inset-y-0 left-0 z-50 w-[380px] max-w-[85vw] transform transition-transform duration-300 ease-in-out
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
       `}>
-        {/* 📍 Ipinasa natin ang activeTab at setActiveTab sa Sidebar */}
         <Sidebar 
           config={config} 
           setConfig={setConfig} 
@@ -116,7 +154,6 @@ export default function NvitadoEditor() {
           )}
         </AnimatePresence>
 
-        {/* 📍 Ipinasa natin ang activeTab sa Preview para mag-sync ang view */}
         <Preview config={config} viewMode={viewMode} activeTab={activeTab} />
       </main>
     </div>

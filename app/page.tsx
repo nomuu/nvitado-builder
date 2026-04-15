@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+// --- IMPORT SCRIPT PARA SA CHATBOX ---
+import Script from 'next/script'; 
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sparkles, ArrowRight, 
@@ -214,10 +216,17 @@ const StatsSection = () => {
 };
 
 export default function LandingPage() {
-  // 📍 Navbar at Footer ay automatic nang nakakabit dahil sa Root Layout logic.
-
   return (
     <div className={`min-h-screen ${poppins.className} text-slate-900 antialiased selection:bg-rose-100`}>
+      
+      {/* --- TUQLAS CHATBOX SCRIPT --- */}
+      <Script
+        src="https://www.tuqlas.com/chatbot.js"
+        data-key="tq_live_f10996193f9a0d0166bd410424adfe8ca4bfa9bc"
+        data-api="https://www.tuqlas.com"
+        strategy="afterInteractive"
+      />
+
       <AnimatedPastelBackground />
 
       {/* 2. HERO SECTION */}
