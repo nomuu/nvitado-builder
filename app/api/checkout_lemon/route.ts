@@ -1,11 +1,29 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
+import crypto from 'crypto'; // 📍 Kailangan ito para sa SHA256
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// --- 📍 NEW ID GENERATOR (SHA256 of MMDDYYYYHHMMSS) ---
+const generateHashedId = () => {
+  const now = new Date();
+  
+  // Format: MMDDYYYYHHMMSS
+  const timestamp = 
+    (now.getMonth() + 1).toString().padStart(2, '0') +
+    now.getDate().toString().padStart(2, '0') +
+    now.getFullYear().toString() +
+    now.getHours().toString().padStart(2, '0') +
+    now.getMinutes().toString().padStart(2, '0') +
+    now.getSeconds().toString().padStart(2, '0');
+
+  // SHA256 Encryption
+  return crypto.createHash('sha256').update(timestamp).digest('hex');
+};
 
 // --- TOKEN GENERATOR (Same as your PayMongo logic) ---
 const generateTokenId = () => {
@@ -21,16 +39,18 @@ export async function POST(req: Request) {
   try {
     const { config, amount } = await req.json();
     
-    // 1. GENERATE TOKEN ID
+    // 1. GENERATE TOKEN ID AND HASHED ID
     const tokenId = generateTokenId();
+    const hashedId = generateHashedId(); // 📍 Hashed MMDDYYYYHHMMSS
 
-    // 2. SAVE/UPSERT SA SUPABASE (Added token_id here)
+    // 2. SAVE/UPSERT SA SUPABASE (Added id here)
     const { error: dbError } = await supabase.from('invitations').upsert({
+      id: hashedId,        // 📍 Ang bagong encrypted ID
       slug: config.slug,
       config_data: config,
       status: 'waiting_payment',
       total_paid: amount,
-      token_id: tokenId, // <--- Isinama na natin 'to
+      token_id: tokenId, 
     }, { onConflict: 'slug' });
 
     if (dbError) {
@@ -52,7 +72,8 @@ export async function POST(req: Request) {
             checkout_data: {
               custom: {
                 invitation_slug: config.slug,
-                token_id: tokenId, // <--- Ipinasa rin sa Lemon Squeezy Metadata
+                token_id: tokenId,
+                invitation_id: hashedId, // 📍 Ipinasa rin ang hashed ID
               },
               variant_quantities: [
                 {
@@ -64,7 +85,6 @@ export async function POST(req: Request) {
             custom_price: Math.round(amount * 100), 
             product_options: {
               name: `Invitation: ${config.title}`,
-              // Nilagay din natin sa description para sa resibo
               description: `License for ${config.slug} | Ref: ${tokenId}`, 
               receipt_button_text: 'Go to Invitation',
               redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?slug=${config.slug}&token=${tokenId}`,

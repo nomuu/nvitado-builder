@@ -270,7 +270,7 @@ export default function LandingPage() {
             {[
               { icon: Globe, title: "Global Reach", desc: "Send your premium digital link instantly via Messenger, Viber, or SMS globally." },
               { icon: Zap, title: "Instant Publishing", desc: "No more long wait times. Your link is active the moment you're done designing." },
-              { icon: Clock, title: "Unlimited Edits", desc: "Update your details anytime and it refreshes instantly for all your guests." }
+              { icon: Clock, title: "Controlled Edits", desc: "Get 2 free revisions per invite, with an option for 3 more paid edits if needed." }
             ].map((feature, i) => (
               <motion.div key={i} whileHover={{ y: -5 }} className="p-8 rounded-[2rem] bg-white border border-slate-50 space-y-4 shadow-sm transition-all">
                 <div className="w-10 h-10 bg-rose-50 rounded-lg flex items-center justify-center text-rose-500">
