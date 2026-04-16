@@ -80,9 +80,10 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     { id: 'story', label: 'Custom', icon: PlusCircle, premium: true },
   ];
 
+  // 📍 SIDEBAR - TINAASAN ANG Z-INDEX PARA MATAKPAN ANG PREVIEW ELEMENTS
   return (
-    <aside className="w-full h-full bg-white border-r flex flex-col overflow-hidden font-sans text-slate-900 shadow-xl relative">
-      <button onClick={onClose} className="lg:hidden absolute top-6 right-6 p-2 bg-slate-100 rounded-full text-slate-600 z-50"><X size={20} /></button>
+    <aside className="w-full h-full bg-white border-r flex flex-col overflow-hidden font-sans text-slate-900 shadow-xl relative z-[9999]">
+      <button onClick={onClose} className="lg:hidden absolute top-6 right-6 p-2 bg-slate-100 rounded-full text-slate-600 z-[10000]"><X size={20} /></button>
       
       <div className="p-8 border-b flex flex-col items-center bg-white text-slate-900 shrink-0 gap-6">
         <Link href="/"><img src="/assets/images/logo2.png" alt="Nvitado" className="h-8 w-auto object-contain cursor-pointer" /></Link>

@@ -219,12 +219,13 @@ export default function Preview({ config, viewMode, activeTab }: any) {
         </div>
       </div>
 
+      {/* 📍 NAV BAR - GINAMITAN NG MABABANG Z-INDEX PARA MATAKPAN NG SIDEBAR */}
       {shouldShowNavbar && (
-        <div className={`absolute bottom-10 left-1/2 -translate-x-1/2 z-[50] no-print ${viewMode === 'mobile' ? 'scale-90 bottom-6' : ''}`}>
+        <div className="absolute bottom-6 left-0 right-0 flex justify-center z-[10] pointer-events-none no-print">
           <motion.div 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="flex items-center gap-1 p-1.5 bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl"
+            className="flex items-center gap-1 p-1.5 bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl pointer-events-auto"
           >
             <button onClick={() => setActiveSection('home')} className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${activeSection === 'home' ? 'bg-white text-slate-900 shadow-lg' : 'text-white hover:bg-white/10'}`}>
               <Home size={18} />
