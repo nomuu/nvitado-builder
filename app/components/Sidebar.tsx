@@ -7,6 +7,7 @@ import {
   X, Settings2, BookHeart, MessageCircleQuestion, 
   PlusCircle, Trash2, Star, Heart, PartyPopper, Cake, Info 
 } from 'lucide-react';
+import axios from 'axios'; // 📍 Siguraduhin na imported ang axios
 
 export default function Sidebar({ config, setConfig, onPublish, isPublishing, onClose, activeTab, setActiveTab }: any) {
   const [showAllBgs, setShowAllBgs] = useState(false);
@@ -17,7 +18,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   // 📍 Auto-generate short_id if it doesn't exist yet
   useEffect(() => {
     if (!config.shortId) {
-      // Gumawa ng random 8-char hex string (simulated short hash)
       const randomId = Math.random().toString(16).substring(2, 10);
       setConfig({ ...config, shortId: randomId });
     }
@@ -89,6 +89,12 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     { id: 'story', label: 'Custom', icon: PlusCircle, premium: true },
   ];
 
+  // 📍 UPDATED ONPUBLISH LOGIC (To include image in save)
+  const handlePublishClick = async () => {
+    // Ipasa ang kabuuang price sa original onPublish function
+    onPublish(totalPrice);
+  };
+
   return (
     <aside className="w-full h-full bg-white border-r flex flex-col overflow-hidden font-sans text-slate-900 shadow-xl relative z-[9999]">
       <button onClick={onClose} className="lg:hidden absolute top-6 right-6 p-2 bg-slate-100 rounded-full text-slate-600 z-[10000]"><X size={20} /></button>
@@ -131,6 +137,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">01. Background & Effects</label>
                 <button onClick={() => setShowAllBgs(!showAllBgs)} className="text-[10px] font-bold text-amber-600 hover:underline">{showAllBgs ? 'Less' : 'View All'}</button>
               </div>
+              
               <div className={`grid gap-3 transition-all duration-300 ${showAllBgs ? 'grid-cols-2' : 'grid-cols-3'}`}>
                 {(showAllBgs ? BACKGROUNDS : BACKGROUNDS.slice(0, 6)).map((bg) => (
                   <button key={bg.id} onClick={() => handleBgSelect(bg)} className={`group relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl border transition-all h-20 ${config.animationId === bg.id ? 'border-amber-500 ring-2 ring-amber-100' : 'border-slate-100 bg-slate-50'}`}>
@@ -139,6 +146,52 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                     {bg.price > 0 && <span className="absolute -top-2 -right-1 bg-amber-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black shadow-sm">+₱{bg.price}</span>}
                   </button>
                 ))}
+              </div>
+
+              {/* 📍 IMAGE UPLOAD AREA */}
+              <div className="mt-5 space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Add Invitation Photo</label>
+                  {config.featuredImage && <span className="text-[8px] font-black text-emerald-500 uppercase italic">Image Ready</span>}
+                </div>
+                
+                {!config.featuredImage ? (
+                  <div className="relative h-14 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:border-amber-400 transition-all group overflow-hidden">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onloadend = () => setConfig({ ...config, featuredImage: reader.result });
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                    />
+                    <div className="flex items-center justify-center h-full gap-2 text-slate-400 group-hover:text-amber-600 transition-colors">
+                      <PlusCircle size={16} />
+                      <span className="text-[10px] font-black uppercase">Click to upload photo</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 p-2 bg-amber-50 border border-amber-200 rounded-2xl animate-in zoom-in-95 duration-200">
+                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-white shadow-sm flex-shrink-0">
+                      <img src={config.featuredImage} className="w-full h-full object-cover" alt="Uploaded" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[8px] font-black text-amber-800 uppercase leading-none mb-1">Photo Active</p>
+                      <p className="text-[7px] text-amber-600/70 font-bold uppercase truncate italic">Featured image enabled</p>
+                    </div>
+                    <button 
+                      onClick={() => setConfig({ ...config, featuredImage: null })}
+                      className="p-2 text-rose-500 hover:bg-rose-100 rounded-xl transition-all"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
+                )}
               </div>
             </section>
 
@@ -214,12 +267,12 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               )}
             </section>
 
-            {/* 06. Custom URL - UPDATED WITH SHORT ID */}
+            {/* 06. Custom URL - Intact */}
             <section>
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">06. Custom URL</label>
               <div className="flex flex-col gap-2">
                 <div className="flex items-center p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700">
-                  <span className="text-slate-400 font-bold">nvitado.com/v/</span>
+                  <span className="text-slate-400 font-bold">nvitado.com/</span>
                   <span className="text-amber-600 font-black px-1.5 py-0.5 bg-amber-100 rounded-md mr-1">{config.shortId || '...'}</span>
                   <span className="text-slate-300 mr-1">/</span>
                   <input type="text" className="bg-transparent outline-none flex-1 text-slate-800 font-bold uppercase" placeholder="EVENT-NAME" value={config.slug} onChange={(e) => handleSlugChange(e.target.value)} />
@@ -408,7 +461,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
           </div>
         </div>
         <button 
-          onClick={() => onPublish(totalPrice)} 
+          onClick={handlePublishClick} 
           disabled={isPublishing} 
           className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs tracking-widest shadow-lg hover:bg-amber-900 transition-all active:scale-95 disabled:bg-slate-400"
         >

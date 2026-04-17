@@ -113,47 +113,71 @@ export default function Preview({ config, viewMode, activeTab }: any) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="flex flex-col items-center w-full py-24 text-center"
+              className="relative flex flex-col items-center w-full py-24 text-center min-h-[600px]"
             >
-              <span className="text-[10px] tracking-[0.5em] text-amber-700 uppercase mb-4 font-black">
-                The Celebration
-              </span>
-              <h2 className={`leading-tight transition-all duration-700 whitespace-pre-wrap text-slate-900 mb-6 font-light
-                ${viewMode === 'mobile' ? 'text-4xl px-2' : 'text-7xl lg:text-9xl px-12'} 
-                ${config.titleFont === 'italic' ? 'italic font-serif' : config.titleFont}`}>
-                {config.title || 'Your Event Name'}
-              </h2>
-              <div className="w-16 h-[1.5px] bg-amber-400 mb-8 mx-auto opacity-50"></div>
-              <div className="space-y-6 w-full max-w-4xl">
-                <div className={`text-center leading-relaxed whitespace-pre-wrap text-slate-600 font-medium
-                  ${viewMode === 'mobile' ? 'text-[13px]' : 'text-2xl'} 
-                  ${config.messageFont === 'italic' ? 'italic font-serif' : config.messageFont}`}>
-                  {config.welcomeMessage}
+              {/* 📍 REAL PHOTOPAPER / POLAROID STYLE - SHARP EDGES */}
+              {config.featuredImage && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full flex justify-center z-0 opacity-40 pointer-events-none">
+                  {/* 📍 Sharp corners, realistic shadow, thick bottom border */}
+                  <div className={`bg-white shadow-[0_20px_50px_rgba(0,0,0,0.2)] rotate-[-3deg] border-white
+                    ${viewMode === 'mobile' 
+                      ? 'w-[260px] p-[10px] pb-[40px]' 
+                      : 'w-[420px] p-[15px] pb-[60px]'
+                    }
+                  `}>
+                    <div className="w-full aspect-[3/4] overflow-hidden bg-slate-100">
+                      <img 
+                        src={config.featuredImage} 
+                        className="w-full h-full object-cover object-center" 
+                        alt="Polaroid Overlay" 
+                      />
+                    </div>
+                  </div>
                 </div>
-                <div className="pt-12 space-y-4 flex flex-col items-center">
-                  <p className={`${viewMode === 'mobile' ? 'text-base' : 'text-4xl'} tracking-[0.2em] font-black text-slate-800 uppercase`}>
-                    {formatDate(config.eventDate, config.dateFormat)}
-                  </p>
-                  {config.showTime && (
-                    <p className={`${viewMode === 'mobile' ? 'text-sm' : 'text-2xl'} tracking-[0.4em] font-medium text-amber-800 uppercase mt-[-10px]`}>
-                      {formatTime(config.eventTime)}
+              )}
+
+              {/* 📍 CONTENT - OVER PHOTO (Z-10) */}
+              <div className="relative z-10 w-full flex flex-col items-center">
+                <span className="text-[10px] tracking-[0.5em] text-amber-700 uppercase mb-4 font-black">
+                  The Celebration
+                </span>
+                <h2 className={`leading-tight transition-all duration-700 whitespace-pre-wrap text-slate-900 mb-6 font-light
+                  ${viewMode === 'mobile' ? 'text-4xl px-2' : 'text-7xl lg:text-9xl px-12'} 
+                  ${config.titleFont === 'italic' ? 'italic font-serif' : config.titleFont}`}>
+                  {config.title || 'Your Event Name'}
+                </h2>
+                <div className="w-16 h-[1.5px] bg-amber-400 mb-8 mx-auto opacity-50"></div>
+                <div className="space-y-6 w-full max-w-4xl">
+                  <div className={`text-center leading-relaxed whitespace-pre-wrap text-slate-600 font-medium
+                    ${viewMode === 'mobile' ? 'text-[13px]' : 'text-2xl'} 
+                    ${config.messageFont === 'italic' ? 'italic font-serif' : config.messageFont}`}>
+                    {config.welcomeMessage}
+                  </div>
+                  <div className="pt-12 space-y-4 flex flex-col items-center">
+                    <p className={`${viewMode === 'mobile' ? 'text-base' : 'text-4xl'} tracking-[0.2em] font-black text-slate-800 uppercase`}>
+                      {formatDate(config.eventDate, config.dateFormat)}
                     </p>
-                  )}
-                  <div className="pt-8 flex flex-col items-center gap-4 w-full">
-                    <p className={`${viewMode === 'mobile' ? 'text-[11px] max-w-[300px]' : 'text-xl max-w-[800px]'} text-slate-400 uppercase tracking-[0.3em] font-black block text-center leading-relaxed`}>
-                      📍 {config.location}
-                    </p>
-                    {config.location && (
-                      <a 
-                        href={mapsUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-full text-[10px] font-black tracking-widest uppercase hover:bg-amber-700 transition-all active:scale-95 shadow-xl"
-                      >
-                        <MapPin size={12} />
-                        Get Directions
-                      </a>
+                    {config.showTime && (
+                      <p className={`${viewMode === 'mobile' ? 'text-sm' : 'text-2xl'} tracking-[0.4em] font-medium text-amber-800 uppercase mt-[-10px]`}>
+                        {formatTime(config.eventTime)}
+                      </p>
                     )}
+                    <div className="pt-8 flex flex-col items-center gap-4 w-full">
+                      <p className={`${viewMode === 'mobile' ? 'text-[11px] max-w-[300px]' : 'text-xl max-w-[800px]'} text-slate-400 uppercase tracking-[0.3em] font-black block text-center leading-relaxed`}>
+                        📍 {config.location}
+                      </p>
+                      {config.location && (
+                        <a 
+                          href={mapsUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-8 py-4 bg-slate-900 text-white rounded-full text-[10px] font-black tracking-widest uppercase hover:bg-amber-700 transition-all active:scale-95 shadow-xl"
+                        >
+                          <MapPin size={12} />
+                          Get Directions
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -176,7 +200,7 @@ export default function Preview({ config, viewMode, activeTab }: any) {
               </h2>
               <div className="w-full bg-white/50 backdrop-blur-sm p-8 rounded-[2rem] border border-white/20 shadow-sm">
                 <p className="text-slate-600 leading-relaxed whitespace-pre-wrap text-sm italic font-serif">
-                  {config.story || "Once upon a time, a beautiful celebration was planned..."}
+                  {config.story || "Once upon a time..."}
                 </p>
               </div>
             </motion.div>
@@ -214,12 +238,12 @@ export default function Preview({ config, viewMode, activeTab }: any) {
         <div className="h-32 w-full flex-shrink-0" />
 
         <div className="mt-auto py-8 flex items-center justify-center gap-2 opacity-30 hover:opacity-100 transition-opacity no-print">
-           <p className="text-[7px] tracking-[0.2em] uppercase font-bold text-slate-400">Powered by</p>
-           <h1 className="text-[8px] font-black tracking-[0.1em] text-slate-500 uppercase">Nvitado</h1>
+            <p className="text-[7px] tracking-[0.2em] uppercase font-bold text-slate-400">Powered by</p>
+            <h1 className="text-[8px] font-black tracking-[0.1em] text-slate-500 uppercase">Nvitado</h1>
         </div>
       </div>
 
-      {/* 📍 NAV BAR - GINAMITAN NG MABABANG Z-INDEX PARA MATAKPAN NG SIDEBAR */}
+      {/* 📍 NAV BAR - Z-INDEX [10] para matabunan ng sidebar */}
       {shouldShowNavbar && (
         <div className="absolute bottom-6 left-0 right-0 flex justify-center z-[10] pointer-events-none no-print">
           <motion.div 
