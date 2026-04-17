@@ -10,17 +10,24 @@ export async function POST(req: Request) {
 
     if (eventName === 'order_created') {
       const email = body.data.attributes.user_email;
-      const invId = body.meta.custom_data.invitation_id; // Match sa hashedId
+      const checkoutId = body.data.id; // ID ng checkout session
+      const invitationId = body.meta.custom_data.invitation_id; // Yung pinasa natin
 
-      const { error } = await supabase.from('invitations')
+      console.log(`Webhook triggered for ${email}. InvitationID: ${invitationId}`);
+
+      // 📍 TRIPLE CHECK UPDATE: Subukan i-update gamit ang ID, kung wala, gamitin ang checkout_id
+      const { error } = await supabase
+        .from('invitations')
         .update({ 
           status: 'paid', 
           email: email 
         })
-        .eq('id', invId);
+        .or(`id.eq.${invitationId},checkout_id.eq.${checkoutId}`); // 📍 HANAPIN SA KAHIT ALIN DYAN SA DALAWA
 
-      if (error) return NextResponse.json({ error: "Update failed" }, { status: 500 });
-      console.log("Success: Payment verified for", email);
+      if (error) {
+        console.error("Update Error:", error.message);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
     }
     return NextResponse.json({ received: true });
   } catch (err: any) {

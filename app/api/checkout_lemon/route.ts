@@ -3,137 +3,57 @@ import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 import crypto from 'crypto';
 
-const supabase = createClient(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-const generateHashedId = () => {
-  const now = new Date();
-  const timestamp = 
-    (now.getMonth() + 1).toString().padStart(2, '0') +
-    now.getDate().toString().padStart(2, '0') +
-    now.getFullYear().toString() +
-    now.getHours().toString().padStart(2, '0') +
-    now.getMinutes().toString().padStart(2, '0') +
-    now.getSeconds().toString().padStart(2, '0');
-
-  // Dagdag random para sigurado ang uniqueness ng ID
-  const random = Math.random().toString(36).substring(2, 7);
-  return crypto.createHash('sha256').update(timestamp + random).digest('hex');
-};
-
-const generateTokenId = () => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let result = '';
-  for (let i = 0; i < 8; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return `nvi-${result}`;
-};
+const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
 export async function POST(req: Request) {
   try {
     const { config, amount } = await req.json();
-    
-    // 📍 1. CHECK KUNG MAY EXISTING SLUG NA PAID NA
-    const { data: existingInvite } = await supabase
-      .from('invitations')
-      .select('status')
-      .eq('slug', config.slug)
-      .eq('status', 'paid')
-      .single();
+    const hashedId = crypto.createHash('sha256').update(new Date().toISOString() + config.slug).digest('hex');
+    const tokenId = `nvi-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
 
-    if (existingInvite) {
-      return NextResponse.json({ 
-        error: "This URL is already taken. Please choose another one." 
-      }, { status: 400 });
-    }
-
-    const tokenId = generateTokenId();
-    const hashedId = generateHashedId();
-    const shortId = config.shortId;
-
-    // 📍 2. SAVE SA SUPABASE (Gamit ang ID as Primary Key)
+    // 1. Save initial record
     const { error: dbError } = await supabase.from('invitations').upsert({
       id: hashedId,
-      short_id: shortId,
       slug: config.slug,
       config_data: config,
       status: 'waiting_payment',
       total_paid: amount,
       token_id: tokenId,
-      revision_count: 2, 
+      short_id: config.shortId,
+      revision_count: 2
     }, { onConflict: 'id' });
 
-    if (dbError) {
-      console.error("SUPABASE ERROR:", dbError.message);
-      return NextResponse.json({ error: "Database save failed" }, { status: 500 });
-    }
+    if (dbError) return NextResponse.json({ error: "DB Save Failed" }, { status: 500 });
 
-    const storeId = process.env.LEMONSQUEEZY_STORE_ID?.toString();
-    const variantId = process.env.LEMONSQUEEZY_VARIANT_ID?.toString();
-    const apiKey = process.env.LEMONSQUEEZY_API_KEY?.trim();
-
-    // 📍 3. LEMON SQUEEZY CHECKOUT CALL
-    const response = await axios.post(
-      'https://api.lemonsqueezy.com/v1/checkouts',
-      {
-        data: {
-          type: 'checkouts',
-          attributes: {
-            checkout_data: {
-              custom: {
-                invitation_slug: config.slug,
-                token_id: tokenId,
-                invitation_id: hashedId, // 📍 Importante ito para sa Webhook
-                short_id: shortId,
-              },
-              variant_quantities: [
-                {
-                  variant_id: variantId,
-                  quantity: 1,
-                },
-              ],
-            },
-            custom_price: Math.round(amount * 100), 
-            product_options: {
-              name: `Invitation: ${config.title}`,
-              description: `Ref: ${tokenId}`, 
-              receipt_button_text: 'Go to Invitation',
-              redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?slug=${config.slug}`,
-            },
-            checkout_options: {
-              button_color: '#0f172a',
+    // 2. Call Lemon Squeezy
+    const response = await axios.post('https://api.lemonsqueezy.com/v1/checkouts', {
+      data: {
+        type: 'checkouts',
+        attributes: {
+          checkout_data: {
+            custom: {
+              invitation_id: hashedId // 📍 IPINASA NATIN ITO
             }
           },
-          relationships: {
-            store: { data: { type: 'stores', id: storeId } },
-            variant: { data: { type: 'variants', id: variantId } },
-          },
+          product_options: {
+            redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?slug=${config.slug}`
+          }
         },
-      },
-      {
-        headers: {
-          'Accept': 'application/vnd.api+json',
-          'Content-Type': 'application/vnd.api+json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
+        relationships: {
+          store: { data: { type: 'stores', id: process.env.LEMONSQUEEZY_STORE_ID?.toString() } },
+          variant: { data: { type: 'variants', id: process.env.LEMONSQUEEZY_VARIANT_ID?.toString() } }
+        }
       }
-    );
+    }, {
+      headers: { Authorization: `Bearer ${process.env.LEMONSQUEEZY_API_KEY}`, 'Content-Type': 'application/vnd.api+json' }
+    });
 
-    const checkoutUrl = response.data.data.attributes.url;
-    const checkoutId = response.data.data.id;
+    // 3. I-SAVE ANG CHECKOUT ID MULA KAY LEMON
+    const lemonCheckoutId = response.data.data.id;
+    await supabase.from('invitations').update({ checkout_id: lemonCheckoutId }).eq('id', hashedId);
 
-    // 📍 4. UPDATE RECORD WITH CHECKOUT ID
-    await supabase.from('invitations').update({ 
-      checkout_id: checkoutId 
-    }).eq('id', hashedId);
-
-    return NextResponse.json({ checkout_url: checkoutUrl });
-
-  } catch (error: any) {
-    console.error("LEMON ERROR:", error.response?.data || error.message);
-    return NextResponse.json({ error: "Failed to generate checkout link" }, { status: 500 });
+    return NextResponse.json({ checkout_url: response.data.data.attributes.url });
+  } catch (err: any) {
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
