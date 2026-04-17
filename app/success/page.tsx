@@ -16,9 +16,10 @@ async function getSuccessDetails(slug: string) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
+  // 📍 IDINAGDAG ANG 'short_id' SA SELECT QUERY
   const { data: inv, error } = await supabase
     .from('invitations')
-    .select('*')
+    .select('*, short_id') 
     .eq('slug', slug)
     .single();
 
@@ -28,6 +29,7 @@ async function getSuccessDetails(slug: string) {
 
   if (inv.checkout_id) {
     try {
+      // Logic para sa Lemon Squeezy o PayMongo details (Retained your original logic)
       const res = await axios.get(`https://api.paymongo.com/v1/checkout_sessions/${inv.checkout_id}`, {
         headers: {
           Authorization: `Basic ${Buffer.from(process.env.PAYMONGO_SECRET_KEY + ':').toString('base64')}`
@@ -44,7 +46,7 @@ async function getSuccessDetails(slug: string) {
         };
       }
     } catch (e) {
-      console.error("PayMongo Error");
+      console.error("Payment Detail Fetch Error");
     }
   }
   return { inv, payerInfo };
@@ -61,14 +63,15 @@ export default async function SuccessPage(props: {
 
   const { inv, payerInfo } = data;
 
-  // 📍 DITO NATIN HAHATAKIN ANG TITLE MULA SA JSON (config_data)
   const config = inv.config_data || {};
   const eventTitle = config.title || inv.title || "Your Invitation";
-
   const amount = inv.total_paid || 0;
 
-  // 📍 BREAKDOWN CALCULATION LOGIC
-  // Base on your route.ts prices:
+  // 📍 UPDATED URL LOGIC: Gamit ang short_id/slug format
+  // Kung walang short_id (legacy data), fallback sa slug lang
+  const invitationPath = inv.short_id ? `${inv.short_id}/${inv.slug}` : inv.slug;
+  const fullUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://nvitado.com'}/${invitationPath}`; 
+
   const effectPrice = (amount % 50 === 5 || amount % 50 === 55 || amount % 50 === 25 || amount % 50 === 30) ? (amount % 50 === 25 || amount % 50 === 30 ? 25 : 5) : 0;
   const storyPrice = config.showStory ? 5 : 0;
   const extraQACount = Math.max(0, (config.questions?.length || 0) - 3);
@@ -76,12 +79,11 @@ export default async function SuccessPage(props: {
   const extensionPrice = Math.max(0, amount - 50 - effectPrice - storyPrice - qaPrice);
 
   const dateObj = new Date(inv.created_at);
-  const fullUrl = `https://nvitado.com/${slug}`; 
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] flex flex-col items-center justify-center p-4 font-sans text-slate-900 leading-tight relative">
       
-      {/* 📍 SQUARE QR SECTION FOR DOWNLOAD ONLY */}
+      {/* 📍 QR DOWNLOAD SECTION */}
       <div className="fixed -left-[9999px] top-0 overflow-hidden">
         <div 
           id="qr-only-download" 
@@ -98,7 +100,7 @@ export default async function SuccessPage(props: {
           </div>
           <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] mb-2 font-bold">Invitation Link</p>
           <p className="text-sm font-bold text-slate-900 font-mono lowercase tracking-tighter">
-            {fullUrl.replace('https://', '')}
+            {fullUrl.replace('https://', '').replace('http://', '')}
           </p>
         </div>
       </div>
@@ -127,6 +129,7 @@ export default async function SuccessPage(props: {
              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-4 relative z-10 text-center font-bold italic">Use this code to edit your invitation in the future.</p>
           </div>
 
+          {/* Payer Info Section - Intact */}
           <div className="space-y-5 mb-6 bg-slate-50 p-6 rounded-3xl border border-slate-100 text-left text-slate-900 font-bold">
              <div className="border-b border-slate-200 pb-3">
                 <p className="text-[8px] font-black text-slate-400 uppercase mb-1.5 tracking-widest leading-none font-bold">Payer Name</p>
@@ -135,7 +138,6 @@ export default async function SuccessPage(props: {
                    {payerInfo.name}
                 </div>
              </div>
-
              <div className="border-b border-slate-200 pb-3">
                 <p className="text-[8px] font-black text-slate-400 uppercase mb-1.5 tracking-widest leading-none font-bold">Contact Email</p>
                 <div className="flex items-center gap-2 font-black uppercase text-xs italic break-all leading-tight">
@@ -143,14 +145,12 @@ export default async function SuccessPage(props: {
                    {payerInfo.email}
                 </div>
              </div>
-
              <div className="border-b border-slate-200 pb-3">
                 <p className="text-[8px] font-black text-rose-500 uppercase mb-1.5 italic tracking-widest leading-none font-bold">Date Paid</p>
                 <p className="text-[10px] font-bold uppercase leading-tight tracking-wide">
                    {dateObj.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} • {dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
                 </p>
              </div>
-
              <div className="">
                 <p className="text-[8px] font-black text-rose-500 uppercase mb-1.5 italic tracking-widest leading-none font-bold">Transaction ID</p>
                 <p className="text-[10px] font-mono font-bold break-all uppercase leading-tight tracking-tighter">
@@ -159,7 +159,7 @@ export default async function SuccessPage(props: {
              </div>
           </div>
 
-          {/* 📍 UPDATED ORDER BREAKDOWN */}
+          {/* Breakdown Section - Intact */}
           <div className="bg-slate-50 rounded-3xl p-6 mb-6 border border-slate-100 text-slate-500 font-bold">
             <div className="flex items-center gap-2 mb-4 border-b border-slate-200 pb-3 text-slate-400">
               <ReceiptText size={14} />
@@ -167,15 +167,9 @@ export default async function SuccessPage(props: {
             </div>
             <div className="space-y-2 mb-4 font-bold uppercase text-[10px]">
               <div className="flex justify-between font-bold"><span>Base Fee</span><span className="text-slate-900">₱50.00</span></div>
-              
               {effectPrice > 0 && <div className="flex justify-between items-center gap-1 font-bold"><span><Sparkles size={8}/> Theme Effect</span><span className="text-slate-900">₱{effectPrice.toFixed(2)}</span></div>}
-              
-              {/* 📍 NEW: STORY BREAKDOWN */}
               {storyPrice > 0 && <div className="flex justify-between items-center gap-1 font-bold"><span><BookHeart size={8}/> Custom section</span><span className="text-slate-900">₱{storyPrice.toFixed(2)}</span></div>}
-              
-              {/* 📍 NEW: Q&A BREAKDOWN */}
               {qaPrice > 0 && <div className="flex justify-between items-center gap-1 font-bold"><span><MessageCircleQuestion size={8}/> Extra Q&A ({extraQACount})</span><span className="text-slate-900">₱{qaPrice.toFixed(2)}</span></div>}
-              
               {extensionPrice > 0 && <div className="flex justify-between"><span>Add-ons / Extension</span><span className="text-slate-900">₱{extensionPrice.toFixed(2)}</span></div>}
             </div>
             <div className="flex justify-between border-t border-slate-200 pt-3 text-sm font-black uppercase italic text-slate-900 leading-none font-bold">
@@ -184,6 +178,7 @@ export default async function SuccessPage(props: {
             </div>
           </div>
 
+          {/* Method Info - Intact */}
           <div className="flex items-center justify-between px-5 py-4 bg-slate-900 rounded-2xl mb-8 text-white shadow-lg text-left font-bold italic">
              <div className="flex items-center gap-3">
                 <div className="bg-white/10 p-2 rounded-lg text-rose-500"><CreditCard size={14} /></div>
@@ -198,6 +193,7 @@ export default async function SuccessPage(props: {
              </div>
           </div>
 
+          {/* QR & Link Section - UPDATED URL */}
           <div className="bg-white p-6 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
             <div className="mb-4">
               <QRCodeSection url={fullUrl} />
@@ -205,7 +201,7 @@ export default async function SuccessPage(props: {
             <div className="">
               <p className="text-[8px] font-black text-rose-400 uppercase tracking-[0.2em] mb-1 font-bold">Invitation Link</p>
               <p className="text-[10px] font-bold text-slate-900 truncate px-2 italic font-mono lowercase tracking-tight">
-                {fullUrl.replace('https://', '')}
+                {fullUrl.replace('https://', '').replace('http://', '')}
               </p>
             </div>
           </div>
@@ -215,8 +211,9 @@ export default async function SuccessPage(props: {
       <div className="max-w-[420px] w-full mt-6 space-y-3 px-2">
         <PrintButton targetId="receipt-to-download" mode="receipt" />
         <PrintButton targetId="qr-only-download" mode="qr" />
+        {/* 📍 UPDATED BUTTON LINK */}
         <Link 
-          href={`/${slug}`} 
+          href={`/${invitationPath}`} 
           className="block w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase text-center shadow-lg active:scale-95 transition-all font-bold"
         >
           Open Invitation Site
