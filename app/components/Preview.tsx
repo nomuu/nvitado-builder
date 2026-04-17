@@ -124,7 +124,7 @@ export default function Preview({ config, viewMode, activeTab }: any) {
         ))}
       </div>
 
-      <div className="relative z-10 w-full h-full overflow-y-auto no-scrollbar flex flex-col px-6">
+      <div className="relative z-10 w-full h-full overflow-y-auto no-scrollbar flex flex-col px-6 pb-20">
         <AnimatePresence mode="wait">
           {activeSection === 'home' && (
             <motion.div 
@@ -134,7 +134,6 @@ export default function Preview({ config, viewMode, activeTab }: any) {
               exit={{ opacity: 0, y: -10 }}
               className="relative flex flex-col items-center w-full py-24 text-center min-h-[600px]"
             >
-              {/* 📍 REAL PHOTOPAPER / POLAROID STYLE - FIXED WITH WHITE OVERLAY */}
               {config.featuredImage && (
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full flex justify-center z-0 opacity-100 pointer-events-none">
                   <div className={`bg-white shadow-[0_20px_50px_rgba(0,0,0,0.2)] rotate-[-3deg] border-white
@@ -149,14 +148,12 @@ export default function Preview({ config, viewMode, activeTab }: any) {
                         className="w-full h-full object-cover object-center" 
                         alt="Polaroid Overlay" 
                       />
-                      {/* 📍 ITO YUNG OVERLAY SA LOOB NG POLAROID PARA MABASA YUNG TEXT */}
                       <div className="absolute inset-0 bg-white/60" /> 
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* 📍 CONTENT - OVER PHOTO (Z-10) */}
               <div className="relative z-10 w-full flex flex-col items-center">
                 <span className="text-[10px] tracking-[0.5em] text-amber-700 uppercase mb-4 font-black">
                   The Celebration
@@ -255,15 +252,13 @@ export default function Preview({ config, viewMode, activeTab }: any) {
           )}
         </AnimatePresence>
 
-        <div className="h-32 w-full flex-shrink-0" />
-
         <div className="mt-auto py-8 flex items-center justify-center gap-2 opacity-30 hover:opacity-100 transition-opacity no-print">
             <p className="text-[7px] tracking-[0.2em] uppercase font-bold text-slate-400">Powered by</p>
             <h1 className="text-[8px] font-black tracking-[0.1em] text-slate-500 uppercase">Nvitado</h1>
         </div>
       </div>
 
-      {/* 📍 NAV BAR */}
+      {/* 📍 NAV BAR - BALIK SA ABSOLUTE PERO NASA LOOB NG PREVIEW CONTAINER PARA HINDI GUMALA SA SCREEN */}
       {shouldShowNavbar && (
         <div className="absolute bottom-6 left-0 right-0 flex justify-center z-[10] pointer-events-none no-print">
           <motion.div 
