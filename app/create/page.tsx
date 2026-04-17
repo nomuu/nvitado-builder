@@ -128,8 +128,8 @@ export default function NvitadoEditor() {
               </div>
               <h3 className="text-xl font-black uppercase tracking-tight text-slate-900 mb-2">Not Eligible to Publish</h3>
               <p className="text-slate-500 text-sm font-medium leading-relaxed mb-8">
-                Sorry Chief! Ang rules natin ay dapat **hindi bababa sa 7 days** bago ang event para makapag-create. 
-                Masyado nang malapit ang date na napili mo.
+                To ensure high-quality service, invitations must be created at least **7 days prior** to the event date. 
+                The selected date is currently outside of this eligible window.
               </p>
               <button 
                 onClick={() => setShowDateModal(false)}
