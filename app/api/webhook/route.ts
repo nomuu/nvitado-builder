@@ -6,31 +6,34 @@ const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SE
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const eventName = body.meta.event_name;
+    
+    // Lemon Squeezy sends event name in meta.event_name
+    const eventName = body.meta?.event_name;
 
     if (eventName === 'order_created') {
       const email = body.data.attributes.user_email;
-      const checkoutId = body.data.id; // ID ng checkout session
-      const invitationId = body.meta.custom_data.invitation_id; // Yung pinasa natin
+      const invId = body.meta.custom_data.invitation_id; // Match sa hashedId natin
 
-      console.log(`Webhook triggered for ${email}. InvitationID: ${invitationId}`);
-
-      // 📍 TRIPLE CHECK UPDATE: Subukan i-update gamit ang ID, kung wala, gamitin ang checkout_id
+      // 📍 UPDATE DATABASE
       const { error } = await supabase
         .from('invitations')
         .update({ 
           status: 'paid', 
           email: email 
         })
-        .or(`id.eq.${invitationId},checkout_id.eq.${checkoutId}`); // 📍 HANAPIN SA KAHIT ALIN DYAN SA DALAWA
+        .eq('id', invId);
 
       if (error) {
-        console.error("Update Error:", error.message);
+        console.error("WEBHOOK DB ERROR:", error.message);
         return NextResponse.json({ error: error.message }, { status: 500 });
       }
+      
+      console.log(`Update success for ${email}`);
     }
-    return NextResponse.json({ received: true });
+
+    return NextResponse.json({ received: true }, { status: 200 });
   } catch (err: any) {
+    console.error("WEBHOOK ERROR:", err.message);
     return NextResponse.json({ error: err.message }, { status: 400 });
   }
 }
