@@ -3,19 +3,20 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Preview from '../components/Preview';
 import { BACKGROUNDS } from '../constants/backgrounds';
-import { Edit3, Eye, Monitor, Smartphone, AlertTriangle, X } from 'lucide-react';
+import { Edit3, Eye, Monitor, Smartphone, AlertTriangle, X, Link2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export default function NvitadoEditor() {
   const [viewMode, setViewMode] = useState<'mobile' | 'desktop'>('mobile');
   const [isPublishing, setIsPublishing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
+  
+  // 📍 Modal States
   const [showDateModal, setShowDateModal] = useState(false);
+  const [showSlugModal, setShowSlugModal] = useState(false);
+  
   const [isEligible, setIsEligible] = useState(true);
-  
-  // 📍 New state para hindi lumabas agad ang modal pagka-load
   const [hasInteracted, setHasInteracted] = useState(false);
-  
   const [activeTab, setActiveTab] = useState('general');
   
   const [config, setConfig] = useState({
@@ -24,7 +25,6 @@ export default function NvitadoEditor() {
     animationId: 'none',
     title: 'Juan & Maria',
     titleFont: 'font-serif', 
-    // 📍 Default date is now 10 days from today para "Safe" agad sa start
     eventDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     dateFormat: 'long', 
     showTime: false,
@@ -41,22 +41,16 @@ export default function NvitadoEditor() {
   // 📍 DATE VALIDATION LOGIC
   useEffect(() => {
     if (!config.eventDate) return;
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
     const eventDate = new Date(config.eventDate);
     eventDate.setHours(0, 0, 0, 0);
-
     const diffTime = eventDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
     if (diffDays < 7) {
       setIsEligible(false);
-      // 📍 Lalabas lang ang modal kung talagang ginalaw na ni user yung date (hasInteracted)
-      if (hasInteracted) {
-        setShowDateModal(true);
-      }
+      if (hasInteracted) setShowDateModal(true);
     } else {
       setIsEligible(true);
       setShowDateModal(false);
@@ -68,7 +62,6 @@ export default function NvitadoEditor() {
     const hasChatbot = document.querySelector('script[src*="tuqlas.com"]') || 
                       document.querySelector('[class*="tuqlas"]');
     if (hasChatbot) { window.location.reload(); return; }
-
     const hideChatbot = () => {
       const scripts = document.querySelectorAll('script[src*="tuqlas.com"]');
       scripts.forEach(s => s.remove());
@@ -82,11 +75,16 @@ export default function NvitadoEditor() {
   }, []);
 
   const handlePublish = async (calculatedTotal: number) => {
+    // 1. Check Date Eligibility
     if (!isEligible) {
-        setHasInteracted(true); // Force interaction check
+        setHasInteracted(true);
         return setShowDateModal(true);
     }
-    if (!config.slug) return alert("Hoy Chief! Paki-set muna ang Custom URL sa Step 06.");
+    // 2. Check Custom URL (Slug) - Professional Modal instead of Alert
+    if (!config.slug) {
+        return setShowSlugModal(true);
+    }
+
     setIsPublishing(true);
     const selectedBg = BACKGROUNDS.find(bg => bg.id === config.animationId);
     try {
@@ -102,60 +100,55 @@ export default function NvitadoEditor() {
     finally { setIsPublishing(false); }
   };
 
-  // Wrapper function para ma-detect ang interaction
   const handleConfigChange = (newConfig: any) => {
-    if (newConfig.eventDate !== config.eventDate) {
-      setHasInteracted(true);
-    }
+    if (newConfig.eventDate !== config.eventDate) setHasInteracted(true);
     setConfig(newConfig);
   };
 
   return (
     <div className="flex h-screen w-full bg-slate-100 overflow-hidden font-sans text-slate-900 relative">
       
-      {/* 📍 DATE WARNING MODAL */}
+      {/* 📍 MODAL OVERLAYS CONTAINER */}
       <AnimatePresence>
+        {/* 1. DATE WARNING MODAL */}
         {showDateModal && (
           <div className="fixed inset-0 z-[10001] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">
-            <motion.div 
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl text-center border-t-[10px] border-amber-500"
-            >
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl text-center border-t-[10px] border-amber-500">
               <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
                 <AlertTriangle className="text-amber-600" size={32} />
               </div>
-              <h3 className="text-xl font-black uppercase tracking-tight text-slate-900 mb-2">Not Eligible to Publish</h3>
+              <h3 className="text-xl font-black uppercase tracking-tight text-slate-900 mb-2">Invalid Event Date</h3>
               <p className="text-slate-500 text-sm font-medium leading-relaxed mb-8">
-                To ensure high-quality service, invitations must be created at least **7 days prior** to the event date. 
-                The selected date is currently outside of this eligible window.
+                To ensure high-quality service, invitations must be created at least **7 days prior** to the event. Please select a later date to proceed.
               </p>
-              <button 
-                onClick={() => setShowDateModal(false)}
-                className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs tracking-widest hover:bg-slate-800 transition-all uppercase"
-              >
-                I understand, let me change it
+              <button onClick={() => setShowDateModal(false)} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs tracking-widest hover:bg-slate-800 transition-all uppercase">
+                Update Event Date
+              </button>
+            </motion.div>
+          </div>
+        )}
+
+        {/* 2. SLUG/URL WARNING MODAL */}
+        {showSlugModal && (
+          <div className="fixed inset-0 z-[10001] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">
+            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl text-center border-t-[10px] border-blue-500">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Link2 className="text-blue-600" size={32} />
+              </div>
+              <h3 className="text-xl font-black uppercase tracking-tight text-slate-900 mb-2">Missing Custom URL</h3>
+              <p className="text-slate-500 text-sm font-medium leading-relaxed mb-8">
+                Your invitation requires a unique link. Please provide a custom URL name in **Step 06 (Custom URL)** before publishing.
+              </p>
+              <button onClick={() => setShowSlugModal(false)} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs tracking-widest hover:bg-slate-800 transition-all uppercase">
+                Set Custom URL
               </button>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
-      <div className={`
-        fixed lg:relative inset-y-0 left-0 z-50 w-[380px] max-w-[85vw] transform transition-transform duration-300 ease-in-out
-        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
-        <Sidebar 
-          config={config} 
-          setConfig={handleConfigChange} // 📍 Gamit ang wrapper para sa interaction detection
-          onPublish={handlePublish} 
-          isPublishing={isPublishing} 
-          onClose={() => setIsSidebarOpen(false)}
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          isEligible={isEligible}
-        />
+      <div className={`fixed lg:relative inset-y-0 left-0 z-50 w-[380px] max-w-[85vw] transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
+        <Sidebar config={config} setConfig={handleConfigChange} onPublish={handlePublish} isPublishing={isPublishing} onClose={() => setIsSidebarOpen(false)} activeTab={activeTab} setActiveTab={setActiveTab} isEligible={isEligible} />
       </div>
       
       <main className="flex-1 flex flex-col items-center justify-center p-2 md:p-8 bg-slate-200 relative text-slate-900">
