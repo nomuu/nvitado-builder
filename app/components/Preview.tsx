@@ -77,6 +77,25 @@ export default function Preview({ config, viewMode, activeTab }: any) {
       style={{ background: config.background }}
     >
       
+      {/* 📍 01. DYNAMIC FULL SCREEN BLURRED BACKGROUND */}
+      <AnimatePresence>
+        {config.featuredImage && activeSection === 'home' && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.25 }} 
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-0 pointer-events-none"
+          >
+            <img 
+              src={config.featuredImage} 
+              className="w-full h-full object-cover blur-[10px] scale-110" 
+              alt="Blurred Background" 
+            />
+            <div className="absolute inset-0 bg-white/30 backdrop-blur-[20px]" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
         {activeBg.type === 'blob' && activeBg.colors?.map((color: string, i: number) => (
           <motion.div
@@ -115,22 +134,23 @@ export default function Preview({ config, viewMode, activeTab }: any) {
               exit={{ opacity: 0, y: -10 }}
               className="relative flex flex-col items-center w-full py-24 text-center min-h-[600px]"
             >
-              {/* 📍 REAL PHOTOPAPER / POLAROID STYLE - SHARP EDGES */}
+              {/* 📍 REAL PHOTOPAPER / POLAROID STYLE - FIXED WITH WHITE OVERLAY */}
               {config.featuredImage && (
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full flex justify-center z-0 opacity-40 pointer-events-none">
-                  {/* 📍 Sharp corners, realistic shadow, thick bottom border */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full flex justify-center z-0 opacity-100 pointer-events-none">
                   <div className={`bg-white shadow-[0_20px_50px_rgba(0,0,0,0.2)] rotate-[-3deg] border-white
                     ${viewMode === 'mobile' 
                       ? 'w-[260px] p-[10px] pb-[40px]' 
                       : 'w-[420px] p-[15px] pb-[60px]'
                     }
                   `}>
-                    <div className="w-full aspect-[3/4] overflow-hidden bg-slate-100">
+                    <div className="relative w-full aspect-[3/4] overflow-hidden bg-slate-100">
                       <img 
                         src={config.featuredImage} 
                         className="w-full h-full object-cover object-center" 
                         alt="Polaroid Overlay" 
                       />
+                      {/* 📍 ITO YUNG OVERLAY SA LOOB NG POLAROID PARA MABASA YUNG TEXT */}
+                      <div className="absolute inset-0 bg-white/60" /> 
                     </div>
                   </div>
                 </div>
@@ -243,7 +263,7 @@ export default function Preview({ config, viewMode, activeTab }: any) {
         </div>
       </div>
 
-      {/* 📍 NAV BAR - Z-INDEX [10] para matabunan ng sidebar */}
+      {/* 📍 NAV BAR */}
       {shouldShowNavbar && (
         <div className="absolute bottom-6 left-0 right-0 flex justify-center z-[10] pointer-events-none no-print">
           <motion.div 
