@@ -37,17 +37,19 @@ export async function POST(req: Request) {
     // 1. GENERATE TOKEN ID AND HASHED ID
     const tokenId = generateTokenId();
     const hashedId = generateHashedId();
-    const shortId = config.shortId; // 📍 Kinuha ang shortId mula sa Sidebar payload
+    const shortId = config.shortId;
 
     // 2. SAVE/UPSERT SA SUPABASE
+    // Idinagdag ang revision_count: 2
     const { error: dbError } = await supabase.from('invitations').upsert({
       id: hashedId,
-      short_id: shortId,    // 📍 Idinagdag sa database column
+      short_id: shortId,
       slug: config.slug,
       config_data: config,
       status: 'waiting_payment',
       total_paid: amount,
-      token_id: tokenId, 
+      token_id: tokenId,
+      revision_count: 2, // 📍 Default revisions after payment
     }, { onConflict: 'slug' });
 
     if (dbError) {
@@ -66,11 +68,12 @@ export async function POST(req: Request) {
           type: 'checkouts',
           attributes: {
             checkout_data: {
+              // 📍 NILINIS KO DITO: Tinanggal ang empty email field para hindi mag-error
               custom: {
                 invitation_slug: config.slug,
                 token_id: tokenId,
                 invitation_id: hashedId,
-                short_id: shortId, // 📍 Ipinasa rin sa lemon custom data
+                short_id: shortId,
               },
               variant_quantities: [
                 {
@@ -84,7 +87,6 @@ export async function POST(req: Request) {
               name: `Invitation: ${config.title}`,
               description: `License for ${config.slug} | Ref: ${tokenId}`, 
               receipt_button_text: 'Go to Invitation',
-              // 📍 In-update ang redirect URL para kasama ang shortId
               redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?slug=${config.slug}&shortId=${shortId}&token=${tokenId}`,
             },
             checkout_options: {

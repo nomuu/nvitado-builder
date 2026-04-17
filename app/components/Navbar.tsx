@@ -1,13 +1,20 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation'; // Idinagdag para sa active link state
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { Menu, X, ArrowRight, PlusCircle, Edit3, ChevronDown } from 'lucide-react';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isGetStartedOpen, setIsGetStartedOpen] = useState(false); // 📍 Para sa toggle logic
   const pathname = usePathname();
+
+  // Close menus when path changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setIsGetStartedOpen(false);
+  }, [pathname]);
 
   const navLinks = [
     { name: 'Home', href: '/' },
@@ -36,7 +43,6 @@ export default function Navbar() {
                     ${isActive ? 'text-slate-900' : 'text-slate-400 hover:text-slate-900'}`}
                 >
                   {link.name}
-                  {/* 📍 Active Indicator (Line sa ilalim) */}
                   {isActive && (
                     <motion.div 
                       layoutId="nav-underline"
@@ -48,11 +54,45 @@ export default function Navbar() {
             })}
           </div>
           
-          <Link href="/create" className="text-[9px] font-black tracking-widest uppercase bg-slate-900 text-white px-6 py-2.5 rounded-full hover:bg-rose-500 transition-all flex items-center gap-2 group shadow-md">
-            <span className="hidden sm:inline">GET STARTED</span>
-            <span className="sm:hidden">START</span>
-            <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-          </Link>
+          {/* 📍 GET STARTED DROPDOWN - WORKS FOR BOTH DESKTOP & MOBILE */}
+          <div className="relative">
+            <button 
+              onClick={() => setIsGetStartedOpen(!isGetStartedOpen)}
+              onMouseEnter={() => setIsGetStartedOpen(true)}
+              className="text-[9px] font-black tracking-widest uppercase bg-slate-900 text-white px-6 py-2.5 rounded-full hover:bg-rose-500 transition-all flex items-center gap-2 shadow-md"
+            >
+              <span>GET STARTED</span>
+              <ChevronDown className={`w-3 h-3 transition-transform duration-300 ${isGetStartedOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {/* Dropdown Menu Container */}
+            <AnimatePresence>
+              {isGetStartedOpen && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  onMouseLeave={() => setIsGetStartedOpen(false)}
+                  className="absolute top-full right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[110]"
+                >
+                  <Link href="/create" className="flex items-center gap-3 p-4 hover:bg-slate-50 transition-all border-b border-slate-50 group">
+                    <PlusCircle size={18} className="text-emerald-500" />
+                    <div className="text-left">
+                      <p className="text-[10px] font-black uppercase text-slate-900">Create Invitation</p>
+                      <p className="text-[8px] text-slate-400 font-bold uppercase group-hover:text-slate-600">Start building from scratch</p>
+                    </div>
+                  </Link>
+                  <Link href="/verify-access" className="flex items-center gap-3 p-4 hover:bg-slate-50 transition-all group">
+                    <Edit3 size={18} className="text-amber-500" />
+                    <div className="text-left">
+                      <p className="text-[10px] font-black uppercase text-slate-900">Revise Existing Invitation</p>
+                      <p className="text-[8px] text-slate-400 font-bold uppercase group-hover:text-slate-600">Update your paid invite</p>
+                    </div>
+                  </Link>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
 
           {/* Mobile Menu Toggle */}
           <button 
@@ -64,27 +104,29 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Dropdown Menu */}
+      {/* Mobile Sidebar Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div 
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden bg-white border-b border-slate-100 overflow-hidden"
+            className="lg:hidden bg-white border-b border-slate-100 overflow-hidden shadow-xl"
           >
-            <div className="flex flex-col p-6 gap-4 text-center">
-              {navLinks.map((link) => (
-                <Link 
-                  key={link.name} 
-                  onClick={() => setIsMobileMenuOpen(false)} 
-                  href={link.href} 
-                  className={`text-[10px] font-black tracking-widest uppercase py-2
-                    ${pathname === link.href ? 'text-rose-500' : 'text-slate-500'}`}
-                >
-                  {link.name}
-                </Link>
-              ))}
+            <div className="flex flex-col p-6 gap-2">
+              <div className="flex flex-col gap-2">
+                {navLinks.map((link) => (
+                  <Link 
+                    key={link.name} 
+                    onClick={() => setIsMobileMenuOpen(false)} 
+                    href={link.href} 
+                    className={`text-[10px] font-black tracking-widest uppercase py-3 border-b border-slate-50/50
+                      ${pathname === link.href ? 'text-rose-500' : 'text-slate-400'}`}
+                  >
+                    {link.name}
+                  </Link>
+                ))}
+              </div>
             </div>
           </motion.div>
         )}
