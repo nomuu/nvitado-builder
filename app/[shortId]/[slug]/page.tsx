@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import Preview from '../components/Preview';
+import Preview from '../../components/Preview';
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 
@@ -8,15 +8,15 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// --- 1. DYNAMIC TITLE (Corrected for Next.js 15) ---
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  // 📍 Kailangan i-await ang params dito
+// --- 1. DYNAMIC TITLE ---
+export async function generateMetadata({ params }: { params: Promise<{ shortId: string, slug: string }> }): Promise<Metadata> {
   const resolvedParams = await params; 
   
+  // 📍 Fetch gamit ang short_id para sa metadata
   const { data: invitation } = await supabase
     .from('invitations')
     .select('config_data')
-    .eq('slug', resolvedParams.slug)
+    .eq('short_id', resolvedParams.shortId) 
     .single();
 
   return {
@@ -25,21 +25,22 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 // --- 2. MAIN PAGE ---
-export default async function InvitationViewer({ params }: { params: Promise<{ slug: string }> }) {
-  // 📍 Kailangan din i-await ang params dito
+export default async function InvitationViewer({ params }: { params: Promise<{ shortId: string, slug: string }> }) {
   const resolvedParams = await params;
-  const { slug } = resolvedParams;
+  const { shortId } = resolvedParams; // 📍 shortId na ang priority natin dito
 
+  // 📍 Database Query: short_id na ang hinahanap natin
   const { data: invitation, error } = await supabase
     .from('invitations')
     .select('*')
-    .eq('slug', slug)
+    .eq('short_id', shortId)
     .single();
 
   if (error || !invitation) return notFound();
 
   return (
     <main className="min-h-screen w-full bg-white overflow-x-hidden">
+      {/* 📍 Preview is still the same, passing config data */}
       <Preview config={invitation.config_data} viewMode="desktop" />
     </main>
   );

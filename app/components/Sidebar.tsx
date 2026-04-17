@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import { BACKGROUNDS } from '../constants/backgrounds';
@@ -13,6 +13,15 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   const [showAllStyles, setShowAllStyles] = useState(false);
   const [showDateStyle, setShowDateStyle] = useState(false);
   const [showMessageStyle, setShowMessageStyle] = useState(false);
+
+  // 📍 Auto-generate short_id if it doesn't exist yet
+  useEffect(() => {
+    if (!config.shortId) {
+      // Gumawa ng random 8-char hex string (simulated short hash)
+      const randomId = Math.random().toString(16).substring(2, 10);
+      setConfig({ ...config, shortId: randomId });
+    }
+  }, [config, setConfig]);
 
   const basePrice = 50;
   const selectedBg = BACKGROUNDS.find(bg => bg.id === config.animationId);
@@ -80,7 +89,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     { id: 'story', label: 'Custom', icon: PlusCircle, premium: true },
   ];
 
-  // 📍 SIDEBAR - TINAASAN ANG Z-INDEX PARA MATAKPAN ANG PREVIEW ELEMENTS
   return (
     <aside className="w-full h-full bg-white border-r flex flex-col overflow-hidden font-sans text-slate-900 shadow-xl relative z-[9999]">
       <button onClick={onClose} className="lg:hidden absolute top-6 right-6 p-2 bg-slate-100 rounded-full text-slate-600 z-[10000]"><X size={20} /></button>
@@ -117,6 +125,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
       <div className="p-8 overflow-y-auto flex-1 space-y-10 custom-scrollbar">
         {activeTab === 'general' && (
           <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+            {/* 01. Background & Effects Section - Intact */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">01. Background & Effects</label>
@@ -133,6 +142,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               </div>
             </section>
 
+            {/* 02. Title & Style - Intact */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">02. Title & Style</label>
@@ -154,6 +164,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               </div>
             </section>
 
+            {/* 03. Date & Time - Intact */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">03. Date & Time</label>
@@ -176,11 +187,13 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               </div>
             </section>
 
+            {/* 04. Event Location - Intact */}
             <section>
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">04. Event Location</label>
               <GooglePlacesAutocomplete apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} selectProps={{ instanceId: "nvitado-location-select", onChange: (place: any) => setConfig({...config, location: place.label}), placeholder: "📍 Search venue...", styles: { control: (provided: any) => ({ ...provided, borderRadius: '12px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', fontSize: '11px', fontWeight: '700' }), } }} />
             </section>
 
+            {/* 05. Welcome Message - Intact */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">05. Welcome Message</label>
@@ -201,16 +214,22 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               )}
             </section>
 
+            {/* 06. Custom URL - UPDATED WITH SHORT ID */}
             <section>
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">06. Custom URL</label>
-              <div className="flex items-center p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700">
-                <span className="text-slate-400 font-bold">nvitado.com/</span>
-                <input type="text" className="bg-transparent outline-none flex-1 ml-1 text-slate-800 font-bold uppercase" placeholder="EVENT-NAME" value={config.slug} onChange={(e) => handleSlugChange(e.target.value)} />
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700">
+                  <span className="text-slate-400 font-bold">nvitado.com/v/</span>
+                  <span className="text-amber-600 font-black px-1.5 py-0.5 bg-amber-100 rounded-md mr-1">{config.shortId || '...'}</span>
+                  <span className="text-slate-300 mr-1">/</span>
+                  <input type="text" className="bg-transparent outline-none flex-1 text-slate-800 font-bold uppercase" placeholder="EVENT-NAME" value={config.slug} onChange={(e) => handleSlugChange(e.target.value)} />
+                </div>
               </div>
             </section>
           </div>
         )}
 
+        {/* Q&A Tab - Intact */}
         {activeTab === 'qa' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -279,6 +298,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
           </div>
         )}
 
+        {/* Story/Custom Tab - Intact */}
         {activeTab === 'story' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
              <div className="flex items-center justify-between p-4 bg-amber-50/50 rounded-2xl border border-amber-100">
@@ -362,6 +382,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
         )}
       </div>
 
+      {/* Footer / Payment Section - Intact */}
       <div className="p-6 bg-slate-50 border-t space-y-3 shrink-0">
         <div className="space-y-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
           <div className="flex justify-between"><span>Publishing Fee</span><span className="text-slate-900">₱{basePrice.toFixed(2)}</span></div>

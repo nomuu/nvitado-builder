@@ -1,18 +1,15 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
-import crypto from 'crypto'; // 📍 Kailangan ito para sa SHA256
+import crypto from 'crypto';
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// --- 📍 NEW ID GENERATOR (SHA256 of MMDDYYYYHHMMSS) ---
 const generateHashedId = () => {
   const now = new Date();
-  
-  // Format: MMDDYYYYHHMMSS
   const timestamp = 
     (now.getMonth() + 1).toString().padStart(2, '0') +
     now.getDate().toString().padStart(2, '0') +
@@ -21,11 +18,9 @@ const generateHashedId = () => {
     now.getMinutes().toString().padStart(2, '0') +
     now.getSeconds().toString().padStart(2, '0');
 
-  // SHA256 Encryption
   return crypto.createHash('sha256').update(timestamp).digest('hex');
 };
 
-// --- TOKEN GENERATOR (Same as your PayMongo logic) ---
 const generateTokenId = () => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
   let result = '';
@@ -41,11 +36,13 @@ export async function POST(req: Request) {
     
     // 1. GENERATE TOKEN ID AND HASHED ID
     const tokenId = generateTokenId();
-    const hashedId = generateHashedId(); // 📍 Hashed MMDDYYYYHHMMSS
+    const hashedId = generateHashedId();
+    const shortId = config.shortId; // 📍 Kinuha ang shortId mula sa Sidebar payload
 
-    // 2. SAVE/UPSERT SA SUPABASE (Added id here)
+    // 2. SAVE/UPSERT SA SUPABASE
     const { error: dbError } = await supabase.from('invitations').upsert({
-      id: hashedId,        // 📍 Ang bagong encrypted ID
+      id: hashedId,
+      short_id: shortId,    // 📍 Idinagdag sa database column
       slug: config.slug,
       config_data: config,
       status: 'waiting_payment',
@@ -58,7 +55,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Database save failed" }, { status: 500 });
     }
 
-    // 3. LEMON SQUEEZY CHECKOUT CREATION
     const storeId = process.env.LEMONSQUEEZY_STORE_ID?.toString();
     const variantId = process.env.LEMONSQUEEZY_VARIANT_ID?.toString();
     const apiKey = process.env.LEMONSQUEEZY_API_KEY?.trim();
@@ -73,7 +69,8 @@ export async function POST(req: Request) {
               custom: {
                 invitation_slug: config.slug,
                 token_id: tokenId,
-                invitation_id: hashedId, // 📍 Ipinasa rin ang hashed ID
+                invitation_id: hashedId,
+                short_id: shortId, // 📍 Ipinasa rin sa lemon custom data
               },
               variant_quantities: [
                 {
@@ -87,7 +84,8 @@ export async function POST(req: Request) {
               name: `Invitation: ${config.title}`,
               description: `License for ${config.slug} | Ref: ${tokenId}`, 
               receipt_button_text: 'Go to Invitation',
-              redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?slug=${config.slug}&token=${tokenId}`,
+              // 📍 In-update ang redirect URL para kasama ang shortId
+              redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?slug=${config.slug}&shortId=${shortId}&token=${tokenId}`,
             },
             checkout_options: {
               button_color: '#0f172a',
@@ -111,7 +109,6 @@ export async function POST(req: Request) {
     const checkoutUrl = response.data.data.attributes.url;
     const checkoutId = response.data.data.id;
 
-    // 4. UPDATE CHECKOUT ID SA SUPABASE (Para match sa flow mo)
     await supabase.from('invitations').update({ 
       checkout_id: checkoutId 
     }).eq('slug', config.slug);
