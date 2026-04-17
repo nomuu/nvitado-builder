@@ -3,13 +3,15 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Preview from '../components/Preview';
 import { BACKGROUNDS } from '../constants/backgrounds';
-import { Edit3, Eye, Monitor, Smartphone } from 'lucide-react';
+import { Edit3, Eye, Monitor, Smartphone, AlertTriangle, X } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
 export default function NvitadoEditor() {
   const [viewMode, setViewMode] = useState<'mobile' | 'desktop'>('mobile');
   const [isPublishing, setIsPublishing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [isEligible, setIsEligible] = useState(true);
   
   // 📍 New state para sa sync ng tabs
   const [activeTab, setActiveTab] = useState('general');
@@ -28,52 +30,63 @@ export default function NvitadoEditor() {
     welcomeMessage: 'We invite you to join us as we celebrate our love and begin our new journey together.',
     messageFont: 'font-serif',
     slug: '',
-    // 📍 Siniguro nating nandito itong mga bagong fields
     showQA: false,
     showStory: false,
     story: '',
   });
 
-  // --- 📍 CHATBOT HIDER LOGIC (HARD VERSION) ---
+  // 📍 DATE VALIDATION LOGIC
   useEffect(() => {
-    // 1. I-check kung galing tayo sa ibang page na may chatbot (Zombie Script)
+    if (!config.eventDate) return;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const eventDate = new Date(config.eventDate);
+    eventDate.setHours(0, 0, 0, 0);
+
+    const diffTime = eventDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 7) {
+      setIsEligible(false);
+      setShowDateModal(true);
+    } else {
+      setIsEligible(true);
+      setShowDateModal(false);
+    }
+  }, [config.eventDate]);
+
+  // --- 📍 CHATBOT HIDER LOGIC ---
+  useEffect(() => {
     const hasChatbot = document.querySelector('script[src*="tuqlas.com"]') || 
                       document.querySelector('[class*="tuqlas"]');
 
     if (hasChatbot) {
-      // Kung may nakitang chatbot elements, mag-hard refresh para malinis ang DOM at Memory
       window.location.reload();
       return;
     }
 
-    // 2. Extra safety: Paulit-ulit na i-check at burahin kung may mag-re-render man
     const hideChatbot = () => {
-      // Burahin ang script tags
       const scripts = document.querySelectorAll('script[src*="tuqlas.com"]');
       scripts.forEach(s => s.remove());
-
-      // Burahin ang visual elements (bubbles, iframes, containers)
       const chatbotElements = document.querySelectorAll('.tuqlas-chatbot-container, #tuqlas-chatbot, [class*="tuqlas"]');
       chatbotElements.forEach(el => {
-        if (el instanceof HTMLElement) {
-          el.remove(); 
-        }
+        if (el instanceof HTMLElement) el.remove(); 
       });
     };
 
     hideChatbot();
-    // Check every 500ms sa loob ng 3 seconds para sigurado
     const interval = setInterval(hideChatbot, 500);
     const timeout = setTimeout(() => clearInterval(interval), 3000);
-
     return () => {
       clearInterval(interval);
       clearTimeout(timeout);
     };
   }, []);
-  // ----------------------------------------------
 
   const handlePublish = async (calculatedTotal: number) => {
+    if (!isEligible) return setShowDateModal(true); // Double check
     if (!config.slug) return alert("Hoy Chief! Paki-set muna ang Custom URL sa Step 06.");
     setIsPublishing(true);
     const selectedBg = BACKGROUNDS.find(bg => bg.id === config.animationId);
@@ -93,6 +106,35 @@ export default function NvitadoEditor() {
   return (
     <div className="flex h-screen w-full bg-slate-100 overflow-hidden font-sans text-slate-900 relative">
       
+      {/* 📍 DATE WARNING MODAL */}
+      <AnimatePresence>
+        {showDateModal && (
+          <div className="fixed inset-0 z-[10001] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-[2.5rem] p-8 max-w-md w-full shadow-2xl text-center border-t-[10px] border-amber-500"
+            >
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <AlertTriangle className="text-amber-600" size={32} />
+              </div>
+              <h3 className="text-xl font-black uppercase tracking-tight text-slate-900 mb-2">Not Eligible to Publish</h3>
+              <p className="text-slate-500 text-sm font-medium leading-relaxed mb-8">
+                Sorry Chief! Ang rules natin ay dapat **hindi bababa sa 7 days** bago ang event para makapag-create. 
+                Masyado nang malapit ang date na napili mo.
+              </p>
+              <button 
+                onClick={() => setShowDateModal(false)}
+                className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs tracking-widest hover:bg-slate-800 transition-all uppercase"
+              >
+                I understand, let me change it
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
       {/* 📍 SIDEBAR */}
       <div className={`
         fixed lg:relative inset-y-0 left-0 z-50 w-[380px] max-w-[85vw] transform transition-transform duration-300 ease-in-out
@@ -106,6 +148,7 @@ export default function NvitadoEditor() {
           onClose={() => setIsSidebarOpen(false)}
           activeTab={activeTab}
           setActiveTab={setActiveTab}
+          isEligible={isEligible} // 📍 Pinasa para sa button state
         />
       </div>
       

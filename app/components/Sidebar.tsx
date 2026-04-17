@@ -5,17 +5,16 @@ import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import { BACKGROUNDS } from '../constants/backgrounds';
 import { 
   X, Settings2, BookHeart, MessageCircleQuestion, 
-  PlusCircle, Trash2, Star, Heart, PartyPopper, Cake, Info 
+  PlusCircle, Trash2, Star, Heart, PartyPopper, Cake, Info, AlertCircle 
 } from 'lucide-react';
-import axios from 'axios'; // 📍 Siguraduhin na imported ang axios
+import axios from 'axios';
 
-export default function Sidebar({ config, setConfig, onPublish, isPublishing, onClose, activeTab, setActiveTab }: any) {
+export default function Sidebar({ config, setConfig, onPublish, isPublishing, onClose, activeTab, setActiveTab, isEligible }: any) {
   const [showAllBgs, setShowAllBgs] = useState(false);
   const [showAllStyles, setShowAllStyles] = useState(false);
   const [showDateStyle, setShowDateStyle] = useState(false);
   const [showMessageStyle, setShowMessageStyle] = useState(false);
 
-  // 📍 Auto-generate short_id if it doesn't exist yet
   useEffect(() => {
     if (!config.shortId) {
       const randomId = Math.random().toString(16).substring(2, 10);
@@ -89,9 +88,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     { id: 'story', label: 'Custom', icon: PlusCircle, premium: true },
   ];
 
-  // 📍 UPDATED ONPUBLISH LOGIC (To include image in save)
   const handlePublishClick = async () => {
-    // Ipasa ang kabuuang price sa original onPublish function
     onPublish(totalPrice);
   };
 
@@ -131,13 +128,11 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
       <div className="p-8 overflow-y-auto flex-1 space-y-10 custom-scrollbar">
         {activeTab === 'general' && (
           <div className="space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
-            {/* 01. Background & Effects Section - Intact */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">01. Background & Effects</label>
                 <button onClick={() => setShowAllBgs(!showAllBgs)} className="text-[10px] font-bold text-amber-600 hover:underline">{showAllBgs ? 'Less' : 'View All'}</button>
               </div>
-              
               <div className={`grid gap-3 transition-all duration-300 ${showAllBgs ? 'grid-cols-2' : 'grid-cols-3'}`}>
                 {(showAllBgs ? BACKGROUNDS : BACKGROUNDS.slice(0, 6)).map((bg) => (
                   <button key={bg.id} onClick={() => handleBgSelect(bg)} className={`group relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl border transition-all h-20 ${config.animationId === bg.id ? 'border-amber-500 ring-2 ring-amber-100' : 'border-slate-100 bg-slate-50'}`}>
@@ -148,13 +143,11 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                 ))}
               </div>
 
-              {/* 📍 IMAGE UPLOAD AREA */}
               <div className="mt-5 space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Add Invitation Photo</label>
                   {config.featuredImage && <span className="text-[8px] font-black text-emerald-500 uppercase italic">Image Ready</span>}
                 </div>
-                
                 {!config.featuredImage ? (
                   <div className="relative h-14 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:border-amber-400 transition-all group overflow-hidden">
                     <input 
@@ -195,7 +188,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               </div>
             </section>
 
-            {/* 02. Title & Style - Intact */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">02. Title & Style</label>
@@ -217,14 +209,19 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               </div>
             </section>
 
-            {/* 03. Date & Time - Intact */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">03. Date & Time</label>
                 <button onClick={() => setShowDateStyle(!showDateStyle)} className="text-[10px] font-bold text-amber-600 hover:underline">{showDateStyle ? 'Hide' : 'Format +'}</button>
               </div>
               <div className="space-y-3">
-                <input type="date" className="p-3 bg-slate-50 border border-slate-200 rounded-xl w-full font-bold text-xs text-slate-900" value={config.eventDate} onChange={(e) => setConfig({...config, eventDate: e.target.value})} />
+                <input type="date" className={`p-3 border rounded-xl w-full font-bold text-xs text-slate-900 transition-colors ${!isEligible ? 'bg-rose-50 border-rose-200 ring-2 ring-rose-100' : 'bg-slate-50 border-slate-200'}`} value={config.eventDate} onChange={(e) => setConfig({...config, eventDate: e.target.value})} />
+                {!isEligible && (
+                  <div className="flex items-center gap-1.5 text-rose-500 font-black text-[8px] uppercase px-1">
+                    <AlertCircle size={10} />
+                    Invalid: Date must be at least 7 days from now
+                  </div>
+                )}
                 {showDateStyle && (
                   <select className="p-3 bg-white border border-amber-200 rounded-xl w-full font-bold text-[10px] text-slate-900 outline-none" value={config.dateFormat} onChange={(e) => setConfig({...config, dateFormat: e.target.value})}>
                     <option value="long">Elegant (April 07, 2026)</option>
@@ -240,13 +237,11 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               </div>
             </section>
 
-            {/* 04. Event Location - Intact */}
             <section>
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">04. Event Location</label>
               <GooglePlacesAutocomplete apiKey={process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY} selectProps={{ instanceId: "nvitado-location-select", onChange: (place: any) => setConfig({...config, location: place.label}), placeholder: "📍 Search venue...", styles: { control: (provided: any) => ({ ...provided, borderRadius: '12px', border: '1px solid #e2e8f0', backgroundColor: '#f8fafc', fontSize: '11px', fontWeight: '700' }), } }} />
             </section>
 
-            {/* 05. Welcome Message - Intact */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">05. Welcome Message</label>
@@ -267,7 +262,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               )}
             </section>
 
-            {/* 06. Custom URL - Intact */}
             <section>
               <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">06. Custom URL</label>
               <div className="flex flex-col gap-2">
@@ -282,7 +276,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
           </div>
         )}
 
-        {/* Q&A Tab - Intact */}
         {activeTab === 'qa' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
              <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -297,61 +290,32 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                   <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${config.showQA ? 'right-1' : 'left-1'}`} />
                 </button>
              </div>
-
              {config.showQA && (
                <div className="animate-in zoom-in-95 duration-200 space-y-6">
                   <div className="flex justify-between items-center">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">Your FAQ List</label>
                     <p className="text-[8px] font-black text-amber-600 uppercase italic">3 Free + 2 Paid</p>
                   </div>
-                  
                   {(config.questions || [{ q: '', a: '' }, { q: '', a: '' }, { q: '', a: '' }]).map((item: any, index: number) => (
                     <div key={index} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 relative group">
                       {index >= 3 && (
-                        <button 
-                          onClick={() => removeQuestion(index)}
-                          className="absolute -top-2 -right-2 p-1 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <Trash2 size={10} />
-                        </button>
+                        <button onClick={() => removeQuestion(index)} className="absolute -top-2 -right-2 p-1 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={10} /></button>
                       )}
                       <div className="flex items-center gap-2">
-                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${index >= 3 ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-600'}`}>
-                          {index + 1}
-                        </span>
-                        <input 
-                          type="text" 
-                          placeholder="The Question..." 
-                          className="bg-transparent outline-none w-full font-bold text-slate-800 text-[11px] uppercase"
-                          value={item.q || ''}
-                          onChange={(e) => handleQAChange(index, 'q', e.target.value)}
-                        />
+                        <span className={`text-[9px] font-black px-2 py-0.5 rounded-full ${index >= 3 ? 'bg-amber-500 text-white' : 'bg-amber-100 text-amber-600'}`}>{index + 1}</span>
+                        <input type="text" placeholder="The Question..." className="bg-transparent outline-none w-full font-bold text-slate-800 text-[11px] uppercase" value={item.q || ''} onChange={(e) => handleQAChange(index, 'q', e.target.value)} />
                       </div>
-                      <textarea 
-                        rows={2} 
-                        placeholder="The Answer..." 
-                        className="p-2 bg-white border border-slate-200 rounded-xl w-full font-medium text-[10px] resize-none text-slate-600"
-                        value={item.a || ''}
-                        onChange={(e) => handleQAChange(index, 'a', e.target.value)}
-                      />
+                      <textarea rows={2} placeholder="The Answer..." className="p-2 bg-white border border-slate-200 rounded-xl w-full font-medium text-[10px] resize-none text-slate-600" value={item.a || ''} onChange={(e) => handleQAChange(index, 'a', e.target.value)} />
                     </div>
                   ))}
-
                   {(config.questions?.length || 3) < 5 && (
-                    <button 
-                      onClick={addQuestion}
-                      className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-[9px] font-black text-slate-400 hover:border-amber-400 hover:text-amber-600 flex items-center justify-center gap-2 transition-all bg-white shadow-sm"
-                    >
-                      <PlusCircle size={14} />
-                      ADD EXTRA QUESTION (+₱2.00)
-                    </button>
+                    <button onClick={addQuestion} className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-[9px] font-black text-slate-400 hover:border-amber-400 hover:text-amber-600 flex items-center justify-center gap-2 transition-all bg-white shadow-sm"><PlusCircle size={14} />ADD EXTRA QUESTION (+₱2.00)</button>
                   )}
                </div>
              )}
           </div>
         )}
 
-        {/* Story/Custom Tab - Intact */}
         {activeTab === 'story' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
              <div className="flex items-center justify-between p-4 bg-amber-50/50 rounded-2xl border border-amber-100">
@@ -359,14 +323,8 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">Enable Custom Section</p>
                    <p className="text-[9px] font-bold text-amber-600 uppercase italic">+₱5.00 Premium Feature</p>
                 </div>
-                <button 
-                  onClick={() => setConfig({...config, showStory: !config.showStory})} 
-                  className={`w-10 h-5 rounded-full relative transition-all ${config.showStory ? 'bg-amber-500' : 'bg-slate-300'}`}
-                >
-                  <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${config.showStory ? 'right-1' : 'left-1'}`} />
-                </button>
+                <button onClick={() => setConfig({...config, showStory: !config.showStory})} className={`w-10 h-5 rounded-full relative transition-all ${config.showStory ? 'bg-amber-500' : 'bg-slate-300'}`}><div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${config.showStory ? 'right-1' : 'left-1'}`} /></button>
              </div>
-
              {config.showStory && (
                <div className="animate-in zoom-in-95 duration-200 space-y-6">
                   <section>
@@ -375,59 +333,29 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                       {ICON_OPTIONS.map((item) => {
                         const Icon = item.icon;
                         return (
-                          <button 
-                            key={item.id} 
-                            onClick={() => setConfig({...config, customIcon: item.id})}
-                            className={`p-2 rounded-lg border flex items-center justify-center transition-all ${config.customIcon === item.id ? 'border-amber-500 bg-amber-50 text-amber-600 shadow-sm' : 'border-slate-100 bg-white hover:border-slate-200'}`}
-                          >
-                            <Icon size={16} />
-                          </button>
+                          <button key={item.id} onClick={() => setConfig({...config, customIcon: item.id})} className={`p-2 rounded-lg border flex items-center justify-center transition-all ${config.customIcon === item.id ? 'border-amber-500 bg-amber-50 text-amber-600 shadow-sm' : 'border-slate-100 bg-white hover:border-slate-200'}`}><Icon size={16} /></button>
                         );
                       })}
                     </div>
                   </section>
-
                   <section>
                     <div className="flex justify-between items-center mb-4">
                       <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">Icon Title (Navbar)</label>
-                      <span className={`text-[9px] font-bold ${(config.iconTitle || '').length >= 8 ? 'text-rose-500' : 'text-slate-400'}`}>
-                        {(config.iconTitle || '').length}/8
-                      </span>
+                      <span className={`text-[9px] font-bold ${(config.iconTitle || '').length >= 8 ? 'text-rose-500' : 'text-slate-400'}`}>{(config.iconTitle || '').length}/8</span>
                     </div>
                     <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                      <input 
-                        type="text" 
-                        maxLength={8}
-                        className="bg-transparent outline-none w-full font-bold text-slate-800 text-xs uppercase" 
-                        placeholder="e.g. STORY" 
-                        value={config.iconTitle || ''} 
-                        onChange={(e) => setConfig({...config, iconTitle: e.target.value})} 
-                      />
+                      <input type="text" maxLength={8} className="bg-transparent outline-none w-full font-bold text-slate-800 text-xs uppercase" placeholder="e.g. STORY" value={config.iconTitle || ''} onChange={(e) => setConfig({...config, iconTitle: e.target.value})} />
                     </div>
                   </section>
-
                   <section>
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">Custom Title (Section)</label>
                     <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
-                      <input 
-                        type="text" 
-                        className="bg-transparent outline-none w-full font-bold text-slate-800 text-xs uppercase" 
-                        placeholder="e.g. OUR LOVE STORY" 
-                        value={config.customTitle || ''} 
-                        onChange={(e) => setConfig({...config, customTitle: e.target.value})} 
-                      />
+                      <input type="text" className="bg-transparent outline-none w-full font-bold text-slate-800 text-xs uppercase" placeholder="e.g. OUR LOVE STORY" value={config.customTitle || ''} onChange={(e) => setConfig({...config, customTitle: e.target.value})} />
                     </div>
                   </section>
-
                   <section>
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">Content</label>
-                    <textarea 
-                      rows={8} 
-                      className="p-3 bg-slate-50 border border-slate-200 rounded-xl w-full font-bold text-xs resize-none text-slate-900" 
-                      placeholder="Share your story or extra details here..."
-                      value={config.story || ''}
-                      onChange={(e) => setConfig({...config, story: e.target.value})}
-                    />
+                    <textarea rows={8} className="p-3 bg-slate-50 border border-slate-200 rounded-xl w-full font-bold text-xs resize-none text-slate-900" placeholder="Share your story or extra details here..." value={config.story || ''} onChange={(e) => setConfig({...config, story: e.target.value})} />
                   </section>
                </div>
              )}
@@ -435,26 +363,16 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
         )}
       </div>
 
-      {/* Footer / Payment Section - Intact */}
       <div className="p-6 bg-slate-50 border-t space-y-3 shrink-0">
         <div className="space-y-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
           <div className="flex justify-between"><span>Publishing Fee</span><span className="text-slate-900">₱{basePrice.toFixed(2)}</span></div>
           {bgPrice > 0 && <div className="flex justify-between text-amber-600"><span>{selectedBg?.name} Effect</span><span>+₱{bgPrice.toFixed(2)}</span></div>}
-          
           {qaPrice > 0 && (
-            <div className="flex justify-between text-amber-600 animate-in fade-in">
-              <span>Extra FAQ Questions</span>
-              <span>+₱{qaPrice.toFixed(2)}</span>
-            </div>
+            <div className="flex justify-between text-amber-600 animate-in fade-in"><span>Extra FAQ Questions</span><span>+₱{qaPrice.toFixed(2)}</span></div>
           )}
-
           {config.showStory && (
-            <div className="flex justify-between text-amber-600 animate-in fade-in">
-              <span>Custom Section Feature</span>
-              <span>+₱5.00</span>
-            </div>
+            <div className="flex justify-between text-amber-600 animate-in fade-in"><span>Custom Section Feature</span><span>+₱5.00</span></div>
           )}
-
           <div className="flex justify-between border-t pt-2 text-[12px] text-slate-900 font-black">
             <span>Total to pay</span>
             <span className="text-amber-600">₱{totalPrice.toFixed(2)}</span>
@@ -462,10 +380,10 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
         </div>
         <button 
           onClick={handlePublishClick} 
-          disabled={isPublishing} 
-          className="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-xs tracking-widest shadow-lg hover:bg-amber-900 transition-all active:scale-95 disabled:bg-slate-400"
+          disabled={isPublishing || !isEligible} // 📍 Disabled din kapag hindi eligible
+          className={`w-full py-4 rounded-xl font-black text-xs tracking-widest shadow-lg transition-all active:scale-95 disabled:bg-slate-300 disabled:cursor-not-allowed ${!isEligible ? 'bg-rose-100 text-rose-400' : 'bg-slate-900 text-white hover:bg-amber-900'}`}
         >
-          {isPublishing ? 'GENERATING LINK...' : 'PUBLISH INVITATION'}
+          {isPublishing ? 'GENERATING LINK...' : !isEligible ? 'INVALID EVENT DATE' : 'PUBLISH INVITATION'}
         </button>
       </div>
     </aside>
