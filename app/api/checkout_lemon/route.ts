@@ -18,7 +18,9 @@ const generateHashedId = () => {
     now.getMinutes().toString().padStart(2, '0') +
     now.getSeconds().toString().padStart(2, '0');
 
-  return crypto.createHash('sha256').update(timestamp).digest('hex');
+  // Dagdag random para sigurado ang uniqueness ng ID
+  const random = Math.random().toString(36).substring(2, 7);
+  return crypto.createHash('sha256').update(timestamp + random).digest('hex');
 };
 
 const generateTokenId = () => {
@@ -34,13 +36,25 @@ export async function POST(req: Request) {
   try {
     const { config, amount } = await req.json();
     
-    // 1. GENERATE TOKEN ID AND HASHED ID
+    // 📍 1. CHECK KUNG MAY EXISTING SLUG NA PAID NA
+    const { data: existingInvite } = await supabase
+      .from('invitations')
+      .select('status')
+      .eq('slug', config.slug)
+      .eq('status', 'paid')
+      .single();
+
+    if (existingInvite) {
+      return NextResponse.json({ 
+        error: "This URL is already taken. Please choose another one." 
+      }, { status: 400 });
+    }
+
     const tokenId = generateTokenId();
     const hashedId = generateHashedId();
     const shortId = config.shortId;
 
-    // 2. SAVE/UPSERT SA SUPABASE
-    // Idinagdag ang revision_count: 2
+    // 📍 2. SAVE SA SUPABASE (Gamit ang ID as Primary Key)
     const { error: dbError } = await supabase.from('invitations').upsert({
       id: hashedId,
       short_id: shortId,
@@ -49,8 +63,8 @@ export async function POST(req: Request) {
       status: 'waiting_payment',
       total_paid: amount,
       token_id: tokenId,
-      revision_count: 2, // 📍 Default revisions after payment
-    }, { onConflict: 'slug' });
+      revision_count: 2, 
+    }, { onConflict: 'id' });
 
     if (dbError) {
       console.error("SUPABASE ERROR:", dbError.message);
@@ -61,6 +75,7 @@ export async function POST(req: Request) {
     const variantId = process.env.LEMONSQUEEZY_VARIANT_ID?.toString();
     const apiKey = process.env.LEMONSQUEEZY_API_KEY?.trim();
 
+    // 📍 3. LEMON SQUEEZY CHECKOUT CALL
     const response = await axios.post(
       'https://api.lemonsqueezy.com/v1/checkouts',
       {
@@ -68,11 +83,10 @@ export async function POST(req: Request) {
           type: 'checkouts',
           attributes: {
             checkout_data: {
-              // 📍 NILINIS KO DITO: Tinanggal ang empty email field para hindi mag-error
               custom: {
                 invitation_slug: config.slug,
                 token_id: tokenId,
-                invitation_id: hashedId,
+                invitation_id: hashedId, // 📍 Importante ito para sa Webhook
                 short_id: shortId,
               },
               variant_quantities: [
@@ -85,9 +99,9 @@ export async function POST(req: Request) {
             custom_price: Math.round(amount * 100), 
             product_options: {
               name: `Invitation: ${config.title}`,
-              description: `License for ${config.slug} | Ref: ${tokenId}`, 
+              description: `Ref: ${tokenId}`, 
               receipt_button_text: 'Go to Invitation',
-              redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?slug=${config.slug}&shortId=${shortId}&token=${tokenId}`,
+              redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?slug=${config.slug}`,
             },
             checkout_options: {
               button_color: '#0f172a',
@@ -111,15 +125,15 @@ export async function POST(req: Request) {
     const checkoutUrl = response.data.data.attributes.url;
     const checkoutId = response.data.data.id;
 
+    // 📍 4. UPDATE RECORD WITH CHECKOUT ID
     await supabase.from('invitations').update({ 
       checkout_id: checkoutId 
-    }).eq('slug', config.slug);
+    }).eq('id', hashedId);
 
     return NextResponse.json({ checkout_url: checkoutUrl });
 
   } catch (error: any) {
-    console.error("LEMON ERROR FULL DETAILS:", error.response?.data || error.message);
-    const errorMessage = error.response?.data?.errors?.[0]?.detail || error.message;
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+    console.error("LEMON ERROR:", error.response?.data || error.message);
+    return NextResponse.json({ error: "Failed to generate checkout link" }, { status: 500 });
   }
 }

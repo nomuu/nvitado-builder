@@ -2,7 +2,6 @@ import React from 'react';
 import Link from 'next/link';
 import { PartyPopper, Hash, ReceiptText, Sparkles, CreditCard, User, KeyRound, Mail, BookHeart, MessageCircleQuestion } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
-import axios from 'axios';
 import PrintButton from '../components/PrintButton'; 
 import QRCodeSection from '../components/QRCodeSection'; 
 
@@ -16,39 +15,26 @@ async function getSuccessDetails(slug: string) {
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
 
-  // 📍 IDINAGDAG ANG 'short_id' SA SELECT QUERY
+  // 📍 Fetch invitation details directly from DB
+  // We use the slug but also order by created_at to get the latest attempt
   const { data: inv, error } = await supabase
     .from('invitations')
-    .select('*, short_id') 
+    .select('*')
     .eq('slug', slug)
+    .order('created_at', { ascending: false })
+    .limit(1)
     .single();
 
   if (error || !inv) return null;
 
-  let payerInfo = { name: 'Valued Customer', email: '---', method: 'E-WALLET' };
+  // 📍 Payer info now comes directly from our database (populated by the webhook)
+  // If webhook hasn't fired yet, we show a pending message
+  const payerInfo = { 
+    name: 'Valued Customer', 
+    email: inv.email || 'Confirmation pending...', 
+    method: 'CARD/E-WALLET' 
+  };
 
-  if (inv.checkout_id) {
-    try {
-      // Logic para sa Lemon Squeezy o PayMongo details (Retained your original logic)
-      const res = await axios.get(`https://api.paymongo.com/v1/checkout_sessions/${inv.checkout_id}`, {
-        headers: {
-          Authorization: `Basic ${Buffer.from(process.env.PAYMONGO_SECRET_KEY + ':').toString('base64')}`
-        }
-      });
-      const attrs = res.data.data.attributes;
-      const billing = attrs.payments?.[0]?.attributes?.billing || attrs.line_items?.[0]?.billing || attrs.customer_details;
-      
-      if (billing) {
-        payerInfo = {
-          name: billing.name || 'Valued Customer',
-          email: billing.email || '---',
-          method: attrs.payment_method_used?.toUpperCase() || 'E-WALLET'
-        };
-      }
-    } catch (e) {
-      console.error("Payment Detail Fetch Error");
-    }
-  }
   return { inv, payerInfo };
 }
 
@@ -67,8 +53,7 @@ export default async function SuccessPage(props: {
   const eventTitle = config.title || inv.title || "Your Invitation";
   const amount = inv.total_paid || 0;
 
-  // 📍 UPDATED URL LOGIC: Gamit ang short_id/slug format
-  // Kung walang short_id (legacy data), fallback sa slug lang
+  // 📍 URL Logic
   const invitationPath = inv.short_id ? `${inv.short_id}/${inv.slug}` : inv.slug;
   const fullUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://nvitado.com'}/${invitationPath}`; 
 
@@ -129,7 +114,6 @@ export default async function SuccessPage(props: {
              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest px-4 relative z-10 text-center font-bold italic">Use this code to edit your invitation in the future.</p>
           </div>
 
-          {/* Payer Info Section - Intact */}
           <div className="space-y-5 mb-6 bg-slate-50 p-6 rounded-3xl border border-slate-100 text-left text-slate-900 font-bold">
              <div className="border-b border-slate-200 pb-3">
                 <p className="text-[8px] font-black text-slate-400 uppercase mb-1.5 tracking-widest leading-none font-bold">Payer Name</p>
@@ -154,12 +138,11 @@ export default async function SuccessPage(props: {
              <div className="">
                 <p className="text-[8px] font-black text-rose-500 uppercase mb-1.5 italic tracking-widest leading-none font-bold">Transaction ID</p>
                 <p className="text-[10px] font-mono font-bold break-all uppercase leading-tight tracking-tighter">
-                   {inv.checkout_id}
+                   {inv.checkout_id || 'PROCESSED'}
                 </p>
              </div>
           </div>
 
-          {/* Breakdown Section - Intact */}
           <div className="bg-slate-50 rounded-3xl p-6 mb-6 border border-slate-100 text-slate-500 font-bold">
             <div className="flex items-center gap-2 mb-4 border-b border-slate-200 pb-3 text-slate-400">
               <ReceiptText size={14} />
@@ -178,7 +161,6 @@ export default async function SuccessPage(props: {
             </div>
           </div>
 
-          {/* Method Info - Intact */}
           <div className="flex items-center justify-between px-5 py-4 bg-slate-900 rounded-2xl mb-8 text-white shadow-lg text-left font-bold italic">
              <div className="flex items-center gap-3">
                 <div className="bg-white/10 p-2 rounded-lg text-rose-500"><CreditCard size={14} /></div>
@@ -193,7 +175,6 @@ export default async function SuccessPage(props: {
              </div>
           </div>
 
-          {/* QR & Link Section - UPDATED URL */}
           <div className="bg-white p-6 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
             <div className="mb-4">
               <QRCodeSection url={fullUrl} />
@@ -211,7 +192,6 @@ export default async function SuccessPage(props: {
       <div className="max-w-[420px] w-full mt-6 space-y-3 px-2">
         <PrintButton targetId="receipt-to-download" mode="receipt" />
         <PrintButton targetId="qr-only-download" mode="qr" />
-        {/* 📍 UPDATED BUTTON LINK */}
         <Link 
           href={`/${invitationPath}`} 
           className="block w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase text-center shadow-lg active:scale-95 transition-all font-bold"
