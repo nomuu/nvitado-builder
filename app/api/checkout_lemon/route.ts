@@ -25,7 +25,25 @@ export async function POST(req: Request) {
 
     if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
 
-    // 2. LEMON SQUEEZY CALL
+    // 2. GENERATE PROFESSIONAL BREAKDOWN (MATCHING SIDEBAR)
+    const effectPrice = (amount % 50 === 5 || amount % 50 === 55 || amount % 50 === 25 || amount % 50 === 30) ? (amount % 50 === 25 || amount % 50 === 30 ? 25 : 5) : 0;
+    const storyPrice = config.showStory ? 5 : 0;
+    const extraQACount = Math.max(0, (config.questions?.length || 0) - 3);
+    const qaPrice = extraQACount * 2;
+    const extensionPrice = Math.max(0, amount - 50 - effectPrice - storyPrice - qaPrice);
+
+    // Kuhanin ang effect name (uppercase para match sa sidebar)
+    const effectName = config.effect?.replace(/([A-Z])/g, ' $1').trim().toUpperCase() || 'THEME EFFECT';
+
+    let description = `PUBLISHING FEE — ₱50.00`;
+    if (effectPrice > 0) description += `  |  ${effectName} — ₱${effectPrice.toFixed(2)}`;
+    if (storyPrice > 0) description += `  |  CUSTOM SECTION FEATURE — ₱${storyPrice.toFixed(2)}`;
+    if (qaPrice > 0) description += `  |  EXTRA Q&A (${extraQACount}) — ₱${qaPrice.toFixed(2)}`;
+    if (extensionPrice > 0) description += `  |  ADD-ONS / EXTENSION — ₱${extensionPrice.toFixed(2)}`;
+    
+    description += `  |  REF: ${tokenId}`;
+
+    // 3. LEMON SQUEEZY CALL
     const response = await axios.post('https://api.lemonsqueezy.com/v1/checkouts', {
       data: {
         type: 'checkouts',
@@ -38,8 +56,8 @@ export async function POST(req: Request) {
           },
           custom_price: Math.round(amount * 100),
           product_options: {
-            name: `Invitation: ${config.title}`, // 📍 LALABAS NA ITO
-            description: `Reference ID: ${tokenId}`,
+            name: `INVITATION: ${config.title.toUpperCase()}`,
+            description: description, 
             receipt_button_text: 'Go to Invitation',
             redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?slug=${config.slug}`
           },

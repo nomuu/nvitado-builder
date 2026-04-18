@@ -9,14 +9,11 @@ export const dynamic = 'force-dynamic';
 
 async function getSuccessDetails(slug: string) {
   if (!slug) return null;
+  const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+  
+  // Wait ng 1.5 seconds para masiguradong tapos na ang webhook mag-save
+  await new Promise(resolve => setTimeout(resolve, 1500));
 
-  const supabase = createClient(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  // 📍 Fetch invitation details directly from DB
-  // We use the slug but also order by created_at to get the latest attempt
   const { data: inv, error } = await supabase
     .from('invitations')
     .select('*')
@@ -27,33 +24,24 @@ async function getSuccessDetails(slug: string) {
 
   if (error || !inv) return null;
 
-  // 📍 Payer info now comes directly from our database (populated by the webhook)
-  // If webhook hasn't fired yet, we show a pending message
   const payerInfo = { 
-    name: 'Valued Customer', 
+    name: inv.customer_name || 'Valued Customer', // 📍 BASAHIN ANG PANGALAN DITO
     email: inv.email || 'Confirmation pending...', 
     method: 'CARD/E-WALLET' 
   };
-
   return { inv, payerInfo };
 }
 
-export default async function SuccessPage(props: { 
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }> 
-}) {
+export default async function SuccessPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const sParams = await props.searchParams;
   const slug = typeof sParams.slug === 'string' ? sParams.slug : null;
   const data = await getSuccessDetails(slug as string);
-
   if (!data) return <div className="p-20 text-center font-black italic text-rose-500 uppercase">404 | NOT FOUND</div>;
 
   const { inv, payerInfo } = data;
-
   const config = inv.config_data || {};
   const eventTitle = config.title || inv.title || "Your Invitation";
   const amount = inv.total_paid || 0;
-
-  // 📍 URL Logic
   const invitationPath = inv.short_id ? `${inv.short_id}/${inv.slug}` : inv.slug;
   const fullUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://nvitado.com'}/${invitationPath}`; 
 
@@ -62,43 +50,27 @@ export default async function SuccessPage(props: {
   const extraQACount = Math.max(0, (config.questions?.length || 0) - 3);
   const qaPrice = extraQACount * 2;
   const extensionPrice = Math.max(0, amount - 50 - effectPrice - storyPrice - qaPrice);
-
   const dateObj = new Date(inv.created_at);
 
   return (
     <div className="min-h-screen bg-[#F8F8F8] flex flex-col items-center justify-center p-4 font-sans text-slate-900 leading-tight relative">
-      
-      {/* 📍 QR DOWNLOAD SECTION */}
       <div className="fixed -left-[9999px] top-0 overflow-hidden">
-        <div 
-          id="qr-only-download" 
-          className="bg-white flex flex-col items-center justify-center p-12 text-center"
-          style={{ width: '450px', height: '450px' }}
-        >
+        <div id="qr-only-download" className="bg-white flex flex-col items-center justify-center p-12 text-center" style={{ width: '450px', height: '450px' }}>
           <div className="mb-6 w-full">
-            <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight leading-tight mb-6">
-               {eventTitle}
-            </h1>
-            <div className="flex justify-center">
-               <QRCodeSection url={fullUrl} />
-            </div>
+            <h1 className="text-2xl font-black text-slate-900 uppercase tracking-tight leading-tight mb-6">{eventTitle}</h1>
+            <div className="flex justify-center"><QRCodeSection url={fullUrl} /></div>
           </div>
           <p className="text-[10px] font-black text-rose-500 uppercase tracking-[0.3em] mb-2 font-bold">Invitation Link</p>
-          <p className="text-sm font-bold text-slate-900 font-mono lowercase tracking-tighter">
-            {fullUrl.replace('https://', '').replace('http://', '')}
-          </p>
+          <p className="text-sm font-bold text-slate-900 font-mono lowercase tracking-tighter">{fullUrl.replace('https://', '').replace('http://', '')}</p>
         </div>
       </div>
 
       <div className="max-w-[420px] w-full text-left">
         <div id="receipt-to-download" className="bg-white rounded-t-[3rem] pt-10 px-8 pb-10 shadow-2xl border border-slate-100 relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-2 bg-rose-500" />
-          
           <div className="flex justify-between items-start mb-8 text-left text-slate-900">
             <div>
-              <div className="mb-1">
-                <img src="/assets/images/logo2.png" alt="Logo" style={{ width: '110px', height: 'auto' }} />
-              </div>
+              <div className="mb-1"><img src="/assets/images/logo2.png" alt="Logo" style={{ width: '110px', height: 'auto' }} /></div>
               <p className="text-[8px] font-black text-rose-500 tracking-[0.3em] uppercase leading-none font-bold italic">Official Payment Receipt</p>
             </div>
             <PartyPopper size={24} className="text-emerald-500 rotate-12" />
@@ -144,7 +116,7 @@ export default async function SuccessPage(props: {
           </div>
 
           <div className="bg-slate-50 rounded-3xl p-6 mb-6 border border-slate-100 text-slate-500 font-bold">
-            <div className="flex items-center gap-2 mb-4 border-b border-slate-200 pb-3 text-slate-400">
+            <div className="flex items-center gap-2 mb-4 border-b border-slate-200 pb-3 text-slate-400 text-bold">
               <ReceiptText size={14} />
               <p className="text-[9px] font-black uppercase tracking-widest italic leading-none font-bold">Order Breakdown</p>
             </div>
@@ -153,7 +125,7 @@ export default async function SuccessPage(props: {
               {effectPrice > 0 && <div className="flex justify-between items-center gap-1 font-bold"><span><Sparkles size={8}/> Theme Effect</span><span className="text-slate-900">₱{effectPrice.toFixed(2)}</span></div>}
               {storyPrice > 0 && <div className="flex justify-between items-center gap-1 font-bold"><span><BookHeart size={8}/> Custom section</span><span className="text-slate-900">₱{storyPrice.toFixed(2)}</span></div>}
               {qaPrice > 0 && <div className="flex justify-between items-center gap-1 font-bold"><span><MessageCircleQuestion size={8}/> Extra Q&A ({extraQACount})</span><span className="text-slate-900">₱{qaPrice.toFixed(2)}</span></div>}
-              {extensionPrice > 0 && <div className="flex justify-between"><span>Add-ons / Extension</span><span className="text-slate-900">₱{extensionPrice.toFixed(2)}</span></div>}
+              {extensionPrice > 0 && <div className="flex justify-between font-bold"><span>Add-ons / Extension</span><span className="text-slate-900">₱{extensionPrice.toFixed(2)}</span></div>}
             </div>
             <div className="flex justify-between border-t border-slate-200 pt-3 text-sm font-black uppercase italic text-slate-900 leading-none font-bold">
               <span>Total Paid</span>
@@ -162,29 +134,23 @@ export default async function SuccessPage(props: {
           </div>
 
           <div className="flex items-center justify-between px-5 py-4 bg-slate-900 rounded-2xl mb-8 text-white shadow-lg text-left font-bold italic">
-             <div className="flex items-center gap-3">
+             <div className="flex items-center gap-3 font-bold italic">
                 <div className="bg-white/10 p-2 rounded-lg text-rose-500"><CreditCard size={14} /></div>
                 <div>
                    <p className="text-[7px] font-black text-rose-500 uppercase tracking-widest leading-none mb-1">Method</p>
                    <p className="text-[10px] font-bold uppercase leading-none font-bold">{payerInfo.method}</p>
                 </div>
              </div>
-             <div className="text-right">
+             <div className="text-right font-bold italic">
                 <p className="text-[7px] font-black text-slate-500 uppercase tracking-widest leading-none mb-1 text-right font-bold uppercase">Status</p>
                 <p className="text-[9px] font-black text-emerald-400 uppercase italic font-mono leading-none tracking-widest">SUCCESS</p>
              </div>
           </div>
 
           <div className="bg-white p-6 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center text-center">
-            <div className="mb-4">
-              <QRCodeSection url={fullUrl} />
-            </div>
-            <div className="">
-              <p className="text-[8px] font-black text-rose-400 uppercase tracking-[0.2em] mb-1 font-bold">Invitation Link</p>
-              <p className="text-[10px] font-bold text-slate-900 truncate px-2 italic font-mono lowercase tracking-tight">
-                {fullUrl.replace('https://', '').replace('http://', '')}
-              </p>
-            </div>
+            <div className="mb-4"><QRCodeSection url={fullUrl} /></div>
+            <p className="text-[8px] font-black text-rose-400 uppercase tracking-[0.2em] mb-1 font-bold">Invitation Link</p>
+            <p className="text-[10px] font-bold text-slate-900 truncate px-2 italic font-mono lowercase tracking-tight">{fullUrl.replace('https://', '').replace('http://', '')}</p>
           </div>
         </div>
       </div>
@@ -192,12 +158,7 @@ export default async function SuccessPage(props: {
       <div className="max-w-[420px] w-full mt-6 space-y-3 px-2">
         <PrintButton targetId="receipt-to-download" mode="receipt" />
         <PrintButton targetId="qr-only-download" mode="qr" />
-        <Link 
-          href={`/${invitationPath}`} 
-          className="block w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase text-center shadow-lg active:scale-95 transition-all font-bold"
-        >
-          Open Invitation Site
-        </Link>
+        <Link href={`/${invitationPath}`} className="block w-full bg-slate-900 text-white py-5 rounded-2xl font-black text-[10px] tracking-[0.2em] uppercase text-center shadow-lg active:scale-95 transition-all font-bold">Open Invitation Site</Link>
       </div>
     </div>
   );
