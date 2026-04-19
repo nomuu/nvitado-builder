@@ -7,20 +7,19 @@ import {
   X, Settings2, BookHeart, MessageCircleQuestion, 
   PlusCircle, Trash2, Star, Heart, PartyPopper, Cake, Info, AlertCircle 
 } from 'lucide-react';
-import axios from 'axios';
 
-export default function Sidebar({ config, setConfig, onPublish, isPublishing, onClose, activeTab, setActiveTab, isEligible }: any) {
+export default function Sidebar({ config, setConfig, onPublish, isPublishing, onClose, activeTab, setActiveTab, isEligible, isRevision = false }: any) {
   const [showAllBgs, setShowAllBgs] = useState(false);
   const [showAllStyles, setShowAllStyles] = useState(false);
   const [showDateStyle, setShowDateStyle] = useState(false);
   const [showMessageStyle, setShowMessageStyle] = useState(false);
 
   useEffect(() => {
-    if (!config.shortId) {
+    if (!isRevision && !config.shortId) {
       const randomId = Math.random().toString(16).substring(2, 10);
       setConfig({ ...config, shortId: randomId });
     }
-  }, [config, setConfig]);
+  }, [isRevision]);
 
   const basePrice = 50;
   const selectedBg = BACKGROUNDS.find(bg => bg.id === config.animationId);
@@ -31,6 +30,13 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   const storyPrice = config.showStory ? 5 : 0;
   const totalPrice = basePrice + bgPrice + qaPrice + storyPrice;
 
+  const FONT_OPTIONS = [
+    { id: 'font-serif', name: 'Elegant Serif', class: 'font-serif' },
+    { id: 'font-sans', name: 'Modern Sans', class: 'font-sans' },
+    { id: 'italic', name: 'Script Style', class: 'italic font-serif' },
+    { id: 'font-mono', name: 'Minimalist', class: 'font-mono' },
+  ];
+
   const ICON_OPTIONS = [
     { id: 'BookHeart', icon: BookHeart },
     { id: 'Heart', icon: Heart },
@@ -40,19 +46,14 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     { id: 'Info', icon: Info },
   ];
 
-  const FONT_OPTIONS = [
-    { id: 'font-serif', name: 'Elegant Serif', class: 'font-serif' },
-    { id: 'font-sans', name: 'Modern Sans', class: 'font-sans' },
-    { id: 'italic', name: 'Script Style', class: 'italic font-serif' },
-    { id: 'font-mono', name: 'Minimalist', class: 'font-mono' },
-  ];
-
   const handleSlugChange = (val: string) => {
     const cleaned = val.toLowerCase().replace(/[^a-z0-9-]/g, '-');
     setConfig({...config, slug: cleaned});
   };
 
   const handleBgSelect = (bg: any) => {
+    // 🔒 Lock background change if in Revision mode
+    if (isRevision) return;
     setConfig({ ...config, background: bg.value, animationId: bg.id, useAnimation: bg.type !== 'solid' });
   };
 
@@ -67,6 +68,8 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   };
 
   const addQuestion = () => {
+    // 🔒 Lock adding questions if in Revision mode
+    if (isRevision) return;
     const currentCount = config.questions?.length || 3;
     if (currentCount < 5) {
       const newQA = [...(config.questions || [{ q: '', a: '' }, { q: '', a: '' }, { q: '', a: '' }]), { q: '', a: '' }];
@@ -77,6 +80,8 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   };
 
   const removeQuestion = (index: number) => {
+    // 🔒 Lock removing questions if in Revision mode
+    if (isRevision) return;
     if ((config.questions?.length || 3) <= 3) return;
     const newQA = config.questions.filter((_: any, i: number) => i !== index);
     setConfig({ ...config, questions: newQA });
@@ -85,7 +90,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   const tabs = [
     { id: 'general', label: 'General', icon: Settings2 },
     { id: 'qa', label: 'Q&A', icon: MessageCircleQuestion },
-    { id: 'story', label: 'Custom', icon: PlusCircle, premium: true },
+    { id: 'story', label: 'Custom', icon: PlusCircle, premium: !isRevision }, 
   ];
 
   const handlePublishClick = async () => {
@@ -114,7 +119,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               >
                 <Icon size={14} />
                 <span className="hidden sm:inline">{tab.label}</span>
-                {tab.premium && (
+                {tab.premium && !isRevision && (
                   <span className="absolute -top-1 -right-1 bg-amber-500 text-white text-[6px] px-1 rounded-full animate-pulse font-black">
                     +₱5
                   </span>
@@ -131,17 +136,25 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
             <section>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">01. Background & Effects</label>
-                <button onClick={() => setShowAllBgs(!showAllBgs)} className="text-[10px] font-bold text-amber-600 hover:underline">{showAllBgs ? 'Less' : 'View All'}</button>
+                {/* 🔒 Hide View All in Revision mode to prevent changing background */}
+                {!isRevision && <button onClick={() => setShowAllBgs(!showAllBgs)} className="text-[10px] font-bold text-amber-600 hover:underline">{showAllBgs ? 'Less' : 'View All'}</button>}
               </div>
-              <div className={`grid gap-3 transition-all duration-300 ${showAllBgs ? 'grid-cols-2' : 'grid-cols-3'}`}>
-                {(showAllBgs ? BACKGROUNDS : BACKGROUNDS.slice(0, 6)).map((bg) => (
-                  <button key={bg.id} onClick={() => handleBgSelect(bg)} className={`group relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl border transition-all h-20 ${config.animationId === bg.id ? 'border-amber-500 ring-2 ring-amber-100' : 'border-slate-100 bg-slate-50'}`}>
+              <div className={`grid gap-3 transition-all duration-300 ${showAllBgs || isRevision ? 'grid-cols-2' : 'grid-cols-3'}`}>
+                {/* 🔒 In Revision mode, only show the currently selected background to lock it */}
+                {(isRevision ? BACKGROUNDS.filter(bg => bg.id === config.animationId) : (showAllBgs ? BACKGROUNDS : BACKGROUNDS.slice(0, 6))).map((bg) => (
+                  <button 
+                    key={bg.id} 
+                    onClick={() => handleBgSelect(bg)} 
+                    disabled={isRevision} 
+                    className={`group relative flex flex-col items-center justify-center gap-1 p-2 rounded-xl border transition-all h-20 ${config.animationId === bg.id ? 'border-amber-500 ring-2 ring-amber-100' : 'border-slate-100 bg-slate-50'} ${isRevision ? 'cursor-default' : ''}`}
+                  >
                     <div className="w-full h-8 rounded-lg shadow-inner border border-black/5" style={{ background: bg.value }}>{bg.icon && <span className="flex items-center justify-center h-full text-xs">{bg.icon}</span>}</div>
                     <span className="text-[9px] font-bold text-slate-600 truncate w-full text-center">{bg.name}</span>
-                    {bg.price > 0 && <span className="absolute -top-2 -right-1 bg-amber-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black shadow-sm">+₱{bg.price}</span>}
+                    {bg.price > 0 && !isRevision && <span className="absolute -top-2 -right-1 bg-amber-500 text-white text-[8px] px-1.5 py-0.5 rounded-full font-black shadow-sm">+₱{bg.price}</span>}
                   </button>
                 ))}
               </div>
+              {isRevision && <p className="text-[8px] font-black text-slate-400 uppercase mt-2 italic">Background is locked after purchase</p>}
 
               <div className="mt-5 space-y-2">
                 <div className="flex justify-between items-center">
@@ -215,12 +228,21 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                 <button onClick={() => setShowDateStyle(!showDateStyle)} className="text-[10px] font-bold text-amber-600 hover:underline">{showDateStyle ? 'Hide' : 'Format +'}</button>
               </div>
               <div className="space-y-3">
-                <input type="date" className={`p-3 border rounded-xl w-full font-bold text-xs text-slate-900 transition-colors ${!isEligible ? 'bg-rose-50 border-rose-200 ring-2 ring-rose-100' : 'bg-slate-50 border-slate-200'}`} value={config.eventDate} onChange={(e) => setConfig({...config, eventDate: e.target.value})} />
-                {!isEligible && (
+                <input 
+                  type="date" 
+                  disabled={isRevision}
+                  className={`p-3 border rounded-xl w-full font-bold text-xs text-slate-900 transition-colors ${!isEligible ? 'bg-rose-50 border-rose-200 ring-2 ring-rose-100' : 'bg-slate-50 border-slate-200'} ${isRevision ? 'opacity-60 cursor-not-allowed' : ''}`} 
+                  value={config.eventDate} 
+                  onChange={(e) => setConfig({...config, eventDate: e.target.value})} 
+                />
+                {!isEligible && !isRevision && (
                   <div className="flex items-center gap-1.5 text-rose-500 font-black text-[8px] uppercase px-1">
                     <AlertCircle size={10} />
                     Invalid: Date must be at least 7 days from now
                   </div>
+                )}
+                {isRevision && (
+                   <div className="text-[8px] font-black text-slate-400 uppercase px-1">Date cannot be changed during revision</div>
                 )}
                 {showDateStyle && (
                   <select className="p-3 bg-white border border-amber-200 rounded-xl w-full font-bold text-[10px] text-slate-900 outline-none" value={config.dateFormat} onChange={(e) => setConfig({...config, dateFormat: e.target.value})}>
@@ -262,17 +284,19 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               )}
             </section>
 
-            <section>
-              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">06. Custom URL</label>
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700">
-                  <span className="text-slate-400 font-bold">nvitado.com/</span>
-                  <span className="text-amber-600 font-black px-1.5 py-0.5 bg-amber-100 rounded-md mr-1">{config.shortId || '...'}</span>
-                  <span className="text-slate-300 mr-1">/</span>
-                  <input type="text" className="bg-transparent outline-none flex-1 text-slate-800 font-bold uppercase" placeholder="EVENT-NAME" value={config.slug} onChange={(e) => handleSlugChange(e.target.value)} />
+            {!isRevision && (
+              <section>
+                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-4 font-bold">06. Custom URL</label>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700">
+                    <span className="text-slate-400 font-bold">nvitado.com/</span>
+                    <span className="text-amber-600 font-black px-1.5 py-0.5 bg-amber-100 rounded-md mr-1">{config.shortId || '...'}</span>
+                    <span className="text-slate-300 mr-1">/</span>
+                    <input type="text" className="bg-transparent outline-none flex-1 text-slate-800 font-bold uppercase" placeholder="EVENT-NAME" value={config.slug} onChange={(e) => handleSlugChange(e.target.value)} />
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            )}
           </div>
         )}
 
@@ -283,9 +307,11 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">Enable Q&A Section</p>
                    <p className="text-[9px] font-bold text-slate-400 uppercase">Show FAQ to your guests</p>
                 </div>
+                {/* 🔒 Disable Q&A Toggle if in Revision mode */}
                 <button 
+                  disabled={isRevision}
                   onClick={() => setConfig({...config, showQA: !config.showQA})} 
-                  className={`w-10 h-5 rounded-full relative transition-all ${config.showQA ? 'bg-amber-500' : 'bg-slate-300'}`}
+                  className={`w-10 h-5 rounded-full relative transition-all ${config.showQA ? 'bg-amber-500' : 'bg-slate-300'} ${isRevision ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
                   <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${config.showQA ? 'right-1' : 'left-1'}`} />
                 </button>
@@ -298,7 +324,8 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                   </div>
                   {(config.questions || [{ q: '', a: '' }, { q: '', a: '' }, { q: '', a: '' }]).map((item: any, index: number) => (
                     <div key={index} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 relative group">
-                      {index >= 3 && (
+                      {/* 🔒 Disable Trash button if in Revision mode */}
+                      {index >= 3 && !isRevision && (
                         <button onClick={() => removeQuestion(index)} className="absolute -top-2 -right-2 p-1 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={10} /></button>
                       )}
                       <div className="flex items-center gap-2">
@@ -308,7 +335,8 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                       <textarea rows={2} placeholder="The Answer..." className="p-2 bg-white border border-slate-200 rounded-xl w-full font-medium text-[10px] resize-none text-slate-600" value={item.a || ''} onChange={(e) => handleQAChange(index, 'a', e.target.value)} />
                     </div>
                   ))}
-                  {(config.questions?.length || 3) < 5 && (
+                  {/* 🔒 Disable Add button if in Revision mode */}
+                  {!isRevision && (config.questions?.length || 3) < 5 && (
                     <button onClick={addQuestion} className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-[9px] font-black text-slate-400 hover:border-amber-400 hover:text-amber-600 flex items-center justify-center gap-2 transition-all bg-white shadow-sm"><PlusCircle size={14} />ADD EXTRA QUESTION (+₱2.00)</button>
                   )}
                </div>
@@ -321,9 +349,16 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
              <div className="flex items-center justify-between p-4 bg-amber-50/50 rounded-2xl border border-amber-100">
                 <div>
                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">Enable Custom Section</p>
-                   <p className="text-[9px] font-bold text-amber-600 uppercase italic">+₱5.00 Premium Feature</p>
+                   {!isRevision && <p className="text-[9px] font-bold text-amber-600 uppercase italic">+₱5.00 Premium Feature</p>}
                 </div>
-                <button onClick={() => setConfig({...config, showStory: !config.showStory})} className={`w-10 h-5 rounded-full relative transition-all ${config.showStory ? 'bg-amber-500' : 'bg-slate-300'}`}><div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${config.showStory ? 'right-1' : 'left-1'}`} /></button>
+                {/* 🔒 Disable Story Toggle if in Revision mode */}
+                <button 
+                  disabled={isRevision}
+                  onClick={() => setConfig({...config, showStory: !config.showStory})} 
+                  className={`w-10 h-5 rounded-full relative transition-all ${config.showStory ? 'bg-amber-500' : 'bg-slate-300'} ${isRevision ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${config.showStory ? 'right-1' : 'left-1'}`} />
+                </button>
              </div>
              {config.showStory && (
                <div className="animate-in zoom-in-95 duration-200 space-y-6">
@@ -364,26 +399,37 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
       </div>
 
       <div className="p-6 bg-slate-50 border-t space-y-3 shrink-0">
-        <div className="space-y-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-          <div className="flex justify-between"><span>Publishing Fee</span><span className="text-slate-900">₱{basePrice.toFixed(2)}</span></div>
-          {bgPrice > 0 && <div className="flex justify-between text-amber-600"><span>{selectedBg?.name} Effect</span><span>+₱{bgPrice.toFixed(2)}</span></div>}
-          {qaPrice > 0 && (
-            <div className="flex justify-between text-amber-600 animate-in fade-in"><span>Extra FAQ Questions</span><span>+₱{qaPrice.toFixed(2)}</span></div>
-          )}
-          {config.showStory && (
-            <div className="flex justify-between text-amber-600 animate-in fade-in"><span>Custom Section Feature</span><span>+₱5.00</span></div>
-          )}
-          <div className="flex justify-between border-t pt-2 text-[12px] text-slate-900 font-black">
-            <span>Total to pay</span>
-            <span className="text-amber-600">₱{totalPrice.toFixed(2)}</span>
+        {!isRevision ? (
+          <div className="space-y-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            <div className="flex justify-between"><span>Publishing Fee</span><span className="text-slate-900">₱{basePrice.toFixed(2)}</span></div>
+            {bgPrice > 0 && <div className="flex justify-between text-amber-600"><span>{selectedBg?.name} Effect</span><span>+₱{bgPrice.toFixed(2)}</span></div>}
+            {qaPrice > 0 && (
+              <div className="flex justify-between text-amber-600 animate-in fade-in"><span>Extra FAQ Questions</span><span>+₱{qaPrice.toFixed(2)}</span></div>
+            )}
+            {config.showStory && (
+              <div className="flex justify-between text-amber-600 animate-in fade-in"><span>Custom Section Feature</span><span>+₱5.00</span></div>
+            )}
+            <div className="flex justify-between border-t pt-2 text-[12px] text-slate-900 font-black">
+              <span>Total to pay</span>
+              <span className="text-amber-600">₱{totalPrice.toFixed(2)}</span>
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="mb-2 p-3 bg-blue-50 border border-blue-100 rounded-xl">
+             <p className="text-[9px] font-black text-blue-800 uppercase italic">Revision Active</p>
+             <p className="text-[8px] text-blue-600 font-bold uppercase tracking-tighter mt-1">Updates are applied instantly to your live link.</p>
+          </div>
+        )}
+
         <button 
           onClick={handlePublishClick} 
-          disabled={isPublishing || !isEligible} // 📍 Disabled din kapag hindi eligible
-          className={`w-full py-4 rounded-xl font-black text-xs tracking-widest shadow-lg transition-all active:scale-95 disabled:bg-slate-300 disabled:cursor-not-allowed ${!isEligible ? 'bg-rose-100 text-rose-400' : 'bg-slate-900 text-white hover:bg-amber-900'}`}
+          disabled={isPublishing || (!isRevision && !isEligible)} 
+          className={`w-full py-4 rounded-xl font-black text-xs tracking-widest shadow-lg transition-all active:scale-95 disabled:bg-slate-300 disabled:cursor-not-allowed ${(!isRevision && !isEligible) ? 'bg-rose-100 text-rose-400' : 'bg-slate-900 text-white hover:bg-amber-900'}`}
         >
-          {isPublishing ? 'GENERATING LINK...' : !isEligible ? 'INVALID EVENT DATE' : 'PUBLISH INVITATION'}
+          {isRevision 
+            ? (isPublishing ? 'SAVING UPDATES...' : 'SAVE & APPLY CHANGES') 
+            : (isPublishing ? 'GENERATING LINK...' : !isEligible ? 'INVALID EVENT DATE' : 'PUBLISH INVITATION')
+          }
         </button>
       </div>
     </aside>
