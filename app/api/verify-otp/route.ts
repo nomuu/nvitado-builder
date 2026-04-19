@@ -13,21 +13,38 @@ export async function POST(req: Request) {
       .select('id, slug')
       .eq('email', email)
       .eq('token_id', tokenId)
-      .eq('otp_code', otp) // Dapat sakto yung code
+      .eq('otp_code', otp) 
       .single();
 
     if (error || !inv) {
       return NextResponse.json({ error: "Invalid or expired verification code." }, { status: 401 });
     }
 
-    // 2. SUCCESS: Burahin ang OTP code sa DB (para hindi na magamit ulit)
+    // 2. SUCCESS: Burahin ang OTP code sa DB
     await supabase
       .from('invitations')
       .update({ otp_code: null } as any)
       .eq('token_id', tokenId);
 
-    // 3. Return success - pwede ring mag-return ng temporary session token dito kung gusto mo
-    return NextResponse.json({ success: true, slug: inv.slug });
+    // 3. 🛡️ SET SECURITY COOKIE
+    // Gagawa tayo ng response object muna para malagyan ng cookie
+    const response = NextResponse.json({ 
+      success: true, 
+      slug: inv.slug,
+      message: "Verified successfully" 
+    });
+
+    // Isasalpak ang cookie na tinitingnan ng revise/page.tsx natin
+    response.cookies.set(`verified_${tokenId}`, 'true', {
+      httpOnly: true, // 🔒 Crucial: Hindi ito mababasa/mananakaw ng JS scripts
+      secure: process.env.NODE_ENV === 'production', // 🔒 HTTPS only sa production
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 2, // 🕒 Valid for 2 hours (sapat na para mag-edit)
+      path: '/',
+    });
+
+    return response;
+
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

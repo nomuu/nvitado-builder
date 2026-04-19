@@ -1,20 +1,35 @@
 import { createClient } from '@supabase/supabase-js';
 import ReviseClient from './ReviseClient';
+import { notFound, redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
 export default async function Page({ params }: { params: Promise<{ tokenId: string }> }) {
-  // Sa bagong version ng Next.js, kailangan i-await ang params
+  // 1. Await params para makuha ang tokenId mula sa URL ([tokenId])
   const { tokenId } = await params;
+  
+  // 2. Await cookies para sa security check
+  const cookieStore = await cookies();
 
-  console.log("Searching for Token ID:", tokenId);
+  // 3. 🛡️ SECURITY CHECK
+  // I-check kung may verified cookie para sa specific na tokenId na ito
+  const isVerified = cookieStore.get(`verified_${tokenId}`)?.value === 'true';
 
+  if (!isVerified) {
+    // Kung walang session/cookie, itatapon sila sa malinis na path ng verification page
+    // base sa folder mo: app/verify-access/page.tsx
+    return redirect('/verify-access');
+  }
+
+  // 4. Pag nakalusot sa bouncer, hugutin ang data sa Supabase
   const { data: inv, error } = await supabase
     .from('invitations')
     .select('*')
     .eq('token_id', tokenId)
-    .maybeSingle(); // Gumamit ng maybeSingle para hindi mag-crash pag walang nahanap
+    .maybeSingle();
 
+  // Database error handling
   if (error) {
     return (
       <div className="p-10">
@@ -24,15 +39,11 @@ export default async function Page({ params }: { params: Promise<{ tokenId: stri
     );
   }
 
+  // Pag walang record na nahanap sa DB gamit ang tokenId, dun lang mag-404
   if (!inv) {
-    return (
-      <div className="p-10 text-orange-600 border border-orange-200 bg-orange-50 rounded">
-        <h1 className="font-bold text-xl">Token Not Found!</h1>
-        <p className="mt-2">Ito ang hinahanap ko sa database: <span className="font-mono bg-white px-2 py-1 rounded border font-bold text-black">{tokenId}</span></p>
-        <p className="mt-4 text-sm">Paki-check sa Supabase dashboard mo kung ang column <code className="bg-orange-100 px-1">token_id</code> ay may record na eksaktong ganyan.</p>
-      </div>
-    );
+    return notFound();
   }
 
+  // I-render ang Editor
   return <ReviseClient initialData={inv} />;
 }
