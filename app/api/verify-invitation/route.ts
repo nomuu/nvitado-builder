@@ -9,10 +9,10 @@ export async function POST(req: Request) {
   try {
     const { email, tokenId } = await req.json();
 
-    // 1. Hugutin ang data (kasama ang revision_count)
+    // 1. Hugutin ang data (Kasama na ang purchasable_revision_count)
     const { data: inv, error: fetchError } = await supabase
       .from('invitations')
-      .select('id, customer_name, token_id, config_data, revision_count') 
+      .select('id, customer_name, token_id, config_data, revision_count, purchasable_revision_count') 
       .eq('email', email)
       .eq('token_id', tokenId)
       .single();
@@ -24,6 +24,7 @@ export async function POST(req: Request) {
     // Kunin ang details mula sa config_data
     const invitationTitle = inv.config_data?.title || "Your Invitation";
     const creditsLeft = inv.revision_count ?? 0;
+    const purchasableLeft = inv.purchasable_revision_count ?? 0; // Ito yung bagong column
 
     // 2. Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -38,7 +39,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Failed to generate security code." }, { status: 500 });
     }
 
-    // 4. I-send ang Email
+    // 4. I-send ang Email (Updated with more details)
     await resend.emails.send({
       from: 'Nvitado Verification <no-reply@nvitado.com>',
       to: email,
@@ -58,7 +59,11 @@ export async function POST(req: Request) {
               <p style="margin: 0 0 5px 0; font-size: 14px; color: #64748b; font-weight: bold; text-transform: uppercase;">Invitation Details</p>
               <p style="margin: 0; font-size: 18px; color: #0f172a; font-weight: bold;">${invitationTitle}</p>
               <p style="margin: 5px 0 0 0; font-size: 14px; color: #64748b;">Ref ID: ${inv.token_id}</p>
-              <p style="margin: 10px 0 0 0; font-size: 14px; color: #0f172a;"><strong>Remaining Revision Credits:</strong> ${creditsLeft}</p>
+              
+              <div style="margin-top: 15px; padding-top: 10px; border-top: 1px solid #e2e8f0;">
+                <p style="margin: 0; font-size: 14px; color: #0f172a;"><strong>Current Revision Credits:</strong> ${creditsLeft}</p>
+                <p style="margin: 5px 0 0 0; font-size: 13px; color: #64748b;"><strong>Available Add-ons:</strong> ${purchasableLeft} more credits available for purchase</p>
+              </div>
             </div>
 
             <div style="background: #f1f5f9; padding: 25px; text-align: center; font-size: 42px; font-weight: 900; letter-spacing: 15px; border-radius: 12px; color: #0f172a; margin: 30px 0; border: 1px solid #e2e8f0;">
