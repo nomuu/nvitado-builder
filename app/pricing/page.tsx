@@ -72,8 +72,8 @@ export default function PricingPage() {
             <h3 className="text-2xl font-black uppercase italic mb-2 tracking-tight">Add-Ons</h3>
             <div className="space-y-4 pt-6 border-t border-slate-50 text-[11px] font-black uppercase text-slate-600">
                <div className="flex justify-between items-center pb-2">
-                  <p>Paid Revisions<br/><span className="text-[8px] text-slate-400 font-bold">(After 2 Free)</span></p>
-                  <span className="text-xl font-black text-indigo-600">₱5.00</span>
+                  <p>Paid 3 Revisions pack<br/><span className="text-[8px] text-slate-400 font-bold">(After 2 Free)</span></p>
+                  <span className="text-xl font-black text-indigo-600">₱35.00</span>
                </div>
                <div className="flex justify-between items-center pt-2">
                   <p>Premium Effects</p>
@@ -140,8 +140,8 @@ export default function PricingPage() {
                 <p className="text-[10px] font-bold text-slate-400 mb-6 uppercase">Exceeded free edits</p>
                 <div className="space-y-3 mt-auto">
                     <div className="flex justify-between text-[11px] font-black uppercase"><span>2 Free Edits</span><span>FREE</span></div>
-                    <div className="flex justify-between text-[11px] font-black uppercase text-indigo-600"><span>3rd Revision</span><span>₱5.00</span></div>
-                    <div className="pt-3 border-t border-slate-200 flex justify-between items-center font-black text-rose-500 uppercase italic"><span>Total</span><span>₱5.00</span></div>
+                    <div className="flex justify-between text-[11px] font-black uppercase text-indigo-600"><span>3rd Revision</span><span>₱35.00</span></div>
+                    <div className="pt-3 border-t border-slate-200 flex justify-between items-center font-black text-rose-500 uppercase italic"><span>Total</span><span>₱35.00</span></div>
                 </div>
             </div>
           </div>
