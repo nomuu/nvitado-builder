@@ -27,12 +27,12 @@ export async function POST(req: Request) {
           .maybeSingle();
 
         if (!fetchError && currentInv) {
-          // 2. Update counts: +1 sa current credits, -1 sa stock (purchasable)
+          // 2. Update counts: +3 sa current credits, -3 sa stock (purchasable)
           const { error: revisionUpdateError } = await supabase
             .from('invitations')
             .update({
-              revision_count: (currentInv.revision_count || 0) + 1,
-              purchasable_revision_count: Math.max(0, (currentInv.purchasable_revision_count || 3) - 1)
+              revision_count: (currentInv.revision_count || 0) + 3,
+              purchasable_revision_count: Math.max(0, (currentInv.purchasable_revision_count || 3) - 3)
             } as any)
             .eq('token_id', tokenId);
 
