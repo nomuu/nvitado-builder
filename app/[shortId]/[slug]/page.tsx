@@ -82,6 +82,8 @@ export default async function InvitationViewer({ params }: { params: Promise<{ s
         <GracePeriodCountdown 
           expirationTime={expirationDate.toISOString()} 
           title={invitation.config_data.title || "Your Event"}
+          // 🆕 PINASA NATIN ANG DYNAMIC NAME DITO GALING SA TABLE RECORD NG INVITATION
+          initialCustomerName={invitation.customer_name || "Valued Customer"}
         />
       )}
     </main>
