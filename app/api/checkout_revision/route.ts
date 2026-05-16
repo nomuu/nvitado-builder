@@ -33,9 +33,7 @@ export async function GET(req: Request) {
           },
           product_options: {
             name: `NVITADO: 3 EXTRA REVISION CREDITS`,
-            description: description, 
-            receipt_button_text: 'Back to Editor',
-            redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/revise/${tokenId}`
+            description: description
           },
           checkout_options: {
             button_color: '#0f172a'

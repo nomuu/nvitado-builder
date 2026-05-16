@@ -57,9 +57,7 @@ export async function POST(req: Request) {
           custom_price: Math.round(amount * 100),
           product_options: {
             name: `INVITATION: ${config.title.toUpperCase()}`,
-            description: description, 
-            receipt_button_text: 'Go to Invitation',
-            redirect_url: `${process.env.NEXT_PUBLIC_APP_URL}/success?slug=${config.slug}`
+            description: description
           },
           checkout_options: {
             button_color: '#0f172a'
