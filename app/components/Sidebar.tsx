@@ -30,9 +30,9 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   const qaPrice = extraQuestionsCount * 2;
   const storyPrice = config.showStory ? 5 : 0;
 
-  // --- 🆕 RETENTION FEE LOGIC (₱20 PER EXTRA MONTH) ---
-  const calculateRetentionFee = () => {
-    if (!config.eventDate) return 0;
+  // --- 💯 CALCULATE RETENTION FEE (₱20 PER EXTRA MONTH) WITH MONTH COUNT ---
+  const calculateRetentionDetails = () => {
+    if (!config.eventDate) return { price: 0, months: 0 };
     const today = new Date();
     const eventDate = new Date(config.eventDate);
     
@@ -44,12 +44,12 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     if (diffDays > 30) {
       const extraDays = diffDays - 30;
       const extraMonths = Math.ceil(extraDays / 30);
-      return extraMonths * 20;
+      return { price: extraMonths * 20, months: extraMonths };
     }
-    return 0;
+    return { price: 0, months: 0 };
   };
 
-  const retentionPrice = calculateRetentionFee();
+  const { price: retentionPrice, months: retentionMonths } = calculateRetentionDetails();
   const totalPrice = basePrice + bgPrice + qaPrice + storyPrice + retentionPrice;
 
   const FONT_OPTIONS = [
@@ -422,10 +422,10 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
             {config.showStory && (
               <div className="flex justify-between text-amber-600 animate-in fade-in"><span>Custom Section Feature</span><span>+₱5.00</span></div>
             )}
-            {/* 🆕 STORAGE RETENTION FEE DISPLAY */}
+            {/* 🆕 MAS MALINAW NA DISPLAY: Nilagyan ng dynamic number of months sa text line label */}
             {retentionPrice > 0 && (
               <div className="flex justify-between text-rose-500 animate-in slide-in-from-right-2">
-                <span>Long-term Storage Fee</span>
+                <span>Long-term Storage ({retentionMonths} {retentionMonths === 1 ? 'Month' : 'Months'})</span>
                 <span>+₱{retentionPrice.toFixed(2)}</span>
               </div>
             )}
