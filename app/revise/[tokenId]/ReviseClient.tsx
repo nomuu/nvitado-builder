@@ -99,7 +99,7 @@ export default function ReviseClient({ initialData }: { initialData: any }) {
   };
 
   const handleBuyCredits = () => {
-    window.location.href = `/checkout/revision?token=${initialData.token_id}`;
+    window.location.href = `/api/checkout_revision?token=${initialData.token_id}`;
   };
 
   return (
@@ -124,7 +124,7 @@ export default function ReviseClient({ initialData }: { initialData: any }) {
           </div>
         )}
 
-        {/* NO CREDITS REMAINING MODAL - INAYOS NA ANG SIZE */}
+        {/* NO CREDITS REMAINING MODAL - INAYOS PARA SA 3 CREDITS PACK */}
         {showNoCreditsModal && (
           <div className="fixed inset-0 z-[10001] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md">
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white rounded-[2.5rem] p-10 max-w-sm w-full shadow-2xl text-center border-t-[10px] border-rose-500">
@@ -133,13 +133,16 @@ export default function ReviseClient({ initialData }: { initialData: any }) {
               </div>
               <h3 className="text-xl font-black uppercase tracking-tight text-slate-900 mb-1">Out of Credits</h3>
               <p className="text-slate-500 text-[11px] font-medium leading-relaxed mb-6">
-                You have **0 revision credits** left. {purchasableCredits > 0 ? `You can still purchase up to ${purchasableCredits} more.` : "Maximum revision limit reached."}
+                You have **0 revision credits** left. {purchasableCredits > 0 ? `You can purchase a 3-credit bundle pack.` : "Maximum revision limit reached."}
               </p>
               
               {purchasableCredits > 0 && (
                 <div className="bg-slate-50 rounded-2xl p-4 mb-6 border border-slate-100 flex items-center justify-between">
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">1 Revision Credit</span>
-                  <span className="text-lg font-black text-slate-900">₱20.00</span>
+                  <div className="flex flex-col items-start">
+                    <span className="text-[10px] font-black text-slate-900 uppercase tracking-widest">3 Revision Credits</span>
+                    <span className="text-[8px] font-bold text-emerald-600 uppercase">🔥 Only ₱11.66 per credit</span>
+                  </div>
+                  <span className="text-lg font-black text-slate-900">₱35.00</span>
                 </div>
               )}
 
@@ -147,9 +150,9 @@ export default function ReviseClient({ initialData }: { initialData: any }) {
                 {purchasableCredits > 0 ? (
                   <button 
                     onClick={handleBuyCredits} 
-                    className="w-full bg-emerald-600 text-white py-4 rounded-2xl font-black text-xs tracking-widest hover:bg-emerald-700 transition-all uppercase flex items-center justify-center gap-2 shadow-lg shadow-emerald-100"
+                    className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black text-xs tracking-widest hover:bg-amber-950 transition-all uppercase flex items-center justify-center gap-2 shadow-lg"
                   >
-                    <ShoppingCart size={16} /> Buy 1 Credit
+                    <ShoppingCart size={16} /> Buy 3 Credits
                   </button>
                 ) : (
                   <div className="p-4 bg-slate-100 rounded-2xl text-[9px] font-black text-slate-400 uppercase">

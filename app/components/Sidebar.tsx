@@ -21,6 +21,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     }
   }, [isRevision]);
 
+  // --- LOGIC PARA SA PRICING ---
   const basePrice = 50;
   const selectedBg = BACKGROUNDS.find(bg => bg.id === config.animationId);
   const bgPrice = selectedBg?.price || 0;
@@ -28,7 +29,28 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   const extraQuestionsCount = Math.max(0, (config.questions?.length || 3) - 3);
   const qaPrice = extraQuestionsCount * 2;
   const storyPrice = config.showStory ? 5 : 0;
-  const totalPrice = basePrice + bgPrice + qaPrice + storyPrice;
+
+  // --- 🆕 RETENTION FEE LOGIC (₱20 PER EXTRA MONTH) ---
+  const calculateRetentionFee = () => {
+    if (!config.eventDate) return 0;
+    const today = new Date();
+    const eventDate = new Date(config.eventDate);
+    
+    // Kunin ang difference sa milliseconds at i-convert sa days
+    const diffTime = eventDate.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    // Kung lampas 30 days, bawat 30 days na sobra ay +₱20
+    if (diffDays > 30) {
+      const extraDays = diffDays - 30;
+      const extraMonths = Math.ceil(extraDays / 30);
+      return extraMonths * 20;
+    }
+    return 0;
+  };
+
+  const retentionPrice = calculateRetentionFee();
+  const totalPrice = basePrice + bgPrice + qaPrice + storyPrice + retentionPrice;
 
   const FONT_OPTIONS = [
     { id: 'font-serif', name: 'Elegant Serif', class: 'font-serif' },
@@ -52,7 +74,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   };
 
   const handleBgSelect = (bg: any) => {
-    // 🔒 Lock background change if in Revision mode
     if (isRevision) return;
     setConfig({ ...config, background: bg.value, animationId: bg.id, useAnimation: bg.type !== 'solid' });
   };
@@ -68,7 +89,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   };
 
   const addQuestion = () => {
-    // 🔒 Lock adding questions if in Revision mode
     if (isRevision) return;
     const currentCount = config.questions?.length || 3;
     if (currentCount < 5) {
@@ -80,7 +100,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   };
 
   const removeQuestion = (index: number) => {
-    // 🔒 Lock removing questions if in Revision mode
     if (isRevision) return;
     if ((config.questions?.length || 3) <= 3) return;
     const newQA = config.questions.filter((_: any, i: number) => i !== index);
@@ -136,11 +155,9 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
             <section>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">01. Background & Effects</label>
-                {/* 🔒 Hide View All in Revision mode to prevent changing background */}
                 {!isRevision && <button onClick={() => setShowAllBgs(!showAllBgs)} className="text-[10px] font-bold text-amber-600 hover:underline">{showAllBgs ? 'Less' : 'View All'}</button>}
               </div>
               <div className={`grid gap-3 transition-all duration-300 ${showAllBgs || isRevision ? 'grid-cols-2' : 'grid-cols-3'}`}>
-                {/* 🔒 In Revision mode, only show the currently selected background to lock it */}
                 {(isRevision ? BACKGROUNDS.filter(bg => bg.id === config.animationId) : (showAllBgs ? BACKGROUNDS : BACKGROUNDS.slice(0, 6))).map((bg) => (
                   <button 
                     key={bg.id} 
@@ -307,7 +324,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">Enable Q&A Section</p>
                    <p className="text-[9px] font-bold text-slate-400 uppercase">Show FAQ to your guests</p>
                 </div>
-                {/* 🔒 Disable Q&A Toggle if in Revision mode */}
                 <button 
                   disabled={isRevision}
                   onClick={() => setConfig({...config, showQA: !config.showQA})} 
@@ -324,7 +340,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                   </div>
                   {(config.questions || [{ q: '', a: '' }, { q: '', a: '' }, { q: '', a: '' }]).map((item: any, index: number) => (
                     <div key={index} className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3 relative group">
-                      {/* 🔒 Disable Trash button if in Revision mode */}
                       {index >= 3 && !isRevision && (
                         <button onClick={() => removeQuestion(index)} className="absolute -top-2 -right-2 p-1 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={10} /></button>
                       )}
@@ -335,7 +350,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                       <textarea rows={2} placeholder="The Answer..." className="p-2 bg-white border border-slate-200 rounded-xl w-full font-medium text-[10px] resize-none text-slate-600" value={item.a || ''} onChange={(e) => handleQAChange(index, 'a', e.target.value)} />
                     </div>
                   ))}
-                  {/* 🔒 Disable Add button if in Revision mode */}
                   {!isRevision && (config.questions?.length || 3) < 5 && (
                     <button onClick={addQuestion} className="w-full py-4 border-2 border-dashed border-slate-200 rounded-2xl text-[9px] font-black text-slate-400 hover:border-amber-400 hover:text-amber-600 flex items-center justify-center gap-2 transition-all bg-white shadow-sm"><PlusCircle size={14} />ADD EXTRA QUESTION (+₱2.00)</button>
                   )}
@@ -351,7 +365,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">Enable Custom Section</p>
                    {!isRevision && <p className="text-[9px] font-bold text-amber-600 uppercase italic">+₱5.00 Premium Feature</p>}
                 </div>
-                {/* 🔒 Disable Story Toggle if in Revision mode */}
                 <button 
                   disabled={isRevision}
                   onClick={() => setConfig({...config, showStory: !config.showStory})} 
@@ -408,6 +421,13 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
             )}
             {config.showStory && (
               <div className="flex justify-between text-amber-600 animate-in fade-in"><span>Custom Section Feature</span><span>+₱5.00</span></div>
+            )}
+            {/* 🆕 STORAGE RETENTION FEE DISPLAY */}
+            {retentionPrice > 0 && (
+              <div className="flex justify-between text-rose-500 animate-in slide-in-from-right-2">
+                <span>Long-term Storage Fee</span>
+                <span>+₱{retentionPrice.toFixed(2)}</span>
+              </div>
             )}
             <div className="flex justify-between border-t pt-2 text-[12px] text-slate-900 font-black">
               <span>Total to pay</span>
