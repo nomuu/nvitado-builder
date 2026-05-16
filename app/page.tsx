@@ -181,35 +181,134 @@ const AnimatedPastelBackground = () => (
   </div>
 );
 
+// --- 💯 FIXED FULL-SCREEN COMBINED COMMUNITY STATS & SINGLE CARD AUTO-SCROLL REVIEW SECTION ---
 const StatsSection = () => {
   const [count, setCount] = useState<number | null>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [totalReviewCount, setTotalReviewCount] = useState<number>(0);
+  
+  // State para sa single dynamic text slider index rotation
+  const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
 
   useEffect(() => {
-    const fetchStats = async () => {
-      const { count: total, error } = await supabase
+    const fetchStatsAndReviews = async () => {
+      // 1. Kunin ang kabuuang bilang ng invitations para sa kaliwang bahagi
+      const { count: total, error: countError } = await supabase
         .from('invitations')
         .select('*', { count: 'exact', head: true });
-      
-      if (!error) setCount(total);
+      if (!countError) setCount(total);
+
+      // 2. Kunin ang total number of reviews para sa kanang bahagi summary status
+      const { count: revCount, error: revCountError } = await supabase
+        .from('reviews')
+        .select('*', { count: 'exact', head: true });
+      if (!revCountError && revCount) setTotalReviewCount(revCount);
+
+      // 3. Kunin ang mga reviews (4 at 5 stars)
+      const { data: reviewData, error: reviewError } = await supabase
+        .from('reviews')
+        .select('*')
+        .gte('stars', 4)
+        .order('created_at', { ascending: false });
+      if (!reviewError && reviewData) setReviews(reviewData);
     };
-    fetchStats();
+
+    fetchStatsAndReviews();
   }, []);
 
+  // 🕒 INTERVAL TIMER: Bawat 4 na segundo ay kusa itong magpapalit ng nadididisplay na review text (fade out / fade in)
+  useEffect(() => {
+    if (reviews.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentReviewIndex((prev) => (prev + 1) % reviews.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [reviews]);
+
   return (
-    <section className="py-20 px-6 relative z-10">
-      <div className="max-w-4xl mx-auto bg-slate-900 rounded-[2.5rem] p-10 md:p-16 text-center shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-10 opacity-10 text-white">
-          <Users size={120} />
-        </div>
-        <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-          <p className="text-amber-400 text-[10px] font-black uppercase tracking-[0.4em] mb-4">The Nvitado Community</p>
-          <h3 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-4 leading-none">
+    // 🆕 GINAWANG ISANG BUONG SCREEN (min-h-screen) AT HIGHLIGHT BANNER LAYOUT
+    <section className="min-h-screen w-full flex items-center justify-center px-6 py-20 relative z-10 max-w-6xl mx-auto select-none">
+      <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
+        
+        {/* 1. KALIWANG BAHAGI: TOTAL INVITATIONS (Naka-animate) */}
+        <motion.div 
+          initial={{ opacity: 0, x: -40 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+          className="text-center md:text-left space-y-4"
+        >
+          <div className="inline-flex items-center gap-2 bg-slate-900 text-amber-400 text-[10px] font-black uppercase tracking-[0.3em] px-4 py-2 rounded-full shadow-md">
+            <Users size={12} /> The Nvitado Community
+          </div>
+          <h3 className="text-7xl md:text-9xl font-black tracking-tighter leading-none text-slate-950 font-sans">
             {count !== null ? count.toLocaleString() : '--'}
           </h3>
-          <p className="text-slate-400 font-medium text-sm md:text-base max-w-md mx-auto leading-relaxed">
-            Beautiful digital invitations have been created and shared globally. Join the modern way of celebrating.
+          <p className="text-slate-500 font-medium text-sm md:text-base max-w-md mx-auto md:mx-0 leading-relaxed">
+            Beautiful digital invitations have been crafted, published, and shared globally. Join the modern way of celebrating your special milestones.
           </p>
         </motion.div>
+
+        {/* 2. KANANG BAHAGI: OVERALL STARS & SINGLE CARD FADE AUTO-SCROLL */}
+        <motion.div 
+          initial={{ opacity: 0, x: 40 }}
+          whileInView={{ opacity: 1, x: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+          className="flex flex-col items-center md:items-start justify-center space-y-6 w-full"
+        >
+          <div className="space-y-2 text-center md:text-left w-full">
+            <p className="text-rose-500 text-[10px] font-black uppercase tracking-[0.4em]">Overall Rating</p>
+            
+            {/* Static 5 Gold Stars Summary */}
+            <div className="flex justify-center md:justify-start gap-1 text-amber-500">
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Star key={s} size={26} className="fill-amber-500 text-amber-500" />
+              ))}
+            </div>
+
+            <p className="text-slate-950 text-sm font-black uppercase tracking-tight">
+              5.0 Stars based on {totalReviewCount > 0 ? totalReviewCount.toLocaleString() : '--'} reviews
+            </p>
+          </div>
+
+          {/* 🚀 SINGLE PREMIUM CARD FOR REVIEW (PA ISA-ISA LANG ANG LABAS NAKA-FADE) */}
+          <div className="w-full max-w-md h-[180px] relative overflow-hidden">
+            <AnimatePresence mode="wait">
+              {reviews.length > 0 && (
+                <motion.div
+                  key={currentReviewIndex}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.4, ease: "easeInOut" }}
+                  className="absolute inset-0 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex flex-col justify-between"
+                >
+                  <div className="space-y-1.5">
+                    <div className="flex gap-0.5 text-amber-500">
+                      {Array.from({ length: reviews[currentReviewIndex].stars }).map((_, sIdx) => (
+                        <Star key={sIdx} size={12} className="fill-amber-500" />
+                      ))}
+                    </div>
+                    {/* Comment Area */}
+                    <p className="text-slate-600 text-xs font-semibold leading-relaxed italic line-clamp-3">
+                      "{reviews[currentReviewIndex].review}"
+                    </p>
+                  </div>
+
+                  {/* Anonymous Footer & No Live Link Button */}
+                  <div className="border-t border-slate-50 pt-2.5 flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-black text-slate-800 uppercase leading-none">Anonymous User</p>
+                      <p className="text-[7px] text-slate-400 font-bold uppercase tracking-tight mt-0.5">Verified Host</p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+
       </div>
     </section>
   );
