@@ -23,6 +23,7 @@ export default function NvitadoEditor() {
     background: '#ffffff',
     useAnimation: false,
     animationId: 'none',
+    headerTitle: 'The Celebration',
     title: 'Juan & Maria',
     titleFont: 'font-serif', 
     eventDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],

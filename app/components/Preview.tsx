@@ -96,7 +96,9 @@ export default function Preview({ config, viewMode, activeTab }: any) {
         )}
       </AnimatePresence>
 
-      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+      {/* 📍 02. BACKGROUND EFFECTS LAYER */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden select-none">
+        {/* BLOBS LOOP LAYER */}
         {activeBg.type === 'blob' && activeBg.colors?.map((color: string, i: number) => (
           <motion.div
             key={i} className="absolute rounded-full blur-[80px] opacity-30"
@@ -112,6 +114,23 @@ export default function Preview({ config, viewMode, activeTab }: any) {
           />
         ))}
 
+        {/* CONTROLLED BLOB EMOJI ACCESS TRIGGER */}
+        {isMounted && activeBg.type === 'blob' && activeBg.icon && [...Array(6)].map((_, i) => (
+          <motion.div
+            key={`blob-icon-${i}`} className="absolute text-xl opacity-20"
+            initial={{ top: `${Math.random() * 80 + 10}%`, left: `${Math.random() * 80 + 10}%`, scale: 0.8 }}
+            animate={{ 
+              x: [0, Math.random() * 30 - 15, Math.random() * -30 + 15, 0], 
+              y: [0, Math.random() * 40 - 20, Math.random() * -40 + 20, 0],
+              rotate: [0, 180, 360] 
+            }}
+            transition={{ duration: Math.random() * 8 + 10, repeat: Infinity, ease: "easeInOut" }}
+          >
+            {activeBg.icon}
+          </motion.div>
+        ))}
+
+        {/* PARTICLES FLOATING LAYER */}
         {isMounted && activeBg.type === 'particle' && [...Array(15)].map((_, i) => (
           <motion.div
             key={i} className="absolute text-2xl"
@@ -155,8 +174,9 @@ export default function Preview({ config, viewMode, activeTab }: any) {
               )}
 
               <div className="relative z-10 w-full flex flex-col items-center">
+                {/* 🆕 HINDI NA FIXED TEXT: Binabasa na ang dynamic input header string ngayon */}
                 <span className="text-[10px] tracking-[0.5em] text-amber-700 uppercase mb-4 font-black">
-                  The Celebration
+                  {config.headerTitle || 'The Celebration'}
                 </span>
                 <h2 className={`leading-tight transition-all duration-700 whitespace-pre-wrap text-slate-900 mb-6 font-light
                   ${viewMode === 'mobile' ? 'text-4xl px-2' : 'text-7xl lg:text-9xl px-12'} 
@@ -258,7 +278,7 @@ export default function Preview({ config, viewMode, activeTab }: any) {
         </div>
       </div>
 
-      {/* 📍 NAV BAR - BALIK SA ABSOLUTE PERO NASA LOOB NG PREVIEW CONTAINER PARA HINDI GUMALA SA SCREEN */}
+      {/* 📍 NAV BAR NAVIGATION CONTROLS */}
       {shouldShowNavbar && (
         <div className="absolute bottom-6 left-0 right-0 flex justify-center z-[10] pointer-events-none no-print">
           <motion.div 

@@ -42,6 +42,8 @@ export async function POST(req: Request) {
     if (extensionPrice > 0) description += `  |  ADD-ONS / EXTENSION — ₱${extensionPrice.toFixed(2)}`;
     
     description += `  |  REF: ${tokenId}`;
+    const origin = req.headers.get('origin') || 'https://nvitado.com'; 
+    const finalReturnUrl = `${origin}/${config.shortId}/${config.slug}`;
 
     // 3. LEMON SQUEEZY CALL
     const response = await axios.post('https://api.lemonsqueezy.com/v1/checkouts', {
@@ -57,7 +59,8 @@ export async function POST(req: Request) {
           custom_price: Math.round(amount * 100),
           product_options: {
             name: `INVITATION: ${config.title.toUpperCase()}`,
-            description: description
+            description: description,
+            redirect_url: finalReturnUrl
           },
           checkout_options: {
             button_color: '#0f172a'

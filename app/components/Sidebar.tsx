@@ -30,17 +30,15 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   const qaPrice = extraQuestionsCount * 2;
   const storyPrice = config.showStory ? 5 : 0;
 
-  // --- 💯 CALCULATE RETENTION FEE (₱20 PER EXTRA MONTH) WITH MONTH COUNT ---
+  // --- CALCULATE RETENTION FEE ---
   const calculateRetentionDetails = () => {
     if (!config.eventDate) return { price: 0, months: 0 };
     const today = new Date();
     const eventDate = new Date(config.eventDate);
     
-    // Kunin ang difference sa milliseconds at i-convert sa days
     const diffTime = eventDate.getTime() - today.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    // Kung lampas 30 days, bawat 30 days na sobra ay +₱20
     if (diffDays > 30) {
       const extraDays = diffDays - 30;
       const extraMonths = Math.ceil(extraDays / 30);
@@ -218,14 +216,26 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               </div>
             </section>
 
+            {/* 02. Title & Style SECTION */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">02. Title & Style</label>
                 <button onClick={() => setShowAllStyles(!showAllStyles)} className="text-[10px] font-bold text-amber-600 hover:underline">{showAllStyles ? 'Hide' : 'Style +'}</button>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
+                {/* 🆕 Heto 'yung bagong field para sa Header Input */}
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900">
-                  <input type="text" className="bg-transparent outline-none w-full font-bold text-slate-800 text-xs uppercase" placeholder="TITLE" value={config.title} onChange={(e) => setConfig({...config, title: e.target.value})} />
+                  <input 
+                    type="text" 
+                    className="bg-transparent outline-none w-full font-bold text-slate-400 text-xs uppercase tracking-widest placeholder:text-slate-300" 
+                    placeholder="HEADER TITLE (e.g. THE CELEBRATION)" 
+                    value={config.headerTitle || ''} 
+                    onChange={(e) => setConfig({...config, headerTitle: e.target.value})} 
+                  />
+                </div>
+                {/* Main Title Box */}
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900">
+                  <input type="text" className="bg-transparent outline-none w-full font-bold text-slate-800 text-xs uppercase" placeholder="MAIN TITLE (e.g. NAME & NAME)" value={config.title} onChange={(e) => setConfig({...config, title: e.target.value})} />
                 </div>
                 {showAllStyles && (
                   <div className="grid grid-cols-2 gap-2 animate-in fade-in zoom-in-95 duration-200">
@@ -261,6 +271,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                 {isRevision && (
                    <div className="text-[8px] font-black text-slate-400 uppercase px-1">Date cannot be changed during revision</div>
                 )}
+                {/* 🔒 FIXED BACK TO ORIGINAL: Ibinalik sa normal na select, tanggal ang motion.select error */}
                 {showDateStyle && (
                   <select className="p-3 bg-white border border-amber-200 rounded-xl w-full font-bold text-[10px] text-slate-900 outline-none" value={config.dateFormat} onChange={(e) => setConfig({...config, dateFormat: e.target.value})}>
                     <option value="long">Elegant (April 07, 2026)</option>
@@ -422,7 +433,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
             {config.showStory && (
               <div className="flex justify-between text-amber-600 animate-in fade-in"><span>Custom Section Feature</span><span>+₱5.00</span></div>
             )}
-            {/* 🆕 MAS MALINAW NA DISPLAY: Nilagyan ng dynamic number of months sa text line label */}
             {retentionPrice > 0 && (
               <div className="flex justify-between text-rose-500 animate-in slide-in-from-right-2">
                 <span>Long-term Storage ({retentionMonths} {retentionMonths === 1 ? 'Month' : 'Months'})</span>
