@@ -5,7 +5,7 @@ import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import { BACKGROUNDS } from '../constants/backgrounds';
 import { 
   X, Settings2, BookHeart, MessageCircleQuestion, 
-  PlusCircle, Trash2, Star, Heart, PartyPopper, Cake, Info, AlertCircle 
+  PlusCircle, Trash2, Star, Heart, PartyPopper, Cake, Info, AlertCircle, Layout, Image as ImageIcon
 } from 'lucide-react';
 
 export default function Sidebar({ config, setConfig, onPublish, isPublishing, onClose, activeTab, setActiveTab, isEligible, isRevision = false }: any) {
@@ -17,7 +17,8 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   useEffect(() => {
     if (!isRevision && !config.shortId) {
       const randomId = Math.random().toString(16).substring(2, 10);
-      setConfig({ ...config, shortId: randomId });
+      // I-initialize na rin ang default imageStyle as 'frame' kung wala pa
+      setConfig({ ...config, shortId: randomId, imageStyle: config.imageStyle || 'frame' });
     }
   }, [isRevision]);
 
@@ -26,7 +27,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   const selectedBg = BACKGROUNDS.find(bg => bg.id === config.animationId);
   const bgPrice = selectedBg?.price || 0;
   
-  // 🔒 SECURITY FIX: Kung naka-toggle off ang config.showQA, gagawin nating 0 ang extraQuestionsCount at qaPrice
   const extraQuestionsCount = config.showQA ? Math.max(0, (config.questions?.length || 3) - 3) : 0;
   const qaPrice = config.showQA ? extraQuestionsCount * 2 : 0;
   const storyPrice = config.showStory ? 5 : 0;
@@ -172,7 +172,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               </div>
               {isRevision && <p className="text-[8px] font-black text-slate-400 uppercase mt-2 italic">Background is locked after purchase</p>}
 
-              <div className="mt-5 space-y-2">
+              <div className="mt-5 space-y-3">
                 <div className="flex justify-between items-center">
                   <label className="text-[9px] font-black uppercase tracking-widest text-slate-400">Add Invitation Photo</label>
                   {config.featuredImage && <span className="text-[8px] font-black text-emerald-500 uppercase italic">Image Ready</span>}
@@ -187,7 +187,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                         const file = e.target.files?.[0];
                         if (file) {
                           const reader = new FileReader();
-                          reader.onloadend = () => setConfig({ ...config, featuredImage: reader.result });
+                          reader.onloadend = () => setConfig({ ...config, featuredImage: reader.result, imageStyle: config.imageStyle || 'frame' });
                           reader.readAsDataURL(file);
                         }
                       }}
@@ -198,25 +198,59 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                     </div>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-3 p-2 bg-amber-50 border border-amber-200 rounded-2xl animate-in zoom-in-95 duration-200">
-                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-white shadow-sm flex-shrink-0">
-                      <img src={config.featuredImage} className="w-full h-full object-cover" alt="Uploaded" />
+                  <div className="space-y-3 animate-in zoom-in-95 duration-200">
+                    <div className="flex items-center gap-3 p-2 bg-amber-50 border border-amber-200 rounded-2xl">
+                      <div className="w-10 h-10 rounded-lg overflow-hidden border border-white shadow-sm flex-shrink-0">
+                        <img src={config.featuredImage} className="w-full h-full object-cover" alt="Uploaded" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[8px] font-black text-amber-800 uppercase leading-none mb-1">Photo Active</p>
+                        <p className="text-[7px] text-amber-600/70 font-bold uppercase truncate italic">Featured image enabled</p>
+                      </div>
+                      <button 
+                        onClick={() => setConfig({ ...config, featuredImage: null })}
+                        className="p-2 text-rose-500 hover:bg-rose-100 rounded-xl transition-all"
+                      >
+                        <Trash2 size={16} />
+                      </button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[8px] font-black text-amber-800 uppercase leading-none mb-1">Photo Active</p>
-                      <p className="text-[7px] text-amber-600/70 font-bold uppercase truncate italic">Featured image enabled</p>
+
+                    {/* 🆕 HIGH PRIORITIZED UX ELEMENT: IMAGE STYLE SELECTOR BUTTONS */}
+                    <div className="space-y-1.5">
+                      <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Photo Display Style</label>
+                      <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
+                        <button
+                          type="button"
+                          onClick={() => setConfig({ ...config, imageStyle: 'frame' })}
+                          className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-[9px] font-black uppercase tracking-wide transition-all ${
+                            (config.imageStyle || 'frame') === 'frame'
+                              ? 'bg-white text-slate-900 shadow-sm ring-1 ring-black/5'
+                              : 'text-slate-400 hover:text-slate-600'
+                          }`}
+                        >
+                          <Layout size={12} />
+                          Frame (Floating)
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfig({ ...config, imageStyle: 'banner' })}
+                          className={`flex items-center justify-center gap-1.5 py-2 rounded-lg text-[9px] font-black uppercase tracking-wide transition-all ${
+                            config.imageStyle === 'banner'
+                              ? 'bg-white text-slate-900 shadow-sm ring-1 ring-black/5'
+                              : 'text-slate-400 hover:text-slate-600'
+                          }`}
+                        >
+                          <ImageIcon size={12} />
+                          Banner Inline
+                        </button>
+                      </div>
                     </div>
-                    <button 
-                      onClick={() => setConfig({ ...config, featuredImage: null })}
-                      className="p-2 text-rose-500 hover:bg-rose-100 rounded-xl transition-all"
-                    >
-                      <Trash2 size={16} />
-                    </button>
                   </div>
                 )}
               </div>
             </section>
 
+            {/* 02. Title & Style SECTION */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">02. Title & Style</label>
@@ -425,7 +459,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
             <div className="flex justify-between"><span>Publishing Fee</span><span className="text-slate-900">₱{basePrice.toFixed(2)}</span></div>
             {bgPrice > 0 && <div className="flex justify-between text-amber-600"><span>{selectedBg?.name} Effect</span><span>+₱{bgPrice.toFixed(2)}</span></div>}
             
-            {/* 🔒 FIXED BREAKDOWN COMPONENT: Haharangan at hindi na ipapakita kung naka-toggle off ang Q&A section */}
             {config.showQA && qaPrice > 0 && (
               <div className="flex justify-between text-amber-600 animate-in fade-in"><span>Extra FAQ Questions</span><span>+₱{qaPrice.toFixed(2)}</span></div>
             )}

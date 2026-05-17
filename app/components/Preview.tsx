@@ -67,6 +67,10 @@ export default function Preview({ config, viewMode, activeTab }: any) {
   // 📍 Dynamic Icon para sa Navbar Button
   const CustomIcon = ICON_MAP[config.customIcon] || ICON_MAP['BookHeart'];
 
+  // I-verify kung 'banner' o 'frame' ang style rule
+  const isBannerStyle = config.featuredImage && config.imageStyle === 'banner';
+  const isFrameStyle = config.featuredImage && (!config.imageStyle || config.imageStyle === 'frame');
+
   return (
     <div 
       className={`transition-all duration-700 ease-in-out relative overflow-hidden flex flex-col items-center bg-white text-slate-900 shadow-2xl
@@ -153,7 +157,8 @@ export default function Preview({ config, viewMode, activeTab }: any) {
               exit={{ opacity: 0, y: -10 }}
               className="relative flex flex-col items-center w-full py-24 text-center min-h-[600px]"
             >
-              {config.featuredImage && (
+              {/* 📸 Setup A: GUMAGANA LAMANG KUNG NAKA 'FRAME STYLE' OVERLAY */}
+              {isFrameStyle && (
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full flex justify-center z-0 opacity-100 pointer-events-none">
                   <div className={`bg-white shadow-[0_20px_50px_rgba(0,0,0,0.2)] rotate-[-3deg] border-white
                     ${viewMode === 'mobile' 
@@ -174,10 +179,25 @@ export default function Preview({ config, viewMode, activeTab }: any) {
               )}
 
               <div className="relative z-10 w-full flex flex-col items-center">
-                {/* 🆕 HINDI NA FIXED TEXT: Binabasa na ang dynamic input header string ngayon */}
                 <span className="text-[10px] tracking-[0.5em] text-amber-700 uppercase mb-4 font-black">
                   {config.headerTitle || 'The Celebration'}
                 </span>
+
+                {/* 📸 Setup B: INLINE BANNER COMPONENT - SAKTONG NAKAPALOB SA PAGITAN NG HEADER AT TITLE */}
+                {isBannerStyle && (
+                  <motion.div 
+                    initial={{ scale: 0.95, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className="w-full max-w-2xl my-6 rounded-2xl overflow-hidden shadow-md border border-white/20 bg-slate-100"
+                  >
+                    <img 
+                      src={config.featuredImage} 
+                      className="w-full h-auto aspect-[16/9] object-cover" 
+                      alt="Event Banner" 
+                    />
+                  </motion.div>
+                )}
+
                 <h2 className={`leading-tight transition-all duration-700 whitespace-pre-wrap text-slate-900 mb-6 font-light
                   ${viewMode === 'mobile' ? 'text-4xl px-2' : 'text-7xl lg:text-9xl px-12'} 
                   ${config.titleFont === 'italic' ? 'italic font-serif' : config.titleFont}`}>
