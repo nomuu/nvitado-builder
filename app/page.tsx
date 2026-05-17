@@ -268,7 +268,7 @@ const StatsSection = () => {
             </div>
 
             <p className="text-slate-950 text-sm font-black uppercase tracking-tight">
-              5.0 Stars based on {totalReviewCount > 0 ? totalReviewCount.toLocaleString() : '--'} reviews
+              {totalReviewCount > 0 ? totalReviewCount.toLocaleString() : '--'} reviews
             </p>
           </div>
 
