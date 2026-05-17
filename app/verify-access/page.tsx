@@ -13,7 +13,7 @@ export default function VerifyAccess() {
   
   const [formData, setFormData] = useState({
     email: '',
-    tokenId: '',
+    tokenId: '', // Dito mase-save ang saktong digits/characters na tina-type nila
     otp: ''
   });
 
@@ -23,12 +23,14 @@ export default function VerifyAccess() {
     setError("");
     setIsLoading(true);
 
+    // Dynamic clean composition para siguraduhing may tamang prefix bago lumipad sa backend system ninyo
+    const fullTokenId = `NVI-${formData.tokenId.trim().toUpperCase()}`;
+
     try {
-      // Dito tatawag tayo sa API natin para i-check kung valid ang Token+Email combo
       const res = await fetch('/api/verify-invitation', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: formData.email, tokenId: formData.tokenId }),
+        body: JSON.stringify({ email: formData.email, tokenId: fullTokenId }),
       });
 
       const data = await res.json();
@@ -51,6 +53,8 @@ export default function VerifyAccess() {
     setError("");
     setIsLoading(true);
 
+    const fullTokenId = `NVI-${formData.tokenId.trim().toUpperCase()}`;
+
     try {
       const res = await fetch('/api/verify-otp', {
         method: 'POST',
@@ -58,15 +62,15 @@ export default function VerifyAccess() {
         body: JSON.stringify({ 
           email: formData.email, 
           otp: formData.otp,
-          tokenId: formData.tokenId 
+          tokenId: fullTokenId 
         }),
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        // SUCCESS! Redirect sa revision page gamit ang token
-        router.push(`/revise/${formData.tokenId}`);
+        // SUCCESS! Redirect sa revision page gamit ang buong token string extension link
+        router.push(`/revise/${fullTokenId}`);
       } else {
         setError(data.error || "Invalid verification code.");
       }
@@ -123,15 +127,24 @@ export default function VerifyAccess() {
 
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-slate-400 ml-1">Token ID</label>
-                  <div className="relative">
-                    <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                  
+                  {/* 🆕 UPGRADED DUAL-ZONE ADAPTIVE LAYOUT CONTAINER */}
+                  <div className="relative flex items-center bg-white border border-slate-200 rounded-2xl overflow-hidden focus-within:ring-2 focus-within:ring-slate-900 transition-all">
+                    <div className="pl-4 flex items-center gap-2 text-slate-400 select-none shrink-0">
+                      <Key size={16} />
+                      {/* FIXED VISUAL INTERFACE COMPONENT FOR NVI- */}
+                      <span className="font-black text-sm tracking-wide text-slate-900 bg-slate-100 px-2 py-1 rounded-md">NVI-</span>
+                    </div>
+                    
                     <input 
                       required
                       type="text"
-                      placeholder="nvi-XXXXXX"
-                      className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-slate-900 transition-all font-bold text-sm"
+                      placeholder="XXXXXX"
+                      maxLength={12} // Adjusted parameters space limit safely
+                      className="w-full pl-2 pr-4 py-4 bg-transparent outline-none font-mono font-black text-sm uppercase tracking-widest text-slate-800"
                       value={formData.tokenId}
-                      onChange={(e) => setFormData({...formData, tokenId: e.target.value})}
+                      // Awtomatikong ginagawang uppercase habang nagpapakita sa input zone
+                      onChange={(e) => setFormData({...formData, tokenId: e.target.value.toUpperCase()})}
                     />
                   </div>
                 </div>

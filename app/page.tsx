@@ -192,10 +192,11 @@ const StatsSection = () => {
 
   useEffect(() => {
     const fetchStatsAndReviews = async () => {
-      // 1. Kunin ang kabuuang bilang ng invitations para sa kaliwang bahagi
+      // 🎯 FIXED CONDITION: Nagdagdag tayo ng .eq('status', 'paid') filter block para verified paid invites lang ang mabilang sa counter mo
       const { count: total, error: countError } = await supabase
         .from('invitations')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'paid');
       if (!countError) setCount(total);
 
       // 2. Kunin ang total number of reviews para sa kanang bahagi summary status

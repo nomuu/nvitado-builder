@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   try {
     const { config, amount } = await req.json();
     const hashedId = crypto.createHash('sha256').update(new Date().toISOString() + config.slug + Math.random()).digest('hex');
-    const tokenId = `nvi-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+    const tokenId = `NVI-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
 
     // 1. SAVE INITIAL RECORD
     const { error: dbError } = await supabase.from('invitations').upsert({
