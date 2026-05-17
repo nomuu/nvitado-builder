@@ -21,13 +21,14 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     }
   }, [isRevision]);
 
-  // --- LOGIC PARA SA PRICING ---
+  // --- 💯 DYNAMIC CONDITION PRICING MATRIX LOGIC ---
   const basePrice = 50;
   const selectedBg = BACKGROUNDS.find(bg => bg.id === config.animationId);
   const bgPrice = selectedBg?.price || 0;
   
-  const extraQuestionsCount = Math.max(0, (config.questions?.length || 3) - 3);
-  const qaPrice = extraQuestionsCount * 2;
+  // 🔒 SECURITY FIX: Kung naka-toggle off ang config.showQA, gagawin nating 0 ang extraQuestionsCount at qaPrice
+  const extraQuestionsCount = config.showQA ? Math.max(0, (config.questions?.length || 3) - 3) : 0;
+  const qaPrice = config.showQA ? extraQuestionsCount * 2 : 0;
   const storyPrice = config.showStory ? 5 : 0;
 
   // --- CALCULATE RETENTION FEE ---
@@ -216,14 +217,12 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               </div>
             </section>
 
-            {/* 02. Title & Style SECTION */}
             <section>
               <div className="flex justify-between items-center mb-4">
                 <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">02. Title & Style</label>
                 <button onClick={() => setShowAllStyles(!showAllStyles)} className="text-[10px] font-bold text-amber-600 hover:underline">{showAllStyles ? 'Hide' : 'Style +'}</button>
               </div>
               <div className="space-y-3">
-                {/* 🆕 Heto 'yung bagong field para sa Header Input */}
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900">
                   <input 
                     type="text" 
@@ -233,7 +232,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                     onChange={(e) => setConfig({...config, headerTitle: e.target.value})} 
                   />
                 </div>
-                {/* Main Title Box */}
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900">
                   <input type="text" className="bg-transparent outline-none w-full font-bold text-slate-800 text-xs uppercase" placeholder="MAIN TITLE (e.g. NAME & NAME)" value={config.title} onChange={(e) => setConfig({...config, title: e.target.value})} />
                 </div>
@@ -271,7 +269,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                 {isRevision && (
                    <div className="text-[8px] font-black text-slate-400 uppercase px-1">Date cannot be changed during revision</div>
                 )}
-                {/* 🔒 FIXED BACK TO ORIGINAL: Ibinalik sa normal na select, tanggal ang motion.select error */}
                 {showDateStyle && (
                   <select className="p-3 bg-white border border-amber-200 rounded-xl w-full font-bold text-[10px] text-slate-900 outline-none" value={config.dateFormat} onChange={(e) => setConfig({...config, dateFormat: e.target.value})}>
                     <option value="long">Elegant (April 07, 2026)</option>
@@ -427,9 +424,12 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
           <div className="space-y-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
             <div className="flex justify-between"><span>Publishing Fee</span><span className="text-slate-900">₱{basePrice.toFixed(2)}</span></div>
             {bgPrice > 0 && <div className="flex justify-between text-amber-600"><span>{selectedBg?.name} Effect</span><span>+₱{bgPrice.toFixed(2)}</span></div>}
-            {qaPrice > 0 && (
+            
+            {/* 🔒 FIXED BREAKDOWN COMPONENT: Haharangan at hindi na ipapakita kung naka-toggle off ang Q&A section */}
+            {config.showQA && qaPrice > 0 && (
               <div className="flex justify-between text-amber-600 animate-in fade-in"><span>Extra FAQ Questions</span><span>+₱{qaPrice.toFixed(2)}</span></div>
             )}
+            
             {config.showStory && (
               <div className="flex justify-between text-amber-600 animate-in fade-in"><span>Custom Section Feature</span><span>+₱5.00</span></div>
             )}
