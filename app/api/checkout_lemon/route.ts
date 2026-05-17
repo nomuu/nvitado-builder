@@ -42,8 +42,11 @@ export async function POST(req: Request) {
     if (extensionPrice > 0) description += `  |  ADD-ONS / EXTENSION — ₱${extensionPrice.toFixed(2)}`;
     
     description += `  |  REF: ${tokenId}`;
+    
     const origin = req.headers.get('origin') || 'https://nvitado.com'; 
-    const finalReturnUrl = `${origin}/${config.shortId}/${config.slug}`;
+    
+    // 🎯 PINALITAN: Dito natin sila ididiretso sa ginawa mong success page route (pwedeng i-adjust ang /success depende sa saktong route folder name mo)
+    const finalReturnUrl = `${origin}/success?shortId=${config.shortId}&slug=${config.slug}`;
 
     // 3. LEMON SQUEEZY CALL
     const response = await axios.post('https://api.lemonsqueezy.com/v1/checkouts', {
