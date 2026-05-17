@@ -174,7 +174,8 @@ export default function NvitadoEditor() {
           )}
         </AnimatePresence>
 
-        <Preview config={config} viewMode={viewMode} activeTab={activeTab} />
+        {/* 🎯 PINASA NATIN ANG `isSidebarOpen` TRACKER DITO SA PREVIEW CARD ENGINE */}
+        <Preview config={config} viewMode={viewMode} activeTab={activeTab} isSidebarOpen={isSidebarOpen} />
       </main>
     </div>
   );

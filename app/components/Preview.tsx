@@ -12,7 +12,7 @@ const ICON_MAP: any = {
   BookHeart, Heart, Star, PartyPopper, Cake, Info
 };
 
-export default function Preview({ config, viewMode, activeTab }: any) {
+export default function Preview({ config, viewMode, activeTab, isSidebarOpen = false }: any) {
   const [isMounted, setIsMounted] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
 
@@ -62,7 +62,8 @@ export default function Preview({ config, viewMode, activeTab }: any) {
 
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(config.location)}`;
 
-  const shouldShowNavbar = config.showQA || config.showStory;
+  // 🔒 SECURITY CHECK: Lalabas lang kapag enabled, at mawawala kapag isSidebarOpen === true (Naka-click ang Edit)
+  const shouldShowNavbar = (config.showQA || config.showStory) && !isSidebarOpen;
 
   // 📍 Dynamic Icon para sa Navbar Button
   const CustomIcon = ICON_MAP[config.customIcon] || ICON_MAP['BookHeart'];
@@ -292,10 +293,7 @@ export default function Preview({ config, viewMode, activeTab }: any) {
           )}
         </AnimatePresence>
 
-        <div className="mt-auto py-8 flex items-center justify-center gap-2 opacity-30 hover:opacity-100 transition-opacity no-print">
-            <p className="text-[7px] tracking-[0.2em] uppercase font-bold text-slate-400">Powered by</p>
-            <h1 className="text-[8px] font-black tracking-[0.1em] text-slate-500 uppercase">Nvitado</h1>
-        </div>
+        {/* ❌ TINANGGAL ANG Z-10 POWERED BY CONTAINER MULA DITO PARA HINDI NA PAKALAT-KALAT SA SCROLL ENGINE */}
       </div>
 
       {/* 📍 NAV BAR NAVIGATION CONTROLS */}
@@ -304,7 +302,7 @@ export default function Preview({ config, viewMode, activeTab }: any) {
           <motion.div 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="flex items-center gap-1 p-1.5 bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl pointer-events-auto"
+            className="flex items-center gap-1 p-1.5 bg-slate-900/80 backdrop-blur-md border border-white/10 rounded-2xl shadow-2xl pointer-events-auto shrink-0 whitespace-nowrap"
           >
             <button onClick={() => setActiveSection('home')} className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all ${activeSection === 'home' ? 'bg-white text-slate-900 shadow-lg' : 'text-white hover:bg-white/10'}`}>
               <Home size={18} />
@@ -328,8 +326,13 @@ export default function Preview({ config, viewMode, activeTab }: any) {
         </div>
       )}
 
-      <div className="absolute bottom-5 right-5 z-[35] w-8 h-8 opacity-40 hover:opacity-100 transition-opacity no-print">
-         <img src="/assets/images/logo.png" alt="Nvitado Logo" className="w-full h-full object-contain" />
+      {/* 🔒 🆕 COMBINED LOGO & POWERED BY INLINE BRANDING BLOCK */}
+      <div className="absolute bottom-5 right-5 z-[35] flex items-center gap-1.5 opacity-30 hover:opacity-100 transition-opacity duration-300 no-print select-none">
+        <div className="text-right flex flex-col justify-center leading-none">
+          <span className="text-[6px] tracking-[0.2em] uppercase font-bold text-slate-400">Powered by</span>
+          <span className="text-[8px] font-black tracking-[0.1em] text-slate-500 uppercase mt-0.5">Nvitado</span>
+        </div>
+        <img src="/assets/images/logo.png" alt="Nvitado Logo" className="w-7 h-7 object-contain" />
       </div>
 
       <style jsx global>{`

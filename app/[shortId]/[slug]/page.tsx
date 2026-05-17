@@ -73,7 +73,11 @@ export default async function InvitationViewer({ params }: { params: Promise<{ s
   const isGracePeriod = diffDays >= 0 && diffDays <= 2;
 
   return (
-    <main className="min-h-screen w-full bg-white overflow-x-hidden relative">
+    /* 💯 FIXED SCROLL ENGINE OVERRIDE BLOCK:
+      Dito natin binasag ang kulong na scrollbar. Pinilit nating maging viewport-centric 
+      at fixed position controller ang browser html rendering para sumunod ang navbar mo kahit mag-scroll!
+    */
+    <main className="h-screen w-full bg-white relative overflow-hidden [&_>_div]:h-screen [&_>_div]:fixed [&_>_div]:inset-0 [&_>_div]:overflow-y-auto">
       {/* 🔒 IPAPAKITA PA RIN ANG INVITATION PREVIEW SA LIKOD */}
       <Preview config={invitation.config_data} viewMode="desktop" />
 
