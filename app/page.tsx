@@ -119,48 +119,78 @@ const EventSelector = () => {
   );
 };
 
+// 🎯 FIXED SLIDER: Tinanggal ang phone mockup shell para laging full aspect ratio app image view ang gamit
 const DevicePreviewSlider = () => {
-  const [index, setIndex] = useState(0);
-  const slides = [
-    { id: 'desktop', title: 'Desktop Builder', icon: <Monitor size={14}/>, img: '/assets/images/desktop-builder.png' },
-    { id: 'mobile', title: 'Mobile Builder', icon: <Smartphone size={14}/>, img: '/assets/images/mobile-builder.png' }
-  ];
+  const [activeTab, setActiveTab] = useState<'desktop' | 'mobile'>('mobile');
+  const [subIndex, setSubIndex] = useState(0);
+
+  const dataset = {
+    desktop: [
+      '/assets/images/desktop-builder1.png',
+      '/assets/images/desktop-builder2.png'
+    ],
+    mobile: [
+      '/assets/images/mobile-builder1.png',
+      '/assets/images/mobile-builder2.png'
+    ]
+  };
 
   useEffect(() => {
+    setSubIndex(0); 
     const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % slides.length);
-    }, 5000);
+      setSubIndex((prev) => (prev + 1) % 2);
+    }, 4000);
     return () => clearInterval(timer);
-  }, []);
+  }, [activeTab]);
 
   return (
-    <section className="px-6 pb-24 relative z-10 max-w-6xl mx-auto">
-      <div className="flex justify-center gap-4 mb-8">
-        {slides.map((slide, i) => (
-          <button 
-            key={slide.id}
-            onClick={() => setIndex(i)}
-            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-[10px] font-black tracking-widest uppercase transition-all shadow-sm
-              ${index === i ? 'bg-slate-900 text-white scale-105 shadow-xl' : 'bg-white text-slate-400 hover:text-slate-600'}`}
-          >
-            {slide.icon} {slide.title}
-          </button>
-        ))}
+    <section className="px-6 pb-24 relative z-10 max-w-5xl mx-auto flex flex-col items-center">
+      {/* Toggle Tab Controls */}
+      <div className="flex bg-white/80 backdrop-blur-md p-1.5 rounded-full shadow-lg border border-slate-100/50 mb-10 gap-1">
+        <button 
+          onClick={() => setActiveTab('mobile')}
+          className={`flex items-center gap-2 px-6 py-3 rounded-full text-[10px] font-black tracking-widest uppercase transition-all
+            ${activeTab === 'mobile' ? 'bg-slate-900 text-white scale-105 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+        >
+          <Smartphone size={14} /> Mobile View
+        </button>
+        <button 
+          onClick={() => setActiveTab('desktop')}
+          className={`flex items-center gap-2 px-6 py-3 rounded-full text-[10px] font-black tracking-widest uppercase transition-all
+            ${activeTab === 'desktop' ? 'bg-slate-900 text-white scale-105 shadow-md' : 'text-slate-400 hover:text-slate-600'}`}
+        >
+          <Monitor size={14} /> Desktop View
+        </button>
       </div>
 
-      <div className="relative overflow-hidden rounded-[2.5rem] bg-white shadow-2xl border border-slate-50 p-2">
+      {/* Unified Presentation Canvas View Frame */}
+      <div className="w-full flex justify-center items-center min-h-[300px] md:min-h-[500px]">
         <AnimatePresence mode="wait">
           <motion.div
-            key={index}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.5, ease: "easeInOut" }}
-            className="w-full"
+            key={`${activeTab}-${subIndex}`}
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -15 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+            className="w-full rounded-2xl bg-white p-2 shadow-2xl border border-slate-100/60 overflow-hidden"
           >
-            <img src={slides[index].img} alt={slides[index].title} className="w-full h-auto rounded-[2rem] block" />
+            <img 
+              src={activeTab === 'mobile' ? dataset.mobile[subIndex] : dataset.desktop[subIndex]} 
+              alt={`${activeTab} Builder Showcase`} 
+              className="w-full h-auto rounded-xl block select-none" 
+            />
           </motion.div>
         </AnimatePresence>
+      </div>
+
+      {/* Step Dots Indicator */}
+      <div className="flex gap-1.5 mt-6">
+        {[0, 1].map((i) => (
+          <div 
+            key={i} 
+            className={`h-1.5 rounded-full transition-all duration-300 ${subIndex === i ? 'w-4 bg-slate-800' : 'w-1.5 bg-slate-300'}`} 
+          />
+        ))}
       </div>
     </section>
   );
@@ -181,31 +211,27 @@ const AnimatedPastelBackground = () => (
   </div>
 );
 
-// --- 💯 FIXED FULL-SCREEN COMBINED COMMUNITY STATS & SINGLE CARD AUTO-SCROLL REVIEW SECTION ---
+// --- FULL-SCREEN COMBINED COMMUNITY STATS & SINGLE CARD AUTO-SCROLL REVIEW SECTION ---
 const StatsSection = () => {
   const [count, setCount] = useState<number | null>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [totalReviewCount, setTotalReviewCount] = useState<number>(0);
   
-  // State para sa single dynamic text slider index rotation
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
 
   useEffect(() => {
     const fetchStatsAndReviews = async () => {
-      // 🎯 FIXED CONDITION: Nagdagdag tayo ng .eq('status', 'paid') filter block para verified paid invites lang ang mabilang sa counter mo
       const { count: total, error: countError } = await supabase
         .from('invitations')
         .select('*', { count: 'exact', head: true })
         .eq('status', 'paid');
       if (!countError) setCount(total);
 
-      // 2. Kunin ang total number of reviews para sa kanang bahagi summary status
       const { count: revCount, error: revCountError } = await supabase
         .from('reviews')
         .select('*', { count: 'exact', head: true });
       if (!revCountError && revCount) setTotalReviewCount(revCount);
 
-      // 3. Kunin ang mga reviews (4 at 5 stars)
       const { data: reviewData, error: reviewError } = await supabase
         .from('reviews')
         .select('*')
@@ -217,7 +243,6 @@ const StatsSection = () => {
     fetchStatsAndReviews();
   }, []);
 
-  // 🕒 INTERVAL TIMER: Bawat 4 na segundo ay kusa itong magpapalit ng nadididisplay na review text (fade out / fade in)
   useEffect(() => {
     if (reviews.length <= 1) return;
     const interval = setInterval(() => {
@@ -227,11 +252,10 @@ const StatsSection = () => {
   }, [reviews]);
 
   return (
-    // 🆕 GINAWANG ISANG BUONG SCREEN (min-h-screen) AT HIGHLIGHT BANNER LAYOUT
     <section className="min-h-screen w-full flex items-center justify-center px-6 py-20 relative z-10 max-w-6xl mx-auto select-none">
       <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
         
-        {/* 1. KALIWANG BAHAGI: TOTAL INVITATIONS (Naka-animate) */}
+        {/* Total invitations layout */}
         <motion.div 
           initial={{ opacity: 0, x: -40 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -250,7 +274,7 @@ const StatsSection = () => {
           </p>
         </motion.div>
 
-        {/* 2. KANANG BAHAGI: OVERALL STARS & SINGLE CARD FADE AUTO-SCROLL */}
+        {/* Reviews dynamic stack wrapper view */}
         <motion.div 
           initial={{ opacity: 0, x: 40 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -261,7 +285,6 @@ const StatsSection = () => {
           <div className="space-y-2 text-center md:text-left w-full">
             <p className="text-rose-500 text-[10px] font-black uppercase tracking-[0.4em]">Overall Rating</p>
             
-            {/* Static 5 Gold Stars Summary */}
             <div className="flex justify-center md:justify-start gap-1 text-amber-500">
               {[1, 2, 3, 4, 5].map((s) => (
                 <Star key={s} size={26} className="fill-amber-500 text-amber-500" />
@@ -273,15 +296,14 @@ const StatsSection = () => {
             </p>
           </div>
 
-          {/* 🚀 SINGLE PREMIUM CARD FOR REVIEW (PA ISA-ISA LANG ANG LABAS NAKA-FADE) */}
           <div className="w-full max-w-md h-[180px] relative overflow-hidden">
             <AnimatePresence mode="wait">
               {reviews.length > 0 && (
                 <motion.div
                   key={currentReviewIndex}
-                  initial={{ opacity: 0, y: 15 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -15 }}
+                  exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.4, ease: "easeInOut" }}
                   className="absolute inset-0 bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-[0_20px_50px_rgba(0,0,0,0.05)] flex flex-col justify-between"
                 >
@@ -291,13 +313,11 @@ const StatsSection = () => {
                         <Star key={sIdx} size={12} className="fill-amber-500" />
                       ))}
                     </div>
-                    {/* Comment Area */}
                     <p className="text-slate-600 text-xs font-semibold leading-relaxed italic line-clamp-3">
                       "{reviews[currentReviewIndex].review}"
                     </p>
                   </div>
 
-                  {/* Anonymous Footer & No Live Link Button */}
                   <div className="border-t border-slate-50 pt-2.5 flex items-center justify-between">
                     <div>
                       <p className="text-[10px] font-black text-slate-800 uppercase leading-none">Anonymous User</p>
@@ -329,7 +349,7 @@ export default function LandingPage() {
 
       <AnimatedPastelBackground />
 
-      {/* 2. HERO SECTION */}
+      {/* HERO SECTION */}
       <section className="relative flex flex-col items-center justify-center text-center px-6 pt-40 pb-16">
         <motion.div 
           custom={0} initial="hidden" animate="visible" variants={fadeInUp} 
