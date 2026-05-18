@@ -73,11 +73,12 @@ export default async function InvitationViewer({ params }: { params: Promise<{ s
   const isGracePeriod = diffDays >= 0 && diffDays <= 2;
 
   return (
-    /* 💯 FIXED SCROLL ENGINE OVERRIDE BLOCK:
-      Dito natin binasag ang kulong na scrollbar. Pinilit nating maging viewport-centric 
-      at fixed position controller ang browser html rendering para sumunod ang navbar mo kahit mag-scroll!
+    /* 💯 FIXED CORE SCROLL LOCK:
+       Ginawa nating `h-screen overflow-hidden` ang main screen frame wrapper para patayin ang scrollbar ng page mismo.
+       Dahil dito, ang `Preview.tsx` na lang ang solong hahawak sa overflow mechanics, at ang orihinal na navbar mo 
+       ay mananatiling naka-float sa bottom viewport nang hindi nagwawala o lumulubog!
     */
-    <main className="h-screen w-full bg-white relative overflow-hidden [&_>_div]:h-screen [&_>_div]:fixed [&_>_div]:inset-0 [&_>_div]:overflow-y-auto">
+    <main className="h-screen w-full bg-white relative overflow-hidden">
       {/* 🔒 IPAPAKITA PA RIN ANG INVITATION PREVIEW SA LIKOD */}
       <Preview config={invitation.config_data} viewMode="desktop" />
 
@@ -86,7 +87,6 @@ export default async function InvitationViewer({ params }: { params: Promise<{ s
         <GracePeriodCountdown 
           expirationTime={expirationDate.toISOString()} 
           title={invitation.config_data.title || "Your Event"}
-          // 🆕 PINASA NATIN ANG DYNAMIC NAME DITO GALING SA TABLE RECORD NG INVITATION
           initialCustomerName={invitation.customer_name || "Valued Customer"}
         />
       )}
