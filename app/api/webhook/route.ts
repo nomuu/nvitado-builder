@@ -87,7 +87,7 @@ export async function POST(req: Request) {
             console.log(`WEBHOOK EMAIL: Sending custom email with exact success query to ${email}`);
 
             await resend.emails.send({
-              from: 'Nvitado <invitations@nvitado.com>',
+              from: 'Nvitado <inquiry@nvitado.com>',
               to: email,
               subject: `🎉 Live na ang iyong imbitasyon: ${eventTitle}!`,
               html: `
