@@ -21,6 +21,13 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Missing LEMONSQUEEZY_REVISION_VARIANT_ID in env" }, { status: 500 });
     }
 
+    // 🌐 FIXED REFERER ROUTE EXTRACTOR:
+    // Kukunin natin kung anong saktong link URL page ang tumawag sa checkout endpoint (hal. nvitado.com/revise/NVI-SIACJ838)
+    // Kung walang referer tag sa headers system ng network channel, default na babalik sa base active server instance
+    const referer = req.headers.get('referer');
+    const { protocol, host } = new URL(req.url);
+    const successRedirectUrl = referer || `${protocol}//${host}/create`;
+
     // CALL LEMON SQUEEZY API
     const response = await axios.post('https://api.lemonsqueezy.com/v1/checkouts', {
       data: {
@@ -33,10 +40,13 @@ export async function GET(req: Request) {
           },
           product_options: {
             name: `NVITADO: 3 EXTRA REVISION CREDITS`,
-            description: description
+            description: description,
+            // 🎯 AUTOMATIC TARGET ALIGNMENT: Dito ibabalik ang user saktong-sakto kung saan siya nag-click ng buy button
+            redirect_url: successRedirectUrl
           },
           checkout_options: {
-            button_color: '#0f172a'
+            button_color: '#0f172a',
+            embed: false
           }
         },
         relationships: {
