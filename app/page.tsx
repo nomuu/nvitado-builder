@@ -1,9 +1,9 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 // --- IMPORT SCRIPT PARA SA CHATBOX ---
 import Script from 'next/script'; 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { 
   Sparkles, ArrowRight, 
   Zap, Globe, Clock, CheckCircle2,
@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Poppins } from 'next/font/google';
 import { createClient } from '@supabase/supabase-js';
+import confetti from 'canvas-confetti'; // 🆕 Ini-import ang sikat na confetti.js engine library mula sa internet
 
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '600', '800', '900'] });
 
@@ -215,12 +216,14 @@ const StatsSection = () => {
   const [count, setCount] = useState<number | null>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [totalReviewCount, setTotalReviewCount] = useState<number>(0);
-  
   const [currentReviewIndex, setCurrentReviewIndex] = useState(0);
+
+  // 🆕 Gumamit ng useInView viewport trigger para sa advanced confetti delivery sync mechanics
+  const sectionRef = useRef<HTMLDivElement>(null);
+  const isSectionInView = useInView(sectionRef, { once: false, amount: 0.3 });
 
   useEffect(() => {
     const fetchStatsAndReviews = async () => {
-      // 🎯 IN-UPDATE: Dito na lilingon si Supabase sa ginawa nating permanent single-row global_stats tracking table
       const { data: statsData, error: statsError } = await supabase
         .from('global_stats')
         .select('total_invitations_published')
@@ -230,7 +233,7 @@ const StatsSection = () => {
       if (!statsError && statsData) {
         setCount(statsData.total_invitations_published);
       } else {
-        setCount(25); // Safe fallback base metric value
+        setCount(25); 
       }
 
       const { count: revCount, error: revCountError } = await supabase
@@ -257,8 +260,30 @@ const StatsSection = () => {
     return () => clearInterval(interval);
   }, [reviews]);
 
+  // 🆕 TRIGGER CONFETTI.JS EFFECT: Tuwing mag-scroscroll pababa ang user at makikita ang section, puputok ang totoong internet confetti side cannons!
+  useEffect(() => {
+    if (isSectionInView) {
+      // Kaliwang kanyon
+      confetti({
+        particleCount: 50,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0, y: 0.8 },
+        colors: ['#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#ec4899']
+      });
+      // Kanang kanyon
+      confetti({
+        particleCount: 50,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1, y: 0.8 },
+        colors: ['#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#ec4899']
+      });
+    }
+  }, [isSectionInView]);
+
   return (
-    <section className="min-h-screen w-full flex items-center justify-center px-6 py-20 relative z-10 max-w-6xl mx-auto select-none">
+    <section ref={sectionRef} className="min-h-screen w-full flex items-center justify-center px-6 py-20 relative z-10 max-w-6xl mx-auto select-none">
       <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-16 items-center">
         
         {/* Total invitations layout */}
