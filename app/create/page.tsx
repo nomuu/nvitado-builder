@@ -19,6 +19,8 @@ export default function NvitadoEditor() {
   const [hasInteracted, setHasInteracted] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   
+  // 🎯 NA-UPDATE NA CONFIG OBJECT STATE:
+  // Isinama na ang lahat ng required default field values para sa Attire subsystem structure
   const [config, setConfig] = useState({
     background: '#ffffff',
     useAnimation: false,
@@ -38,6 +40,12 @@ export default function NvitadoEditor() {
     showQA: false,
     showStory: false,
     story: '',
+    // 🆕 ATTIRE TAB INITIALIZATION VALUES
+    showAttire: false,
+    attireTitle: 'Rustic Pastel Theme',
+    attireColors: ['#fda4af', '#9cc3b2', '#fcd34d'], // default initial color tag suggestions
+    menAttireText: 'Long sleeves, slacks, or formal suit',
+    womenAttireText: 'Cocktail dress, long gown, or formal attire',
   });
 
   // 📍 DATE VALIDATION LOGIC
@@ -174,7 +182,6 @@ export default function NvitadoEditor() {
           )}
         </AnimatePresence>
 
-        {/* 🎯 PINASA NATIN ANG `isSidebarOpen` TRACKER DITO SA PREVIEW CARD ENGINE */}
         <Preview config={config} viewMode={viewMode} activeTab={activeTab} isSidebarOpen={isSidebarOpen} />
       </main>
     </div>

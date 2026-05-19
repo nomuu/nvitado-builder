@@ -5,7 +5,8 @@ import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import { BACKGROUNDS } from '../constants/backgrounds';
 import { 
   X, Settings2, BookHeart, MessageCircleQuestion, 
-  PlusCircle, Trash2, Star, Heart, PartyPopper, Cake, Info, AlertCircle, Layout, Image as ImageIcon
+  PlusCircle, Trash2, Star, Heart, PartyPopper, Cake, Info, AlertCircle, Layout, Image as ImageIcon,
+  Shirt // 🆕 Idinagdag ang shirt icon para sa attire tab
 } from 'lucide-react';
 
 export default function Sidebar({ config, setConfig, onPublish, isPublishing, onClose, activeTab, setActiveTab, isEligible, isRevision = false }: any) {
@@ -14,10 +15,23 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   const [showDateStyle, setShowDateStyle] = useState(false);
   const [showMessageStyle, setShowMessageStyle] = useState(false);
 
+  // 🆕 Pre-defined list of common wedding/event colors para sa selection layout
+  const COLOR_PALETTE = [
+    { name: 'Rose', value: '#fda4af' },
+    { name: 'Amber', value: '#fcd34d' },
+    { name: 'Emerald', value: '#6ee7b7' },
+    { name: 'Sage', value: '#9cc3b2' },
+    { name: 'Sky', value: '#7dd3fc' },
+    { name: 'Indigo', value: '#a5b4fc' },
+    { name: 'Champagne', value: '#fef3c7' },
+    { name: 'Burgundy', value: '#991b1b' },
+    { name: 'Navy', value: '#1e3a8a' },
+    { name: 'Slate', value: '#64748b' }
+  ];
+
   useEffect(() => {
     if (!isRevision && !config.shortId) {
       const randomId = Math.random().toString(16).substring(2, 10);
-      // I-initialize na rin ang default imageStyle as 'frame' kung wala pa
       setConfig({ ...config, shortId: randomId, imageStyle: config.imageStyle || 'frame' });
     }
   }, [isRevision]);
@@ -105,11 +119,23 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     setConfig({ ...config, questions: newQA });
   };
 
+  // 🆕 Pinag-pwesto ang Attire tab bago mag Q&A sa dashboard nav arrays
   const tabs = [
     { id: 'general', label: 'General', icon: Settings2 },
+    { id: 'attire', label: 'Attire', icon: Shirt },
     { id: 'qa', label: 'Q&A', icon: MessageCircleQuestion },
     { id: 'story', label: 'Custom', icon: PlusCircle, premium: !isRevision }, 
   ];
+
+  // 🆕 Toggles value assignment helper block para sa multiple selection arrays ng theme colors
+  const toggleColorSelection = (hexColor: string) => {
+    const currentColors = [...(config.attireColors || [])];
+    if (currentColors.includes(hexColor)) {
+      setConfig({ ...config, attireColors: currentColors.filter(c => c !== hexColor) });
+    } else {
+      setConfig({ ...config, attireColors: [...currentColors, hexColor] });
+    }
+  };
 
   const handlePublishClick = async () => {
     onPublish(totalPrice);
@@ -215,7 +241,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                       </button>
                     </div>
 
-                    {/* 🆕 HIGH PRIORITIZED UX ELEMENT: IMAGE STYLE SELECTOR BUTTONS */}
                     <div className="space-y-1.5">
                       <label className="text-[8px] font-black uppercase tracking-widest text-slate-400">Photo Display Style</label>
                       <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl">
@@ -355,6 +380,92 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                   </div>
                 </div>
               </section>
+            )}
+          </div>
+        )}
+
+        {/* 🆕 NEW ATTIRE CODE MODULE TAB VIEW INTERFACE */}
+        {activeTab === 'attire' && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">Enable Attire Guide</p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase">Dresscode instructions for guests</p>
+              </div>
+              <button 
+                onClick={() => setConfig({...config, showAttire: !config.showAttire})} 
+                className={`w-10 h-5 rounded-full relative transition-all ${config.showAttire ? 'bg-amber-500' : 'bg-slate-300'}`}
+              >
+                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${config.showAttire ? 'right-1' : 'left-1'}`} />
+              </button>
+            </div>
+
+            {config.showAttire && (
+              <div className="animate-in zoom-in-95 duration-200 space-y-6">
+                {/* 1. Theme Title Input Section */}
+                <section className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">Theme / Motif Name</label>
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900">
+                    <input 
+                      type="text" 
+                      className="bg-transparent outline-none w-full font-bold text-slate-800 text-xs uppercase" 
+                      placeholder="e.g. RUSTIC PASTEL / ALL WHITE" 
+                      value={config.attireTitle || ''} 
+                      onChange={(e) => setConfig({...config, attireTitle: e.target.value})} 
+                    />
+                  </div>
+                </section>
+
+                {/* 2. Color Multi-selector circles layout */}
+                <section className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">Select Theme Colors</label>
+                  <div className="grid grid-cols-5 gap-3 p-1">
+                    {COLOR_PALETTE.map((color) => {
+                      const isSelected = (config.attireColors || []).includes(color.value);
+                      return (
+                        <button
+                          key={color.value}
+                          type="button"
+                          onClick={() => toggleColorSelection(color.value)}
+                          className={`w-10 h-10 rounded-full border-2 transition-all relative flex items-center justify-center shadow-sm hover:scale-105 ${isSelected ? 'border-slate-900 ring-2 ring-slate-200' : 'border-white/50'}`}
+                          style={{ backgroundColor: color.value }}
+                          title={color.name}
+                        >
+                          {isSelected && <div className="w-2 h-2 rounded-full bg-slate-900" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+
+                {/* 3. Men's Wear Guidelines Block */}
+                <section className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">Gents Attire Option</label>
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    <input 
+                      type="text" 
+                      className="bg-transparent outline-none w-full font-bold text-slate-700 text-xs" 
+                      placeholder="e.g. Long sleeves, slacks, or formal suit" 
+                      value={config.menAttireText || ''} 
+                      onChange={(e) => setConfig({...config, menAttireText: e.target.value})} 
+                    />
+                  </div>
+                </section>
+
+                {/* 4. Women's Wear Guidelines Block */}
+                <section className="space-y-3">
+                  <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">Ladies Attire Option</label>
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    <input 
+                      type="text" 
+                      className="bg-transparent outline-none w-full font-bold text-slate-700 text-xs" 
+                      placeholder="e.g. Cocktail dress, long gown, or formal attire" 
+                      value={config.womenAttireText || ''} 
+                      onChange={(e) => setConfig({...config, womenAttireText: e.target.value})} 
+                    />
+                  </div>
+                </section>
+              </div>
             )}
           </div>
         )}

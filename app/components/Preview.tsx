@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { BACKGROUNDS } from '../constants/backgrounds';
 import { 
   MapPin, Home, MessageCircleQuestion, BookHeart, 
-  Star, Heart, PartyPopper, Cake, Info 
+  Star, Heart, PartyPopper, Cake, Info,
+  Shirt // 🆕 Idinagdag para sa visual view tab icon ng dresscode guide
 } from 'lucide-react';
 
 // 📍 Icon mapping para sa dynamic rendering
@@ -23,21 +24,26 @@ export default function Preview({ config, viewMode, activeTab, isSidebarOpen = f
   useEffect(() => {
     if (activeTab === 'general') {
       setActiveSection('home');
+    } else if (activeTab === 'attire' && config.showAttire) {
+      setActiveSection('attire');
     } else if (activeTab === 'qa' && config.showQA) {
       setActiveSection('qa');
     } else if (activeTab === 'story' && config.showStory) {
       setActiveSection('story');
     }
-  }, [activeTab, config.showQA, config.showStory]);
+  }, [activeTab, config.showQA, config.showStory, config.showAttire]);
 
   useEffect(() => {
+    if (activeSection === 'attire' && !config.showAttire) {
+      setActiveSection('home');
+    }
     if (activeSection === 'qa' && !config.showQA) {
       setActiveSection('home');
     }
     if (activeSection === 'story' && !config.showStory) {
       setActiveSection('home');
     }
-  }, [config.showQA, config.showStory, activeSection]);
+  }, [config.showQA, config.showStory, config.showAttire, activeSection]);
 
   const activeBg = BACKGROUNDS.find(b => b.id === config.animationId) || BACKGROUNDS[0];
 
@@ -62,8 +68,8 @@ export default function Preview({ config, viewMode, activeTab, isSidebarOpen = f
 
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(config.location)}`;
 
-  // 🔒 SECURITY CHECK: Lalabas lang kapag enabled, at mawawala kapag isSidebarOpen === true (Naka-click ang Edit)
-  const shouldShowNavbar = (config.showQA || config.showStory) && !isSidebarOpen;
+  // 🔒 SECURITY CHECK WITH ATTIRE: Kasama na si config.showAttire sa pagpapakita ng interactive wrapper block ng nav system
+  const shouldShowNavbar = (config.showQA || config.showStory || config.showAttire) && !isSidebarOpen;
 
   // 📍 Dynamic Icon para sa Navbar Button
   const CustomIcon = ICON_MAP[config.customIcon] || ICON_MAP['BookHeart'];
@@ -246,6 +252,58 @@ export default function Preview({ config, viewMode, activeTab, isSidebarOpen = f
             </motion.div>
           )}
 
+          {/* 🆕 NEW ATTIRE INTERFACE CARD VIEW GENERATION COMPONENT */}
+          {activeSection === 'attire' && config.showAttire && (
+            <motion.div 
+              key="attire"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="flex flex-col items-center w-full py-24 text-center max-w-lg mx-auto"
+            >
+              <span className="text-[10px] tracking-[0.5em] text-amber-700 uppercase mb-4 font-black">
+                Dresscode Guide
+              </span>
+              <h2 className="text-4xl font-serif italic text-slate-900 mb-8">
+                {config.attireTitle || "Wedding Motif"}
+              </h2>
+              
+              <div className="w-full bg-white/50 backdrop-blur-sm p-8 rounded-[2rem] border border-white/20 shadow-sm flex flex-col items-center gap-8">
+                {/* Theme palette circle chips */}
+                {config.attireColors && config.attireColors.length > 0 && (
+                  <div className="flex flex-wrap justify-center gap-4">
+                    {config.attireColors.map((hexColor: string, cIdx: number) => (
+                      <div 
+                        key={cIdx} 
+                        className="w-10 h-10 rounded-full shadow-md border-2 border-white" 
+                        style={{ backgroundColor: hexColor }} 
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Clothing details grid list wrapper */}
+                <div className="w-full space-y-4 text-left border-t border-slate-900/5 pt-6">
+                  {config.menAttireText && (
+                    <div className="space-y-1">
+                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Gents / Men's Wear</p>
+                      <p className="text-xs text-slate-700 font-bold uppercase leading-relaxed">{config.menAttireText}</p>
+                    </div>
+                  )}
+                  {config.womenAttireText && (
+                    <div className="space-y-1 pt-2">
+                      <p className="text-[9px] font-black uppercase text-slate-400 tracking-wider">Ladies / Women's Wear</p>
+                      <p className="text-xs text-slate-700 font-bold uppercase leading-relaxed">{config.womenAttireText}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* SPACER FOR ATTIRE GUIDE INTERFACE */}
+              <div className="h-32 w-full min-h-[128px] block pointer-events-none clear-both" />
+            </motion.div>
+          )}
+
           {activeSection === 'story' && config.showStory && (
             <motion.div 
               key="story"
@@ -308,7 +366,7 @@ export default function Preview({ config, viewMode, activeTab, isSidebarOpen = f
         {/* ❌ TINANGGAL ANG Z-10 POWERED BY CONTAINER MULA DITO PARA HINDI NA PAKALAT-KALAT SA SCROLL ENGINE */}
       </div>
 
-      {/* 📍 NAV BAR NAVIGATION CONTROLS */}
+      {/* 📍 NAV BAR NAVIGATION CONTROLS WITH DYNAMIC ATTIRE KEY BUTTON */}
       {shouldShowNavbar && (
         <div className="absolute bottom-6 left-0 right-0 flex justify-center z-[10] pointer-events-none no-print">
           <motion.div 
@@ -320,6 +378,15 @@ export default function Preview({ config, viewMode, activeTab, isSidebarOpen = f
               <Home size={18} />
               <span className="text-[7px] font-black uppercase mt-1">Home</span>
             </button>
+            
+            {/* 🆕 ATTIRE FLUID SELECTION BUTTON CONTROLLER LAYER */}
+            {config.showAttire && (
+              <button onClick={() => setActiveSection('attire')} className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all animate-in fade-in zoom-in duration-300 ${activeSection === 'attire' ? 'bg-white text-slate-900 shadow-lg' : 'text-white hover:bg-white/10'}`}>
+                <Shirt size={18} />
+                <span className="text-[7px] font-black uppercase mt-1">Attire</span>
+              </button>
+            )}
+
             {config.showQA && (
               <button onClick={() => setActiveSection('qa')} className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all animate-in fade-in zoom-in duration-300 ${activeSection === 'qa' ? 'bg-white text-slate-900 shadow-lg' : 'text-white hover:bg-white/10'}`}>
                 <MessageCircleQuestion size={18} />
