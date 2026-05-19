@@ -148,7 +148,7 @@ export default function Preview({ config, viewMode, activeTab, isSidebarOpen = f
         ))}
       </div>
 
-      <div className="relative z-10 w-full h-full overflow-y-auto no-scrollbar flex flex-col px-6 pb-20">
+      <div className="relative z-10 w-full h-full overflow-y-auto no-scrollbar flex flex-col px-6 pb-52">
         <AnimatePresence mode="wait">
           {activeSection === 'home' && (
             <motion.div 
@@ -239,6 +239,10 @@ export default function Preview({ config, viewMode, activeTab, isSidebarOpen = f
                   </div>
                 </div>
               </div>
+
+              {/* 🎯 SPACER FOR HOME VIEW (MAP DIRECTION) */}
+              <div className="h-32 w-full min-h-[128px] block pointer-events-none clear-both" />
+
             </motion.div>
           )}
 
@@ -261,6 +265,10 @@ export default function Preview({ config, viewMode, activeTab, isSidebarOpen = f
                   {config.story || "Once upon a time..."}
                 </p>
               </div>
+
+              {/* 🎯 SPACER FOR STORY VIEW */}
+              <div className="h-32 w-full min-h-[128px] block pointer-events-none clear-both" />
+
             </motion.div>
           )}
 
@@ -289,6 +297,10 @@ export default function Preview({ config, viewMode, activeTab, isSidebarOpen = f
                     </div>
                  )}
               </div>
+
+              {/* 🎯 SPACER FOR Q&A VIEW */}
+              <div className="h-32 w-full min-h-[128px] block pointer-events-none clear-both" />
+
             </motion.div>
           )}
         </AnimatePresence>
