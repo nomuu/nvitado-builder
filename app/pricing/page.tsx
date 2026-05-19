@@ -155,7 +155,7 @@ export default function PricingPage() {
           {[
             { q: "Why the 1-week rule?", a: "To ensure system stability and give you enough time to your guests to view the link." },
             { q: "Can I edit design?", a: "No. Design is locked on publish. Details can be edited max 5 times (2 free, 3 paid)." },
-            { q: "What is extension fee?", a: "A ₱20 fee per month if your event is scheduled for the coming months." },
+            { q: "What is extension fee?", a: "A ₱5 fee per month if your event is scheduled for the coming months." },
             { q: "Is payment secure?", a: "Yes. All payments are handled securely via PayMongo (GCash, Maya, etc)." }
           ].map((item, i) => (
             <div key={i} className="space-y-2">
