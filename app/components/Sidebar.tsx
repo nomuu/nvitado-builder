@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import { BACKGROUNDS } from '../constants/backgrounds';
-import { COLOR_PALETTE } from '../constants/colors'; // 🆕 Ini-import na mula sa hiwalay mong constants file
+import { COLOR_PALETTE } from '../constants/colors'; // 🆕 Gumagana gamit ang external data file module mo
 import { 
   X, Settings2, BookHeart, MessageCircleQuestion, 
   PlusCircle, Trash2, Star, Heart, PartyPopper, Cake, Info, AlertCircle, Layout, Image as ImageIcon,
@@ -121,6 +121,9 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
       setConfig({ ...config, attireColors: [...currentColors, hexColor] });
     }
   };
+
+  // 🆕 Dynamic category index extractor: Saktong tinitipon ang lahat ng unique text headers ng group classification
+  const categories = Array.from(new Set(COLOR_PALETTE.map(c => c.category)));
 
   const handlePublishClick = async () => {
     onPublish(totalPrice);
@@ -384,6 +387,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
               </button>
             </div>
 
+            {/* 🎯 FIXED: Tinanggal ang sirang config.showTypeCheck condition para magpakita na ang buong attire module layout */}
             {config.showAttire && (
               <div className="animate-in zoom-in-95 duration-200 space-y-6">
                 <section className="space-y-2">
@@ -399,26 +403,37 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                   </div>
                 </section>
 
-                <section className="space-y-2">
+                {/* 🎯 ORGANIZED & CATEGORIZED THEME COLORS DISPLAY MODULE */}
+                <section className="space-y-4">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">Select Theme Colors</label>
-                  <div className="grid grid-cols-5 gap-3 p-1">
-                    {/* 🎯 GUMAGANA NA DIRECTLY VIA external constant data module loop */}
-                    {COLOR_PALETTE.map((color) => {
-                      const isSelected = (config.attireColors || []).includes(color.value);
-                      return (
-                        <button
-                          key={color.value}
-                          type="button"
-                          onClick={() => toggleColorSelection(color.value)}
-                          className={`w-10 h-10 rounded-full border-2 transition-all relative flex items-center justify-center shadow-sm hover:scale-105 ${isSelected ? 'border-slate-900 ring-2 ring-slate-200' : 'border-white/50'}`}
-                          style={{ backgroundColor: color.value }}
-                          title={color.name}
-                        >
-                          {isSelected && <div className="w-2 h-2 rounded-full bg-slate-900" />}
-                        </button>
-                      );
-                    })}
-                  </div>
+                  
+                  {categories.map((category) => (
+                    <div key={category} className="space-y-2 border-b border-slate-100 pb-3 last:border-b-0 last:pb-0">
+                      {/* Category Label Header */}
+                      <p className="text-[8px] font-black text-amber-700 uppercase tracking-widest">{category}</p>
+                      
+                      {/* Color circle chips loop for this specific category */}
+                      <div className="flex flex-wrap gap-2.5 pt-1">
+                        {COLOR_PALETTE.filter(c => c.category === category).map((color) => {
+                          const isSelected = (config.attireColors || []).includes(color.value);
+                          return (
+                            <button
+                              key={color.value}
+                              type="button"
+                              onClick={() => toggleColorSelection(color.value)}
+                              className={`w-8 h-8 rounded-full border-2 transition-all relative flex items-center justify-center shadow-sm hover:scale-110 ${
+                                isSelected ? 'border-slate-900 ring-2 ring-slate-200 scale-105' : 'border-white/60'
+                              }`}
+                              style={{ backgroundColor: color.value }}
+                              title={color.name}
+                            >
+                              {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-slate-900" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
                 </section>
 
                 <section className="space-y-3">
