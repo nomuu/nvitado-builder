@@ -7,7 +7,7 @@ import { Menu, X, ArrowRight, PlusCircle, Edit3, ChevronDown } from 'lucide-reac
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isGetStartedOpen, setIsGetStartedOpen] = useState(false); // 📍 Para sa toggle logic
+  const [isGetStartedOpen, setIsGetStartedOpen] = useState(false);
   const pathname = usePathname();
 
   // Close menus when path changes
@@ -54,7 +54,7 @@ export default function Navbar() {
             })}
           </div>
           
-          {/* 📍 GET STARTED DROPDOWN - WORKS FOR BOTH DESKTOP & MOBILE */}
+          {/* 📍 GET STARTED DROPDOWN */}
           <div className="relative">
             <button 
               onClick={() => setIsGetStartedOpen(!isGetStartedOpen)}
@@ -75,13 +75,15 @@ export default function Navbar() {
                   onMouseLeave={() => setIsGetStartedOpen(false)}
                   className="absolute top-full right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden z-[110]"
                 >
-                  <Link href="/create" className="flex items-center gap-3 p-4 hover:bg-slate-50 transition-all border-b border-slate-50 group">
+                  {/* 🎯 EXPERIMENT CHANGE: Tinuro natin sa /setup imbes na /create para magdaan muna sa template questions */}
+                  <Link href="/setup" className="flex items-center gap-3 p-4 hover:bg-slate-50 transition-all border-b border-slate-50 group">
                     <PlusCircle size={18} className="text-emerald-500" />
                     <div className="text-left">
                       <p className="text-[10px] font-black uppercase text-slate-900">Create Invitation</p>
-                      <p className="text-[8px] text-slate-400 font-bold uppercase group-hover:text-slate-600">Start building from scratch</p>
+                      <p className="text-[8px] text-slate-400 font-bold uppercase group-hover:text-slate-600">Answer 3 quick questions for a smart template</p>
                     </div>
                   </Link>
+                  
                   <Link href="/verify-access" className="flex items-center gap-3 p-4 hover:bg-slate-50 transition-all group">
                     <Edit3 size={18} className="text-amber-500" />
                     <div className="text-left">

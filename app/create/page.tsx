@@ -1,13 +1,15 @@
 "use client";
-import React, { useState, useEffect } from 'react'; 
+import React, { useState, useEffect, Suspense } from 'react'; 
+import { useSearchParams } from 'next/navigation'; 
 import Sidebar from '../components/Sidebar';
 import Preview from '../components/Preview';
 import { BACKGROUNDS } from '../constants/backgrounds';
-import { COLOR_PALETTE } from '../constants/colors'; // 🆕 Ini-import para sa default setup values
+import { COLOR_PALETTE } from '../constants/colors'; 
 import { Edit3, Eye, Monitor, Smartphone, AlertTriangle, X, Link2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
-export default function NvitadoEditor() {
+function EditorContent() {
+  const searchParams = useSearchParams();
   const [viewMode, setViewMode] = useState<'mobile' | 'desktop'>('mobile');
   const [isPublishing, setIsPublishing] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
@@ -20,8 +22,6 @@ export default function NvitadoEditor() {
   const [hasInteracted, setHasInteracted] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   
-  // 🎯 SCHEMATIC OBJECT STATE INITIALIZATION:
-  // Isinama ang structural variables ng attire feature at kinuha ang unang tatlong kulay ng constant palette as defaults.
   const [config, setConfig] = useState({
     background: '#ffffff',
     useAnimation: false,
@@ -37,17 +37,95 @@ export default function NvitadoEditor() {
     location: 'Makati City, Metro Manila',
     welcomeMessage: 'We invite you to join us as we celebrate our love and begin our new journey together.',
     messageFont: 'font-serif',
-    slug: '',
+    slug: '', // Naka-default na blangko
     showQA: false,
     showStory: false,
     story: '',
-    // 🆕 UP-TO-DATE ATTIRE THEME STATE DEFAULT SCHEMA
     showAttire: false,
     attireTitle: 'Rustic Pastel Theme',
-    attireColors: [COLOR_PALETTE[0].value, COLOR_PALETTE[1].value, COLOR_PALETTE[2].value], // Dynamic fallback value mapping
+    attireColors: [COLOR_PALETTE[0].value, COLOR_PALETTE[1].value, COLOR_PALETTE[2].value], 
     menAttireText: 'Long sleeves, slacks, or formal suit',
     womenAttireText: 'Cocktail dress, long gown, or formal attire',
   });
+
+  // 🎯 ONBOARDING ADAPTER: Kumukuha ng wizard variables nang hindi pinapakialaman ang slug status
+  useEffect(() => {
+    const isFromInit = searchParams.get('init') === 'true';
+    if (!isFromInit) return; 
+
+    const eventParam = searchParams.get('event');
+    const themeParam = searchParams.get('theme');
+    const celebrantParam = searchParams.get('celebrant');
+
+    setConfig((prevConfig) => {
+      let nextConfig = { ...prevConfig };
+
+      if (celebrantParam) {
+        nextConfig.title = celebrantParam;
+      }
+
+      // 🎯 FIXED: Laging blangko ang slug dito para masunod ang gusto mong manual naming rule sa sidebar
+      nextConfig.slug = ''; 
+
+      if (eventParam) {
+        if (eventParam === 'wedding') {
+          nextConfig.headerTitle = 'THE WEDDING OF';
+          nextConfig.titleFont = 'font-serif';
+          nextConfig.welcomeMessage = 'We invite you to join us as we celebrate our love and exchange vows to begin our beautiful journey together.';
+        } else if (eventParam === 'birthday') {
+          nextConfig.headerTitle = 'CELEBRATING THE BIRTHDAY OF';
+          nextConfig.titleFont = 'font-sans';
+          nextConfig.welcomeMessage = 'Cheers to another beautiful year of life, laughter, and blessings! Come and celebrate this special milestone with us.';
+        } else if (eventParam === 'baptism') {
+          nextConfig.headerTitle = 'THE HOLY BAPTISM OF';
+          nextConfig.titleFont = 'font-serif';
+          nextConfig.welcomeMessage = 'Please join us as our little angel receives the holy blessing and is welcomed into the grace of God.';
+        } else if (eventParam === 'party') {
+          nextConfig.headerTitle = 'YOU ARE INVITED TO';
+          nextConfig.titleFont = 'font-sans';
+          nextConfig.welcomeMessage = 'Get ready for a night full of music, drinks, and unforgettable memories! The celebration won’t be complete without you.';
+        } else if (eventParam === 'success') {
+          nextConfig.headerTitle = 'IN HONOR OF THE ACHIEVEMENT OF';
+          nextConfig.titleFont = 'font-serif';
+          nextConfig.welcomeMessage = 'Hard work finally pays off! Share the pride and joy of this milestone achievement as we toast to new beginnings.';
+        }
+      }
+
+      if (themeParam) {
+        if (themeParam === 'minimalist') {
+          nextConfig.background = '#ffffff';
+          nextConfig.useAnimation = false;
+          nextConfig.animationId = 'none';
+          nextConfig.showAttire = true;
+          nextConfig.attireTitle = 'Minimalist Monochromatic Theme';
+          nextConfig.attireColors = ['#F8FAFC', '#64748B', '#0F172A']; 
+        } else if (themeParam === 'luxury') {
+          nextConfig.background = '#0f172a'; 
+          nextConfig.useAnimation = true;
+          nextConfig.animationId = 'gold_sparkles'; 
+          nextConfig.showAttire = true;
+          nextConfig.attireTitle = 'Luxury Black & Gold Formal Attire';
+          nextConfig.attireColors = ['#0F172A', '#D97706', '#FEF3C7']; 
+        } else if (themeParam === 'rose') {
+          nextConfig.background = '#FFF1F2'; 
+          nextConfig.useAnimation = true;
+          nextConfig.animationId = 'falling_petals'; 
+          nextConfig.showAttire = true;
+          nextConfig.attireTitle = 'Pastel Pink & Romantic Rose Palette Theme';
+          nextConfig.attireColors = ['#FFE4E6', '#F43F5E', '#FB7185']; 
+        } else if (themeParam === 'midnight') {
+          nextConfig.background = '#000000'; 
+          nextConfig.useAnimation = true;
+          nextConfig.animationId = 'neon_glow'; 
+          nextConfig.showAttire = true;
+          nextConfig.attireTitle = 'Midnight Cyber Glow Vibrant Neon Theme';
+          nextConfig.attireColors = ['#000000', '#6366F1', '#EC4899']; 
+        }
+      }
+
+      return nextConfig;
+    });
+  }, [searchParams]);
 
   // 📍 DATE VALIDATION LOGIC
   useEffect(() => {
@@ -86,12 +164,10 @@ export default function NvitadoEditor() {
   }, []);
 
   const handlePublish = async (calculatedTotal: number) => {
-    // 1. Check Date Eligibility
     if (!isEligible) {
         setHasInteracted(true);
         return setShowDateModal(true);
     }
-    // 2. Check Custom URL (Slug)
     if (!config.slug) {
         return setShowSlugModal(true);
     }
@@ -118,8 +194,6 @@ export default function NvitadoEditor() {
 
   return (
     <div className="flex h-screen w-full bg-slate-100 overflow-hidden font-sans text-slate-900 relative">
-      
-      {/* 📍 MODAL OVERLAYS CONTAINER */}
       <AnimatePresence>
         {/* 1. DATE WARNING MODAL */}
         {showDateModal && (
@@ -186,5 +260,17 @@ export default function NvitadoEditor() {
         <Preview config={config} viewMode={viewMode} activeTab={activeTab} isSidebarOpen={isSidebarOpen} />
       </main>
     </div>
+  );
+}
+
+export default function NvitadoEditor() {
+  return (
+    <Suspense fallback={
+      <div className="h-screen w-full flex items-center justify-center bg-slate-100 font-black text-xs tracking-widest text-slate-400 uppercase">
+        ⚡ Loading Onboarding Configuration Preset...
+      </div>
+    }>
+      <EditorContent />
+    </Suspense>
   );
 }
