@@ -3,10 +3,11 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import { BACKGROUNDS } from '../constants/backgrounds';
+import { COLOR_PALETTE } from '../constants/colors'; // 🆕 Ini-import na mula sa hiwalay mong constants file
 import { 
   X, Settings2, BookHeart, MessageCircleQuestion, 
   PlusCircle, Trash2, Star, Heart, PartyPopper, Cake, Info, AlertCircle, Layout, Image as ImageIcon,
-  Shirt // 🆕 Idinagdag ang shirt icon para sa attire tab
+  Shirt 
 } from 'lucide-react';
 
 export default function Sidebar({ config, setConfig, onPublish, isPublishing, onClose, activeTab, setActiveTab, isEligible, isRevision = false }: any) {
@@ -14,20 +15,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   const [showAllStyles, setShowAllStyles] = useState(false);
   const [showDateStyle, setShowDateStyle] = useState(false);
   const [showMessageStyle, setShowMessageStyle] = useState(false);
-
-  // 🆕 Pre-defined list of common wedding/event colors para sa selection layout
-  const COLOR_PALETTE = [
-    { name: 'Rose', value: '#fda4af' },
-    { name: 'Amber', value: '#fcd34d' },
-    { name: 'Emerald', value: '#6ee7b7' },
-    { name: 'Sage', value: '#9cc3b2' },
-    { name: 'Sky', value: '#7dd3fc' },
-    { name: 'Indigo', value: '#a5b4fc' },
-    { name: 'Champagne', value: '#fef3c7' },
-    { name: 'Burgundy', value: '#991b1b' },
-    { name: 'Navy', value: '#1e3a8a' },
-    { name: 'Slate', value: '#64748b' }
-  ];
 
   useEffect(() => {
     if (!isRevision && !config.shortId) {
@@ -119,7 +106,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     setConfig({ ...config, questions: newQA });
   };
 
-  // 🆕 Pinag-pwesto ang Attire tab bago mag Q&A sa dashboard nav arrays
   const tabs = [
     { id: 'general', label: 'General', icon: Settings2 },
     { id: 'attire', label: 'Attire', icon: Shirt },
@@ -127,7 +113,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     { id: 'story', label: 'Custom', icon: PlusCircle, premium: !isRevision }, 
   ];
 
-  // 🆕 Toggles value assignment helper block para sa multiple selection arrays ng theme colors
   const toggleColorSelection = (hexColor: string) => {
     const currentColors = [...(config.attireColors || [])];
     if (currentColors.includes(hexColor)) {
@@ -384,7 +369,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
           </div>
         )}
 
-        {/* 🆕 NEW ATTIRE CODE MODULE TAB VIEW INTERFACE */}
         {activeTab === 'attire' && (
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
             <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
@@ -402,7 +386,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
 
             {config.showAttire && (
               <div className="animate-in zoom-in-95 duration-200 space-y-6">
-                {/* 1. Theme Title Input Section */}
                 <section className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">Theme / Motif Name</label>
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900">
@@ -416,10 +399,10 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                   </div>
                 </section>
 
-                {/* 2. Color Multi-selector circles layout */}
                 <section className="space-y-2">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">Select Theme Colors</label>
                   <div className="grid grid-cols-5 gap-3 p-1">
+                    {/* 🎯 GUMAGANA NA DIRECTLY VIA external constant data module loop */}
                     {COLOR_PALETTE.map((color) => {
                       const isSelected = (config.attireColors || []).includes(color.value);
                       return (
@@ -438,7 +421,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                   </div>
                 </section>
 
-                {/* 3. Men's Wear Guidelines Block */}
                 <section className="space-y-3">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">Gents Attire Option</label>
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">
@@ -452,7 +434,6 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
                   </div>
                 </section>
 
-                {/* 4. Women's Wear Guidelines Block */}
                 <section className="space-y-3">
                   <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 font-bold">Ladies Attire Option</label>
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl">

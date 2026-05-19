@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Preview from '../components/Preview';
 import { BACKGROUNDS } from '../constants/backgrounds';
+import { COLOR_PALETTE } from '../constants/colors'; // 🆕 Ini-import para sa default setup values
 import { Edit3, Eye, Monitor, Smartphone, AlertTriangle, X, Link2 } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 
@@ -19,8 +20,8 @@ export default function NvitadoEditor() {
   const [hasInteracted, setHasInteracted] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   
-  // 🎯 NA-UPDATE NA CONFIG OBJECT STATE:
-  // Isinama na ang lahat ng required default field values para sa Attire subsystem structure
+  // 🎯 SCHEMATIC OBJECT STATE INITIALIZATION:
+  // Isinama ang structural variables ng attire feature at kinuha ang unang tatlong kulay ng constant palette as defaults.
   const [config, setConfig] = useState({
     background: '#ffffff',
     useAnimation: false,
@@ -40,10 +41,10 @@ export default function NvitadoEditor() {
     showQA: false,
     showStory: false,
     story: '',
-    // 🆕 ATTIRE TAB INITIALIZATION VALUES
+    // 🆕 UP-TO-DATE ATTIRE THEME STATE DEFAULT SCHEMA
     showAttire: false,
     attireTitle: 'Rustic Pastel Theme',
-    attireColors: ['#fda4af', '#9cc3b2', '#fcd34d'], // default initial color tag suggestions
+    attireColors: [COLOR_PALETTE[0].value, COLOR_PALETTE[1].value, COLOR_PALETTE[2].value], // Dynamic fallback value mapping
     menAttireText: 'Long sleeves, slacks, or formal suit',
     womenAttireText: 'Cocktail dress, long gown, or formal attire',
   });
@@ -90,7 +91,7 @@ export default function NvitadoEditor() {
         setHasInteracted(true);
         return setShowDateModal(true);
     }
-    // 2. Check Custom URL (Slug) - Professional Modal instead of Alert
+    // 2. Check Custom URL (Slug)
     if (!config.slug) {
         return setShowSlugModal(true);
     }
