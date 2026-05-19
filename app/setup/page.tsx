@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Heart, Cake, Star, PartyPopper, User, HelpCircle,
   ArrowRight, ArrowLeft, Check, Sparkles, 
-  Palette
+  Palette, Home // 🆕 Import natin ang Home icon
 } from 'lucide-react';
 import { Poppins } from 'next/font/google';
 
@@ -18,7 +18,7 @@ const EVENTS = [
   { id: 'baptism', name: 'Baptism', icon: Star, color: 'bg-sky-500' },
   { id: 'party', name: 'Party', icon: PartyPopper, color: 'bg-indigo-500' },
   { id: 'success', name: 'Achievement', icon: User, color: 'bg-emerald-500' },
-  { id: 'others', name: 'Others', icon: HelpCircle, color: 'bg-slate-500' }, // 🆕 Idinagdag para sa custom/other event categories
+  { id: 'others', name: 'Others', icon: HelpCircle, color: 'bg-slate-500' },
 ];
 
 const THEMES = [
@@ -149,7 +149,6 @@ export default function SetupPage() {
               className="space-y-8"
             >
               <div className="text-center space-y-2">
-                {/* 🎯 NAAYOS NA HEADER: Mas respectful at generic na para sa kahit anong klase ng event */}
                 <h1 className="text-4xl md:text-5xl font-black tracking-tighter uppercase italic">Whose event <br/>is <span className="text-rose-500">This?</span></h1>
                 <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">Enter Host, Couple, or Subject Name</p>
               </div>
@@ -164,7 +163,7 @@ export default function SetupPage() {
                   className="w-full bg-white border-2 border-slate-100 rounded-[2rem] px-8 py-6 text-xl font-black uppercase tracking-tight focus:border-slate-900 focus:ring-0 transition-all outline-none text-center shadow-sm"
                 />
                 <div className="absolute top-1/2 -translate-y-1/2 left-6 text-slate-200">
-                  <Edit3 size={20} />
+                  <User size={20} />
                 </div>
               </div>
               
@@ -187,7 +186,15 @@ export default function SetupPage() {
             >
               <ArrowLeft size={16} /> Back
             </button>
-          ) : <div />}
+          ) : (
+            /* 🆕 BACK TO HOME BUTTON: Lalabas lang kapag step 0 */
+            <button 
+              onClick={() => router.push('/')}
+              className="flex items-center gap-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-900 transition-all"
+            >
+              <Home size={16} /> Back Home
+            </button>
+          )}
 
           <button 
             disabled={isNextDisabled()}
@@ -202,8 +209,4 @@ export default function SetupPage() {
       </div>
     </div>
   );
-}
-
-function Edit3({ size }: { size: number }) {
-  return <User size={size} />;
 }
