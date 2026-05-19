@@ -93,7 +93,7 @@ export default function TermsPage() {
               </div>
             </div>
             <p className="mt-6 text-[10px] font-bold text-slate-400 uppercase italic">
-              *Refund requests must be sent to hello@nvitado.com with proof of payment within 48 hours of transaction.
+              *Refund requests must be sent to inquiry@nvitado.com with proof of payment within 48 hours of transaction.
             </p>
           </motion.div>
 
