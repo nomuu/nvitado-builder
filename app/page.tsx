@@ -119,7 +119,6 @@ const EventSelector = () => {
   );
 };
 
-// 🎯 FIXED SLIDER: Tinanggal ang phone mockup shell para laging full aspect ratio app image view ang gamit
 const DevicePreviewSlider = () => {
   const [activeTab, setActiveTab] = useState<'desktop' | 'mobile'>('mobile');
   const [subIndex, setSubIndex] = useState(0);
@@ -221,11 +220,18 @@ const StatsSection = () => {
 
   useEffect(() => {
     const fetchStatsAndReviews = async () => {
-      const { count: total, error: countError } = await supabase
-        .from('invitations')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'paid');
-      if (!countError) setCount(total);
+      // 🎯 IN-UPDATE: Dito na lilingon si Supabase sa ginawa nating permanent single-row global_stats tracking table
+      const { data: statsData, error: statsError } = await supabase
+        .from('global_stats')
+        .select('total_invitations_published')
+        .eq('id', 1)
+        .single();
+      
+      if (!statsError && statsData) {
+        setCount(statsData.total_invitations_published);
+      } else {
+        setCount(25); // Safe fallback base metric value
+      }
 
       const { count: revCount, error: revCountError } = await supabase
         .from('reviews')
