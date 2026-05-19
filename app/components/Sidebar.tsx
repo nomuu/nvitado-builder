@@ -44,7 +44,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     if (diffDays > 30) {
       const extraDays = diffDays - 30;
       const extraMonths = Math.ceil(extraDays / 30);
-      return { price: extraMonths * 20, months: extraMonths };
+      return { price: extraMonths * 5, months: extraMonths };
     }
     return { price: 0, months: 0 };
   };

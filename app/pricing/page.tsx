@@ -59,7 +59,7 @@ export default function PricingPage() {
           <div className="bg-white p-10 rounded-[3rem] border border-slate-100 shadow-xl">
             <div className="h-14 w-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mb-8"><TrendingUp size={28} /></div>
             <h3 className="text-2xl font-black uppercase italic mb-2 tracking-tight">Extensions</h3>
-            <div className="flex items-baseline gap-1 mb-6"><span className="text-5xl font-black text-slate-900">₱20</span><span className="text-slate-400 font-bold text-[10px] uppercase">/ Extra Month</span></div>
+            <div className="flex items-baseline gap-1 mb-6"><span className="text-5xl font-black text-slate-900">₱5</span><span className="text-slate-400 font-bold text-[10px] uppercase">/ Extra Month</span></div>
             <ul className="space-y-4 pt-6 border-t border-slate-50 text-[11px] font-black uppercase text-slate-600">
               <li className="flex items-center gap-3"><CheckCircle2 size={14} className="text-amber-500" /> Advance Booking</li>
               <li className="flex items-center gap-3"><CheckCircle2 size={14} className="text-amber-500" /> Extended Live Link</li>
@@ -130,8 +130,8 @@ export default function PricingPage() {
                 <p className="text-[10px] font-bold text-slate-400 mb-6 uppercase">Event in 2 months</p>
                 <div className="space-y-3 mt-auto">
                     <div className="flex justify-between text-[11px] font-black uppercase"><span>Base Fee</span><span>₱50.00</span></div>
-                    <div className="flex justify-between text-[11px] font-black uppercase text-amber-600"><span>Ext (₱20 x 2)</span><span>₱40.00</span></div>
-                    <div className="pt-3 border-t border-slate-200 flex justify-between items-center font-black text-rose-500 uppercase italic"><span>Total</span><span>₱90.00</span></div>
+                    <div className="flex justify-between text-[11px] font-black uppercase text-amber-600"><span>Ext (₱5 x 2)</span><span>₱10.00</span></div>
+                    <div className="pt-3 border-t border-slate-200 flex justify-between items-center font-black text-rose-500 uppercase italic"><span>Total</span><span>₱60.00</span></div>
                 </div>
             </div>
             {/* Revisions */}

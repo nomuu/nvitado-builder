@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 import crypto from 'crypto';
+import { BACKGROUNDS } from '../../constants/backgrounds'; // 🎯 NAAYOS NA PATH
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
@@ -26,11 +27,18 @@ export async function POST(req: Request) {
     if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
 
     // 2. GENERATE PROFESSIONAL BREAKDOWN (MATCHING SIDEBAR)
-    const effectPrice = (amount % 50 === 5 || amount % 50 === 55 || amount % 50 === 25 || amount % 50 === 30) ? (amount % 50 === 25 || amount % 50 === 30 ? 25 : 5) : 0;
+    const selectedBg = BACKGROUNDS.find((bg: any) => bg.id === config.animationId);
+    const effectPrice = selectedBg?.price || 0;
+
     const storyPrice = config.showStory ? 5 : 0;
     const extraQACount = Math.max(0, (config.questions?.length || 0) - 3);
     const qaPrice = extraQACount * 2;
+    
+    // Ang matitirang butal mula sa amount ay saktong mapupunta sa extensionPrice
     const extensionPrice = Math.max(0, amount - 50 - effectPrice - storyPrice - qaPrice);
+    
+    // 🆕 BINUKAL NA LOGIC: Kunin natin kung ilang buwan ang katumbas ng extensionPrice gamit ang bagong ₱5 rate mo
+    const retentionMonths = Math.round(extensionPrice / 5);
 
     // Kuhanin ang effect name (uppercase para match sa sidebar)
     const effectName = config.effect?.replace(/([A-Z])/g, ' $1').trim().toUpperCase() || 'THEME EFFECT';
@@ -39,13 +47,16 @@ export async function POST(req: Request) {
     if (effectPrice > 0) description += `  |  ${effectName} — ₱${effectPrice.toFixed(2)}`;
     if (storyPrice > 0) description += `  |  CUSTOM SECTION FEATURE — ₱${storyPrice.toFixed(2)}`;
     if (qaPrice > 0) description += `  |  EXTRA Q&A (${extraQACount}) — ₱${qaPrice.toFixed(2)}`;
-    if (extensionPrice > 0) description += `  |  ADD-ONS / EXTENSION — ₱${extensionPrice.toFixed(2)}`;
+    
+    // 🆕 IBINALIK ANG MONTH INDICATOR LABEL: Swak na sa bagong 5 pesos allocation math breakdown mo
+    if (extensionPrice > 0) {
+      description += `  |  LONG-TERM STORAGE (${retentionMonths} ${retentionMonths === 1 ? 'MONTH' : 'MONTHS'}) — ₱${extensionPrice.toFixed(2)}`;
+    }
     
     description += `  |  REF: ${tokenId}`;
     
     const origin = req.headers.get('origin') || 'https://nvitado.com'; 
     
-    // 🎯 PINALITAN: Dito natin sila ididiretso sa ginawa mong success page route (pwedeng i-adjust ang /success depende sa saktong route folder name mo)
     const finalReturnUrl = `${origin}/success?shortId=${config.shortId}&slug=${config.slug}`;
 
     // 3. LEMON SQUEEZY CALL
