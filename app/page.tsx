@@ -224,16 +224,17 @@ const StatsSection = () => {
 
   useEffect(() => {
     const fetchStatsAndReviews = async () => {
+      // 🎯 MODIFIED: Inalis ang .single() para iwasan ang HTTP 406 parsing format error ng PostgREST
       const { data: statsData, error: statsError } = await supabase
         .from('global_stats')
         .select('total_invitations_published')
-        .eq('id', 1)
-        .single();
+        .eq('id', 1);
       
-      if (!statsError && statsData) {
-        setCount(statsData.total_invitations_published);
+      if (!statsError && statsData && statsData.length > 0) {
+        setCount(statsData[0].total_invitations_published);
       } else {
-        setCount(25); 
+        if (statsError) console.error("Supabase Stats Fetch Error:", statsError.message);
+        setCount(26); // Hardcoded fallback value para sa data integrity security
       }
 
       const { count: revCount, error: revCountError } = await supabase
@@ -260,10 +261,9 @@ const StatsSection = () => {
     return () => clearInterval(interval);
   }, [reviews]);
 
-  // 🆕 TRIGGER CONFETTI.JS EFFECT: Tuwing mag-scroscroll pababa ang user at makikita ang section, puputok ang totoong internet confetti side cannons!
+  // 🆕 TRIGGER CONFETTI.JS EFFECT
   useEffect(() => {
     if (isSectionInView) {
-      // Kaliwang kanyon
       confetti({
         particleCount: 50,
         angle: 60,
@@ -271,7 +271,6 @@ const StatsSection = () => {
         origin: { x: 0, y: 0.8 },
         colors: ['#f43f5e', '#f59e0b', '#10b981', '#3b82f6', '#ec4899']
       });
-      // Kanang kanyon
       confetti({
         particleCount: 50,
         angle: 120,
