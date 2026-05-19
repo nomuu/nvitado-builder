@@ -156,7 +156,7 @@ export default function PricingPage() {
             { q: "Why the 1-week rule?", a: "To ensure system stability and give you enough time to your guests to view the link." },
             { q: "Can I edit design?", a: "No. Design is locked on publish. Details can be edited max 5 times (2 free, 3 paid)." },
             { q: "What is extension fee?", a: "A ₱5 fee per month if your event is scheduled for the coming months." },
-            { q: "Is payment secure?", a: "Yes. All payments are handled securely via PayMongo (GCash, Maya, etc)." }
+            { q: "Is payment secure?", a: "Yes, 100% secure. All payments are securely processed via Lemon Squeezy, a leading global merchant of record. We support local payment methods including GCash card, Maya card, and credit/debit cards using bank-grade encryption to ensure your transaction data is fully protected." }
           ].map((item, i) => (
             <div key={i} className="space-y-2">
               <h4 className="text-sm font-black uppercase italic text-slate-800">{item.q}</h4>

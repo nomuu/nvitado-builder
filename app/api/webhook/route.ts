@@ -67,7 +67,16 @@ export async function POST(req: Request) {
         
         console.log("DATABASE UPDATE SUCCESSFUL");
 
-        // 2. DATA EXTRACTION: Kunin ang short_id at slug nang ligtas
+        // 🎯 2. LIFETIME COUNTER INCREMENT: Matapos maging 'paid', dito natin papaganahin ang RPC function para mag Plus 1 ang permanent counter natin
+        const { error: counterError } = await supabase.rpc('increment_lifetime_counter');
+        if (counterError) {
+          console.error("WEBHOOK STATS COUNTER ERROR:", counterError.message);
+          // Hindi natin i-bebreak ang code gamit ang return response para tuloy-tuloy pa rin ang email delivery kahit may temporary database function glitch
+        } else {
+          console.log("LIFETIME COUNTER INCREMENTED SUCCESSFULLY (+1)");
+        }
+
+        // 3. DATA EXTRACTION: Kunin ang short_id at slug nang ligtas
         const { data: targetInv, error: fetchError } = await supabase
           .from('invitations')
           .select('short_id, slug, config_data')
