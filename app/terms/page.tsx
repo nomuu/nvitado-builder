@@ -59,7 +59,7 @@ export default function TermsPage() {
               <div>
                 <h4 className="text-xs font-black uppercase mb-2 text-slate-900">Automatic Data Purge</h4>
                 <p className="text-xs text-slate-500 font-medium leading-relaxed uppercase tracking-tight">
-                  Links and guest RSVP data are <span className="font-bold text-rose-500">permanently deleted 48 hours</span> after the event ends. We do not store backups; users must export data manually before this period.
+                  Links are <span className="font-bold text-rose-500">permanently deleted 48 hours</span> after the event ends. We do not store backups.
                 </p>
               </div>
             </div>
@@ -142,7 +142,7 @@ export default function TermsPage() {
               <h3 className="text-xl font-black uppercase italic">05. Limitation of Liability</h3>
             </div>
             <p className="text-[11px] text-slate-500 font-medium leading-relaxed uppercase tracking-tight">
-              Nvitado is not liable for service interruptions, server downtime, or external app (Messenger/Viber) delivery failures. We provide the tool, but the distribution and guest management remain the User's responsibility.
+              Nvitado is not liable for service interruptions, server downtime, or external app (Messenger/Viber) delivery failures. We provide the invitation link generation tool, but the distribution and sharing of the link to your guests remain the sole responsibility of the User.
             </p>
           </motion.div>
 
