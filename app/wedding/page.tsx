@@ -28,7 +28,7 @@ const imageFloat = {
     transition: {
       duration: 5,
       repeat: Infinity,
-      ease: "easeInOut"
+      ease: "easeInOut" as const // Idinagdag ang 'as const' para maging valid transition string literal
     }
   }
 };
