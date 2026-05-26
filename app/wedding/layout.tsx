@@ -32,9 +32,12 @@ export default function WeddingLayout({ children }: { children: React.ReactNode 
             <Link href="/wedding/templates" className="hover:text-rose-500 transition-colors">
               Templates
             </Link>
-            <Link href="/wedding/pricing" className="hover:text-rose-500 transition-colors">
-              Pricing
-            </Link>
+            
+            {/* 🎯 PAMALIT SA PRICING: Hard link pabalik sa Main Domain */}
+            {/* Note: Kung nasa localhost ka at gusto mong i-test pabalik sa main mo, pwede mong gawing "http://localhost:3000" ang href pansamantala */}
+            <a href="https://nvitado.com" className="hover:text-rose-500 transition-colors">
+              More Events
+            </a>
           </div>
 
         </div>

@@ -8,6 +8,15 @@ export interface WeddingTemplate {
   theme: string;
   placeholderBg: string;
   isPopular: boolean;
+  // 🎯 BAGONG DETAILS PARA SA DESIGN SYSTEM NG TEMPLATE
+  design?: {
+    bgImage: string;
+    fontHeading: string;
+    fontBody: string;
+    primaryColor: string;
+    secondaryColor: string;
+    accentColor: string;
+  };
 }
 
 export const weddingTemplates: WeddingTemplate[] = [
@@ -18,7 +27,16 @@ export const weddingTemplates: WeddingTemplate[] = [
     price: 350,
     theme: "Clean, White, Slate",
     placeholderBg: "bg-gradient-to-br from-slate-100 to-slate-200",
-    isPopular: false
+    isPopular: false,
+    // 🎯 IDINAGDAG ANG STYLE AT THEME PARA SA TPL-001
+    design: {
+      bgImage: "https://images.unsplash.com/photo-1601662528567-526cd06f6582?q=80&w=800&auto=format&fit=crop", 
+      fontHeading: "font-serif",      // Elegant serif for headers
+      fontBody: "font-sans",          // Clean sans-serif for readable body text
+      primaryColor: "text-slate-900", // Almost black/dark slate for main emphasis
+      secondaryColor: "text-slate-500", // Soft slate gray for dates/locations
+      accentColor: "border-slate-300" // Light slate for fine lines/dividers
+    }
   },
   {
     id: "tpl-002",
