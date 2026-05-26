@@ -1,9 +1,10 @@
 "use client";
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import Script from "next/script";
 import "./globals.css";
 import Navbar from "./components/Navbar";
-import Footer from "./components/Footer"; // 📍 Import dito
+import Footer from "./components/Footer";
 
 export default function RootLayout({
   children,
@@ -11,12 +12,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
+  
+  // 🎯 Nagdagdag tayo ng state para bantayan ang aktwal na domain ng user
+  const [isWeddingDomain, setIsWeddingDomain] = useState(false);
+
+  useEffect(() => {
+    // 🎯 Kapag nag-load na sa browser, iche-check natin kung nasa wedding subdomain siya
+    if (window.location.hostname.includes("wedding.nvitado.com") || window.location.hostname.includes("wedding")) {
+      setIsWeddingDomain(true);
+    }
+  }, []);
 
   // 📍 Listahan ng mga pages na DAPAT may Navbar at Footer
-  const showSharedUI = pathname === "/" || 
-                       pathname === "/pricing" || 
-                       pathname === "/terms" || 
-                       pathname === "/support";
+  // 🎯 Idinagdag natin ang `!isWeddingDomain` para siguraduhing HINDI siya lalabas sa wedding site
+  const showSharedUI = !isWeddingDomain && (
+    pathname === "/" || 
+    pathname === "/pricing" || 
+    pathname === "/terms" || 
+    pathname === "/support"
+  );
 
   return (
     <html lang="en">
@@ -27,6 +41,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/assets/images/logo.png" />
       </head>
       <body className="antialiased">
+        
         {/* 📍 Navbar Logic */}
         {showSharedUI && <Navbar />}
         
