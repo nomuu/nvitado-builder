@@ -3,8 +3,8 @@ import React from 'react';
 import Link from 'next/link';
 import { Poppins } from 'next/font/google';
 
-// 🎯 SAPILITANG I-IMPORT ITONG LINYA NA ITO PARA BUMALIK LAHAT NG TAILWIND DESIGN SA LIVE LINK MO!
-import '../globals.css'; 
+// 🎯 ABSOLUTE PATH ALIAS: Gagamit tayo ng '@/app/' para kahit anong gulo ng subdomain sa middleware, siguradong sapul ang CSS!
+import '@/app/globals.css'; 
 
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '600', '800', '900'] });
 
@@ -12,7 +12,7 @@ export default function WeddingLayout({ children }: { children: React.ReactNode 
   return (
     <div className={`${poppins.className} bg-[#FFFDF9] min-h-screen antialiased`}>
       
-      {/* 👑 CLEAN & FOCUSED NAVIGATION BAR */}
+      {/* 👑 NAVIGATION BAR */}
       <nav className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between relative z-50">
         
         {/* LOGO & BRAND NAME */}
@@ -38,7 +38,7 @@ export default function WeddingLayout({ children }: { children: React.ReactNode 
 
       </nav>
 
-      {/* Dito papasok ang landing page mo o kahit anong sub-pages ng wedding folder */}
+      {/* Main engine workspace connector */}
       <main>{children}</main>
       
     </div>
