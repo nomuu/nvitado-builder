@@ -124,7 +124,7 @@ export default function WeddingLandingPage() {
               { icon: MapPin, title: "One-Tap Venue Directions", desc: "Embed your reception or church exact coordinates. Guests get real-time Google Maps directions straight from their devices." },
               { icon: Clock, title: "Live Countdown Timer", desc: "Build excitement with a beautiful minimalist ticking clock calculating every second down to your specific ceremony schedule." },
               { icon: MessageCircle, title: "Interactive FAQ Section", desc: "Answer common questions about registry, accommodations, kids, parking, and protocols cleanly without getting repetitive inquiries." },
-              { icon: Sparkles, title: "Custom Premium URL", desc: "Claim a gorgeous dedicated link name like wedding.nvitado.com/juan-maria that matches your prenup branding beautifully." }
+              { icon: Sparkles, title: "Custom Premium URL", desc: "Claim a gorgeous dedicated link name like nvitado.com/343e343/juan-maria that matches your prenup branding beautifully." }
             ].map((feat, idx) => (
               <motion.div 
                 key={idx}
