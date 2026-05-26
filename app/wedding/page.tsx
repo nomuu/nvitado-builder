@@ -46,8 +46,8 @@ export default function WeddingLandingPage() {
         <div className="absolute w-[500px] h-[500px] bg-amber-100/30 rounded-full blur-[120px] top-1/3 -right-20" />
       </div>
 
-      {/* 💍 HERO SECTION: 2-COLUMN LAYOUT */}
-      <header className="max-w-7xl mx-auto px-6 pt-12 pb-24 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center relative z-10">
+      {/* 💍 HERO SECTION: 2-COLUMN LAYOUT (Naka-pt-28 para hindi matakpan ng fixed navbar sa taas) */}
+      <header className="max-w-7xl mx-auto px-6 pt-28 pb-24 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center relative z-10">
         
         {/* LEFT COLUMN: TEXT CONTENT & ACTION BUTTONS */}
         <div className="text-left flex flex-col items-start space-y-6">
@@ -88,7 +88,8 @@ export default function WeddingLandingPage() {
           <div className="relative w-full max-w-[640px] aspect-square flex items-center justify-center overflow-hidden rounded-full">
             
             <motion.div 
-              animate={imageFloat.animate}
+              variants={imageFloat}
+              animate="animate"
               className="w-full h-full relative z-10 flex items-center justify-center"
             >
               {/* LARGE RADIAL MASK BOUNDARY */}
