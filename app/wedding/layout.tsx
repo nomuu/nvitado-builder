@@ -3,6 +3,9 @@ import React from 'react';
 import Link from 'next/link';
 import { Poppins } from 'next/font/google';
 
+// 🎯 SAPILITANG I-IMPORT ITONG LINYA NA ITO PARA BUMALIK LAHAT NG TAILWIND DESIGN SA LIVE LINK MO!
+import '../globals.css'; 
+
 const poppins = Poppins({ subsets: ['latin'], weight: ['400', '600', '800', '900'] });
 
 export default function WeddingLayout({ children }: { children: React.ReactNode }) {
@@ -20,7 +23,7 @@ export default function WeddingLayout({ children }: { children: React.ReactNode 
           </span>
         </Link>
 
-        {/* 🎯 CORE NAVIGATION LINKS (Centered/Right-aligned layout focus) */}
+        {/* 🎯 CORE NAVIGATION LINKS */}
         <div className="flex items-center gap-8 text-[11px] font-black uppercase tracking-widest text-slate-600">
           <Link href="/wedding" className="hover:text-rose-500 transition-colors">
             Home
