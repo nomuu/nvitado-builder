@@ -37,7 +37,7 @@ export default function SupportPage() {
             <span className="text-rose-500 not-italic">One Chat</span> Away.
           </h1>
           <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] max-w-lg mx-auto leading-relaxed">
-            Our AI assistant "Nvitabot" handles everything from tech support 24/7.
+            Our AI assistant "ENVI" handles everything from tech support 24/7.
           </p>
         </motion.div>
         
