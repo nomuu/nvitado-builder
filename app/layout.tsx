@@ -2,6 +2,7 @@
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/react";
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -59,6 +60,8 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
         */}
+
+        <Analytics />
       </body>
     </html>
   );
