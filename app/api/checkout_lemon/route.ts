@@ -33,9 +33,10 @@ export async function POST(req: Request) {
     const storyPrice = config.showStory ? 5 : 0;
     const extraQACount = Math.max(0, (config.questions?.length || 0) - 3);
     const qaPrice = extraQACount * 2;
+    const rsvpPrice = config.showRSVP ? 5 : 0;
     
     // Ang matitirang butal mula sa amount ay saktong mapupunta sa extensionPrice
-    const extensionPrice = Math.max(0, amount - 50 - effectPrice - storyPrice - qaPrice);
+    const extensionPrice = Math.max(0, amount - 50 - effectPrice - storyPrice - qaPrice - rsvpPrice);
     
     // 🆕 BINUKAL NA LOGIC: Kunin natin kung ilang buwan ang katumbas ng extensionPrice gamit ang bagong ₱5 rate mo
     const retentionMonths = Math.round(extensionPrice / 5);
@@ -47,6 +48,7 @@ export async function POST(req: Request) {
     if (effectPrice > 0) description += `  |  ${effectName} — ₱${effectPrice.toFixed(2)}`;
     if (storyPrice > 0) description += `  |  CUSTOM SECTION FEATURE — ₱${storyPrice.toFixed(2)}`;
     if (qaPrice > 0) description += `  |  EXTRA Q&A (${extraQACount}) — ₱${qaPrice.toFixed(2)}`;
+    if (rsvpPrice > 0) description += `  |  RSVP FEATURE — ₱${rsvpPrice.toFixed(2)}`;
     
     // 🆕 IBINALIK ANG MONTH INDICATOR LABEL: Swak na sa bagong 5 pesos allocation math breakdown mo
     if (extensionPrice > 0) {

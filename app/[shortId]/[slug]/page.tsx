@@ -80,7 +80,7 @@ export default async function InvitationViewer({ params }: { params: Promise<{ s
     */
     <main className="h-screen w-full bg-white relative overflow-hidden">
       {/* 🔒 IPAPAKITA PA RIN ANG INVITATION PREVIEW SA LIKOD */}
-      <Preview config={invitation.config_data} viewMode="desktop" />
+      <Preview config={invitation.config_data} viewMode="desktop" invitationId={invitation.id} />
 
       {/* 🛑 KAPAG GRACE PERIOD, NAKAPATONG ITONG BLUR MODAL WALL */}
       {isGracePeriod && (

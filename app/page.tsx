@@ -434,6 +434,107 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* --- NEW FEATURE: LIVE RSVP & GUEST LIST --- */}
+      <section className="py-24 px-6 relative z-10">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+            {/* Copy side */}
+            <motion.div
+              initial={{ opacity: 0, x: -40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+              className="flex-1 space-y-6"
+            >
+              <div className="inline-flex items-center gap-2 bg-emerald-500 text-white px-4 py-1.5 rounded-full text-[9px] font-black tracking-[0.3em] uppercase shadow-md">
+                <Sparkles className="w-3 h-3" /> New Feature
+              </div>
+              <h2 className="text-4xl md:text-5xl font-black tracking-tighter leading-none uppercase italic">
+                Live <span className="text-rose-500">RSVP</span> &amp; Guest List
+              </h2>
+              <p className="text-slate-500 text-sm md:text-base font-medium leading-relaxed max-w-lg">
+                Let your guests confirm their attendance straight from your invitation. You verify and manage everyone from one simple dashboard — no spreadsheets, no scattered group chats.
+              </p>
+
+              <div className="space-y-4">
+                {[
+                  { icon: CheckCircle2, title: "Guests Confirm in One Tap", desc: "They leave their name and a contact — Facebook, email, or number — so you know exactly who's coming." },
+                  { icon: Users, title: "Verify & Confirm Guests", desc: "Approve each guest and watch your going count update live, up to 100 confirmed attendees." },
+                  { icon: Zap, title: "No Duplicates, No Overbooking", desc: "Smart name matching blocks repeat entries and RSVPs close automatically once your list is full." }
+                ].map((f, i) => (
+                  <div key={i} className="flex gap-4 items-start">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                      <f.icon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-black text-sm uppercase italic tracking-tight">{f.title}</h4>
+                      <p className="text-slate-500 font-medium text-xs leading-relaxed max-w-sm">{f.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 pt-2">
+                <Link href="/create" className="inline-flex bg-slate-900 text-white px-8 py-4 rounded-2xl font-black text-[10px] tracking-widest hover:bg-emerald-600 transition-all shadow-lg active:scale-95 group items-center gap-2">
+                  TRY RSVP NOW
+                  <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Optional add-on • +₱5 per invitation</span>
+              </div>
+            </motion.div>
+
+            {/* Visual mock side */}
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+              className="flex-1 w-full max-w-sm mx-auto"
+            >
+              <div className="bg-white rounded-[2.5rem] p-6 shadow-2xl border border-slate-100 space-y-4 rotate-1 hover:rotate-0 transition-all duration-700">
+                <div className="flex items-center justify-between">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Guest List</span>
+                  <span className="text-[9px] font-black uppercase text-emerald-600">Live</span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { n: 'Going', v: '86', c: 'text-emerald-600' },
+                    { n: 'Pending', v: '12', c: 'text-amber-600' },
+                    { n: 'Total', v: '98', c: 'text-slate-400' },
+                  ].map((s) => (
+                    <div key={s.n} className="text-center bg-slate-50 rounded-xl py-3 border border-slate-100">
+                      <p className={`text-lg font-black ${s.c}`}>{s.v}</p>
+                      <p className="text-[7px] font-black text-slate-400 uppercase tracking-wider">{s.n}</p>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="space-y-2">
+                  {[
+                    { name: 'Ronald Mendoza', status: 'Going' },
+                    { name: 'Maria Santos', status: 'Pending' },
+                    { name: 'Juan Dela Cruz', status: 'Going' },
+                  ].map((g) => (
+                    <div key={g.name} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                      <span className="text-[11px] font-black text-slate-700 uppercase truncate">{g.name}</span>
+                      <span className={`text-[7px] font-black uppercase px-2 py-0.5 rounded-full ${g.status === 'Going' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                        {g.status}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-emerald-500 text-white">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span className="text-[9px] font-black uppercase tracking-wider">Confirm attendance</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       <section className="py-24 px-6 relative overflow-hidden bg-[#FFFDF8]/30 z-10">
         <div className="max-w-6xl mx-auto">
           <div className="flex flex-col lg:flex-row items-center gap-16">
@@ -475,6 +576,7 @@ export default function LandingPage() {
           </Link>
           <div className="mt-10 flex flex-wrap justify-center gap-5 text-[9px] font-black text-slate-400 tracking-widest uppercase">
             <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500"/> Instant Setup</span>
+            <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500"/> RSVP Ready</span>
             <span className="flex items-center gap-1.5"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500"/> Premium Quality</span>
           </div>
         </motion.div>

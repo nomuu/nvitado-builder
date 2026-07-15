@@ -71,6 +71,10 @@ export async function POST(req: Request) {
         revision_type: logType
       });
 
+    // Note: live RSVP guests self-register and are managed directly against
+    // the rsvp_guests table via /api/rsvp (owner RsvpManager). We intentionally
+    // do NOT sync config here so a content revision never wipes real RSVPs.
+
     return NextResponse.json({ 
       success: true, 
       newCount: updated.revision_count 

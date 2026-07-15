@@ -5,15 +5,16 @@ import { BACKGROUNDS } from '../constants/backgrounds';
 import { 
   MapPin, Home, MessageCircleQuestion, BookHeart, 
   Star, Heart, PartyPopper, Cake, Info,
-  Shirt // 🆕 Idinagdag para sa visual view tab icon ng dresscode guide
+  Shirt, Users
 } from 'lucide-react';
+import RSVPSection from '../[shortId]/[slug]/RSVPSection';
 
 // 📍 Icon mapping para sa dynamic rendering
 const ICON_MAP: any = {
   BookHeart, Heart, Star, PartyPopper, Cake, Info
 };
 
-export default function Preview({ config, viewMode, activeTab, isSidebarOpen = false }: any) {
+export default function Preview({ config, viewMode, activeTab, isSidebarOpen = false, invitationId }: any) {
   const [isMounted, setIsMounted] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
 
@@ -30,8 +31,10 @@ export default function Preview({ config, viewMode, activeTab, isSidebarOpen = f
       setActiveSection('qa');
     } else if (activeTab === 'story' && config.showStory) {
       setActiveSection('story');
+    } else if (activeTab === 'rsvp' && config.showRSVP) {
+      setActiveSection('rsvp');
     }
-  }, [activeTab, config.showQA, config.showStory, config.showAttire]);
+  }, [activeTab, config.showQA, config.showStory, config.showAttire, config.showRSVP]);
 
   useEffect(() => {
     if (activeSection === 'attire' && !config.showAttire) {
@@ -43,7 +46,10 @@ export default function Preview({ config, viewMode, activeTab, isSidebarOpen = f
     if (activeSection === 'story' && !config.showStory) {
       setActiveSection('home');
     }
-  }, [config.showQA, config.showStory, config.showAttire, activeSection]);
+    if (activeSection === 'rsvp' && !config.showRSVP) {
+      setActiveSection('home');
+    }
+  }, [config.showQA, config.showStory, config.showAttire, config.showRSVP, activeSection]);
 
   const activeBg = BACKGROUNDS.find(b => b.id === config.animationId) || BACKGROUNDS[0];
 
@@ -69,7 +75,7 @@ export default function Preview({ config, viewMode, activeTab, isSidebarOpen = f
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(config.location)}`;
 
   // 🔒 SECURITY CHECK WITH ATTIRE: Kasama na si config.showAttire sa pagpapakita ng interactive wrapper block ng nav system
-  const shouldShowNavbar = (config.showQA || config.showStory || config.showAttire) && !isSidebarOpen;
+  const shouldShowNavbar = (config.showQA || config.showStory || config.showAttire || config.showRSVP) && !isSidebarOpen;
 
   // 📍 Dynamic Icon para sa Navbar Button
   const CustomIcon = ICON_MAP[config.customIcon] || ICON_MAP['BookHeart'];
@@ -361,6 +367,80 @@ export default function Preview({ config, viewMode, activeTab, isSidebarOpen = f
 
             </motion.div>
           )}
+
+          {/* 🆕 RSVP SECTION */}
+          {activeSection === 'rsvp' && config.showRSVP && (
+            <motion.div 
+              key="rsvp"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="flex flex-col items-center w-full py-24 text-center max-w-lg mx-auto"
+            >
+              <span className="text-[10px] tracking-[0.5em] text-amber-700 uppercase mb-4 font-black">
+                Confirm Attendance
+              </span>
+              <h2 className="text-4xl font-serif italic text-slate-900 mb-8">RSVP</h2>
+              
+              {/* LIVE MODE: Interactive RSVP form */}
+              {invitationId ? (
+                <RSVPSection invitationId={invitationId} message={config.rsvpMessage} rules={config.rsvpRules} />
+              ) : (
+                /* BUILDER MODE: Static preview */
+                <div className="w-full bg-white/50 backdrop-blur-sm p-8 rounded-[2rem] border border-white/20 shadow-sm space-y-5 text-left">
+                  {/* OWNER MESSAGE */}
+                  {config.rsvpMessage && config.rsvpMessage.trim() ? (
+                    <p className="text-[10px] font-medium text-slate-600 leading-relaxed whitespace-pre-line text-center bg-white/40 border border-white/30 rounded-2xl p-4">
+                      {config.rsvpMessage}
+                    </p>
+                  ) : (
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wider italic text-center">
+                      Add a message from the RSVP tab.
+                    </p>
+                  )}
+
+                  {/* INSTRUCTIONS / RULES */}
+                  {(config.rsvpRules?.length || 0) > 0 && (
+                    <div className="bg-white/40 border border-white/30 rounded-2xl p-4 space-y-2">
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Please note</p>
+                      <ul className="space-y-1.5">
+                        {(config.rsvpRules || []).map((rule: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2 text-[10px] font-medium text-slate-600 leading-relaxed">
+                            <span className="text-amber-500 font-black shrink-0">{i + 1}.</span>
+                            <span className="break-words">{rule}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* NAME FIELD MOCK */}
+                  <div className="space-y-2">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Your Full Name</p>
+                    <div className="p-3 bg-white/70 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-400">
+                      Type your name...
+                    </div>
+                  </div>
+
+                  {/* CONTACT FIELDS MOCK */}
+                  <div className="space-y-2">
+                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-wider">How can the host reach you? <span className="text-slate-300">(at least one)</span></p>
+                    <div className="p-3 bg-white/70 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-400">Facebook profile link</div>
+                    <div className="p-3 bg-white/70 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-400">Email address</div>
+                    <div className="p-3 bg-white/70 border border-slate-200 rounded-xl text-[10px] font-bold text-slate-400">Contact number</div>
+                  </div>
+
+                  {/* SUBMIT MOCK */}
+                  <div className="w-full py-3 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-widest text-center">
+                    Send RSVP
+                  </div>
+                </div>
+              )}
+
+              {/* SPACER */}
+              <div className="h-32 w-full min-h-[128px] block pointer-events-none clear-both" />
+            </motion.div>
+          )}
         </AnimatePresence>
 
         {/* ❌ TINANGGAL ANG Z-10 POWERED BY CONTAINER MULA DITO PARA HINDI NA PAKALAT-KALAT SA SCROLL ENGINE */}
@@ -399,6 +479,12 @@ export default function Preview({ config, viewMode, activeTab, isSidebarOpen = f
                 <span className="text-[7px] font-black uppercase mt-1">
                   {config.iconTitle || "Custom"}
                 </span>
+              </button>
+            )}
+            {config.showRSVP && (
+              <button onClick={() => setActiveSection('rsvp')} className={`flex flex-col items-center justify-center w-14 h-12 rounded-xl transition-all animate-in fade-in zoom-in duration-300 ${activeSection === 'rsvp' ? 'bg-white text-slate-900 shadow-lg' : 'text-white hover:bg-white/10'}`}>
+                <Users size={18} />
+                <span className="text-[7px] font-black uppercase mt-1">RSVP</span>
               </button>
             )}
           </motion.div>

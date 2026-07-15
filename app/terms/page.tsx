@@ -89,12 +89,19 @@ export default function TermsPage() {
                   <li>• Event cancellation or postponement.</li>
                   <li>• Spelling/detail errors (Use free edits).</li>
                   <li>• Change of mind regarding design.</li>
+                  <li>• Unused RSVP guest slots (fixed fee).</li>
                 </ul>
               </div>
             </div>
             <p className="mt-6 text-[10px] font-bold text-slate-400 uppercase italic">
               *Refund requests must be sent to inquiry@nvitado.com with proof of payment within 48 hours of transaction.
             </p>
+            <div className="mt-6 p-5 bg-amber-50/50 rounded-2xl border border-amber-100">
+              <h4 className="text-[10px] font-black uppercase text-amber-700 mb-2">RSVP Add-On (Fixed ₱5.00):</h4>
+              <p className="text-[10px] font-bold text-amber-800 uppercase leading-relaxed tracking-tight">
+                The RSVP feature is a one-time ₱5.00 fee that covers up to 100 going guests. This fee is fixed and non-adjustable — it will not change or be refunded even if fewer than 100 guests confirm or if the guest capacity is not fully used.
+              </p>
+            </div>
           </motion.div>
 
           {/* SECTION 3: CONTENT CONDUCT */}

@@ -29,6 +29,9 @@ export default function ReviseClient({ initialData }: { initialData: any }) {
   const [revisionCredits, setRevisionCredits] = useState(initialData.revision_count);
   const [purchasableCredits, setPurchasableCredits] = useState(initialData.purchasable_revision_count || 0);
 
+  // Note: live RSVP guests are managed directly against the DB by RsvpManager
+  // (in the RSVP tab), so we no longer hydrate config.rsvpGuests here.
+
   // 📍 DATE VALIDATION LOGIC
   useEffect(() => {
     if (!config.eventDate) return;
@@ -255,6 +258,7 @@ export default function ReviseClient({ initialData }: { initialData: any }) {
                     setActiveTab={setActiveTab} 
                     isEligible={isEligible}
                     isRevision={true}
+                    invitationId={initialData.id}
                     revisionCredits={revisionCredits}
                 />
             </div>

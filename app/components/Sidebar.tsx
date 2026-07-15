@@ -1,16 +1,16 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
 import GooglePlacesAutocomplete from 'react-google-places-autocomplete';
 import { BACKGROUNDS } from '../constants/backgrounds';
 import { COLOR_PALETTE } from '../constants/colors'; // 🆕 Gumagana gamit ang external data file module mo
+import RsvpManager from './RsvpManager';
 import { 
-  X, Settings2, BookHeart, MessageCircleQuestion, 
+  Settings2, BookHeart, MessageCircleQuestion, 
   PlusCircle, Trash2, Star, Heart, PartyPopper, Cake, Info, AlertCircle, Layout, Image as ImageIcon,
-  Shirt 
+  Shirt, Users
 } from 'lucide-react';
 
-export default function Sidebar({ config, setConfig, onPublish, isPublishing, onClose, activeTab, setActiveTab, isEligible, isRevision = false }: any) {
+export default function Sidebar({ config, setConfig, onPublish, isPublishing, onClose, activeTab, setActiveTab, isEligible, isRevision = false, invitationId }: any) {
   const [showAllBgs, setShowAllBgs] = useState(false);
   const [showAllStyles, setShowAllStyles] = useState(false);
   const [showDateStyle, setShowDateStyle] = useState(false);
@@ -31,6 +31,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   const extraQuestionsCount = config.showQA ? Math.max(0, (config.questions?.length || 3) - 3) : 0;
   const qaPrice = config.showQA ? extraQuestionsCount * 2 : 0;
   const storyPrice = config.showStory ? 5 : 0;
+  const rsvpPrice = config.showRSVP ? 5 : 0;
 
   // --- CALCULATE RETENTION FEE ---
   const calculateRetentionDetails = () => {
@@ -50,7 +51,7 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
   };
 
   const { price: retentionPrice, months: retentionMonths } = calculateRetentionDetails();
-  const totalPrice = basePrice + bgPrice + qaPrice + storyPrice + retentionPrice;
+  const totalPrice = basePrice + bgPrice + qaPrice + storyPrice + retentionPrice + rsvpPrice;
 
   const FONT_OPTIONS = [
     { id: 'font-serif', name: 'Elegant Serif', class: 'font-serif' },
@@ -110,7 +111,8 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
     { id: 'general', label: 'General', icon: Settings2 },
     { id: 'attire', label: 'Attire', icon: Shirt },
     { id: 'qa', label: 'Q&A', icon: MessageCircleQuestion },
-    { id: 'story', label: 'Custom', icon: PlusCircle, premium: !isRevision }, 
+    { id: 'story', label: 'Custom', icon: PlusCircle, premium: !isRevision },
+    { id: 'rsvp', label: 'RSVP', icon: Users },
   ];
 
   const toggleColorSelection = (hexColor: string) => {
@@ -131,11 +133,8 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
 
   return (
     <aside className="w-full h-full bg-white border-r flex flex-col overflow-hidden font-sans text-slate-900 shadow-xl relative z-[9999]">
-      <button onClick={onClose} className="lg:hidden absolute top-6 right-6 p-2 bg-slate-100 rounded-full text-slate-600 z-[10000]"><X size={20} /></button>
       
-      <div className="p-8 border-b flex flex-col items-center bg-white text-slate-900 shrink-0 gap-6">
-        <Link href="/"><img src="/assets/images/logo2.png" alt="Nvitado" className="h-8 w-auto object-contain cursor-pointer" /></Link>
-        
+      <div className="p-4 border-b flex flex-col items-center bg-white text-slate-900 shrink-0 gap-6">
         <div className="flex w-full bg-slate-100 p-1 rounded-xl">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -558,6 +557,132 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
              )}
           </div>
         )}
+
+        {activeTab === 'rsvp' && (
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6">
+            <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">Enable RSVP <span className="text-amber-600">+₱5</span></p>
+                <p className="text-[9px] font-bold text-slate-400 uppercase">Guest confirmations & rules</p>
+              </div>
+              <button
+                disabled={isRevision}
+                onClick={() => setConfig({...config, showRSVP: !config.showRSVP})}
+                className={`w-10 h-5 rounded-full relative transition-all ${config.showRSVP ? 'bg-amber-500' : 'bg-slate-300'} ${isRevision ? 'opacity-50 cursor-not-allowed' : ''}`}
+              >
+                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${config.showRSVP ? 'right-1' : 'left-1'}`} />
+              </button>
+            </div>
+
+            {config.showRSVP && (
+              <div className="animate-in zoom-in-95 duration-200 space-y-4">
+                {/* RSVP MESSAGE */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Message</label>
+                    <span className={`text-[8px] font-black uppercase tracking-wider ${(config.rsvpMessage?.length || 0) >= 1500 ? 'text-rose-500' : 'text-slate-400'}`}>
+                      {config.rsvpMessage?.length || 0} / 1500
+                    </span>
+                  </div>
+                  <textarea
+                    rows={5}
+                    maxLength={1500}
+                    value={config.rsvpMessage || ''}
+                    onChange={(e) => setConfig({ ...config, rsvpMessage: e.target.value.slice(0, 1500) })}
+                    placeholder="e.g. We would be honored to celebrate this special day with you. Kindly let us know if you can make it!"
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-xs text-slate-800 leading-relaxed resize-none focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition-all"
+                  />
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">
+                    A short greeting shown above the RSVP form.
+                  </p>
+                </div>
+
+                {/* RSVP INSTRUCTIONS / NOTES / RULES */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Instructions / Rules</label>
+                    <span className="text-[8px] font-black uppercase tracking-wider text-slate-400">
+                      {(config.rsvpRules?.length || 0)} / 5
+                    </span>
+                  </div>
+
+                  {(config.rsvpRules?.length || 0) < 5 && (
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        id="rsvp-rule-input"
+                        placeholder="Add a note or rule..."
+                        className="flex-1 p-3 bg-slate-50 border border-slate-200 rounded-xl font-medium text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:border-amber-400 transition-all"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            const input = e.target as HTMLInputElement;
+                            const val = input.value.trim();
+                            if (!val) return;
+                            if ((config.rsvpRules?.length || 0) >= 5) return;
+                            setConfig({ ...config, rsvpRules: [...(config.rsvpRules || []), val] });
+                            input.value = '';
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          const input = document.getElementById('rsvp-rule-input') as HTMLInputElement;
+                          const val = input?.value.trim();
+                          if (!val) return;
+                          if ((config.rsvpRules?.length || 0) >= 5) return;
+                          setConfig({ ...config, rsvpRules: [...(config.rsvpRules || []), val] });
+                          input.value = '';
+                        }}
+                        className="px-4 py-3 bg-slate-900 text-white rounded-xl text-[9px] font-black uppercase tracking-wider hover:bg-amber-600 transition-all active:scale-95"
+                      >
+                        Add
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    {(config.rsvpRules || []).map((rule: string, index: number) => (
+                      <div key={index} className="flex items-start gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100 group">
+                        <span className="text-[10px] font-black text-amber-500 shrink-0 mt-0.5">{index + 1}.</span>
+                        <span className="flex-1 text-[11px] font-medium text-slate-700 leading-relaxed break-words">{rule}</span>
+                        <button
+                          onClick={() => {
+                            const updated = (config.rsvpRules || []).filter((_: string, i: number) => i !== index);
+                            setConfig({ ...config, rsvpRules: updated });
+                          }}
+                          className="p-1 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                        >
+                          <Trash2 size={12} />
+                        </button>
+                      </div>
+                    ))}
+
+                    {(!config.rsvpRules || config.rsvpRules.length === 0) && (
+                      <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider italic">
+                        Optional — add up to 5 notes or rules (e.g. dress code, no kids, RSVP deadline).
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* HOW IT WORKS */}
+                <div className="flex gap-2 p-3 bg-slate-50 border border-slate-100 rounded-xl">
+                  <Info size={14} className="text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-[9px] font-bold text-slate-500 leading-relaxed">
+                    Guests submit their name and a contact (Facebook, email, or number). You&apos;ll verify and confirm each guest from your guest list.
+                  </p>
+                </div>
+
+                {/* LIVE GUEST MANAGER (owner, revision mode) */}
+                {isRevision && invitationId && (
+                  <div className="pt-2 border-t border-slate-100">
+                    <RsvpManager invitationId={invitationId} />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       <div className="p-6 bg-slate-50 border-t space-y-3 shrink-0">
@@ -572,6 +697,9 @@ export default function Sidebar({ config, setConfig, onPublish, isPublishing, on
             
             {config.showStory && (
               <div className="flex justify-between text-amber-600 animate-in fade-in"><span>Custom Section Feature</span><span>+₱5.00</span></div>
+            )}
+            {config.showRSVP && (
+              <div className="flex justify-between text-amber-600 animate-in fade-in"><span>RSVP Feature</span><span>+₱5.00</span></div>
             )}
             {retentionPrice > 0 && (
               <div className="flex justify-between text-rose-500 animate-in slide-in-from-right-2">

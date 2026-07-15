@@ -46,6 +46,11 @@ function EditorContent() {
     attireColors: [COLOR_PALETTE[0].value, COLOR_PALETTE[1].value, COLOR_PALETTE[2].value], 
     menAttireText: 'Long sleeves, slacks, or formal suit',
     womenAttireText: 'Cocktail dress, long gown, or formal attire',
+    showRSVP: false,
+    rsvpUnlocked: false,
+    rsvpMessage: '',
+    rsvpRules: [] as string[],
+    rsvpGuests: [] as { name: string; status: string | null }[],
   });
 
   // 🎯 ONBOARDING ADAPTER: Kumukuha ng wizard variables nang hindi pinapakialaman ang slug status

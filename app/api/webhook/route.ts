@@ -84,6 +84,25 @@ export async function POST(req: Request) {
           .maybeSingle();
 
         if (!fetchError && targetInv) {
+          // 🆕 RSVP BULK INSERT: Insert pre-loaded guests into rsvp_guests table
+          if (targetInv.config_data?.showRSVP && targetInv.config_data?.rsvpGuests?.length > 0) {
+            const rsvpRows = targetInv.config_data.rsvpGuests.map((guest: any) => ({
+              invitation_id: invId,
+              name: guest.name,
+              status: guest.status || null,
+            }));
+
+            const { error: rsvpError } = await supabase
+              .from('rsvp_guests')
+              .upsert(rsvpRows, { onConflict: 'invitation_id,name' });
+
+            if (rsvpError) {
+              console.error("WEBHOOK RSVP INSERT ERROR:", rsvpError.message);
+            } else {
+              console.log(`RSVP GUESTS INSERTED: ${rsvpRows.length} guest(s) synced`);
+            }
+          }
+
           try {
             const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nvitado.com';
             const invitationLink = `${appUrl}/${targetInv.short_id}/${targetInv.slug}`;

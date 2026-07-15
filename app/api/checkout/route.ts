@@ -64,6 +64,16 @@ export async function POST(req: Request) {
       });
     }
 
+    // 4. RSVP Feature (₱5.00)
+    if (config.showRSVP) {
+      lineItems.push({
+        currency: 'PHP',
+        amount: 500,
+        name: 'RSVP Feature',
+        quantity: 1,
+      });
+    }
+
     // 4. Monthly Extension / Advance Booking (Buffer calculation)
     const totalAmountCentavos = Math.round(amount * 100);
     const currentLineItemsTotal = lineItems.reduce((acc, item) => acc + item.amount, 0);
