@@ -9,6 +9,11 @@ const supabase = createClient(
 // Maximum number of CONFIRMED (going) guests allowed per invitation.
 const MAX_GOING = 100;
 
+// Anti-spam: max number of UNCONFIRMED (pending) self-registrations that can be
+// queued at once. While this many guests are still awaiting the owner's
+// confirmation, new self-registrations are held until the owner accommodates them.
+const MAX_PENDING = 10;
+
 // Normalize a name for duplicate detection: lowercase + strip ALL whitespace,
 // so "Ronald Mendoza", "RONALD MENDOZA" and "RONALDMENDOZA" all collide.
 const normalizeName = (s: string) => s.toLowerCase().replace(/\s+/g, '');
@@ -36,6 +41,8 @@ export async function POST(req: Request) {
     const guests = allGuests || [];
     const existing = guests.find((g) => normalizeName(g.name) === normName);
     const goingCount = guests.filter((g) => g.status === 'going').length;
+    // Pending = self-registered guests awaiting the owner's confirmation (no status yet).
+    const pendingCount = guests.filter((g) => !g.status).length;
 
     // --- DELETE ACTION ---
     if (action === 'delete') {
@@ -104,6 +111,14 @@ export async function POST(req: Request) {
         return NextResponse.json(
           { error: `Sorry, the guest list is full. ${MAX_GOING} guests have already been confirmed, so no more RSVPs can be accepted.` },
           { status: 409 }
+        );
+      }
+      // Anti-spam: hold new self-registrations while a full queue of pending
+      // guests is still awaiting the owner's confirmation.
+      if (pendingCount >= MAX_PENDING) {
+        return NextResponse.json(
+          { error: `Due to a high volume of guests, we're currently accommodating ${MAX_PENDING} pending RSVPs. Please wait for the event owner to confirm the current guests, then try registering again shortly.` },
+          { status: 429 }
         );
       }
       // Require at least one contact method so the owner can verify them.
