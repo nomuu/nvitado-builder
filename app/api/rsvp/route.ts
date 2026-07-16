@@ -20,7 +20,7 @@ const normalizeName = (s: string) => s.toLowerCase().replace(/\s+/g, '');
 
 export async function POST(req: Request) {
   try {
-    const { invitation_id, name, status, action, fb_link, email, contact } = await req.json();
+    const { invitation_id, name, status, action, fb_link, email, contact, attended, remarks } = await req.json();
 
     if (!invitation_id || !name) {
       return NextResponse.json({ error: 'invitation_id and name are required' }, { status: 400 });
@@ -57,6 +57,7 @@ export async function POST(req: Request) {
     const trimmedFbLink = typeof fb_link === 'string' ? fb_link.trim() : '';
     const trimmedEmail = typeof email === 'string' ? email.trim() : '';
     const trimmedContact = typeof contact === 'string' ? contact.trim() : '';
+    const trimmedRemarks = typeof remarks === 'string' ? remarks.trim() : '';
 
     const wantsGoing = status === 'going';
 
@@ -71,14 +72,26 @@ export async function POST(req: Request) {
 
       const updatePayload: Record<string, unknown> = {};
 
-      // Self-registration ('register') must never downgrade an owner-confirmed
-      // guest; it only refreshes contact details. Owner actions set status.
-      if (action !== 'register') {
-        updatePayload.status = status || null;
+      if (action === 'set_attendance') {
+        // Event-day check-in: update presence + remarks only. This must never
+        // change the guest's RSVP (accept/reject) status.
+        if (typeof attended === 'boolean') {
+          updatePayload.attended = attended;
+          updatePayload.attended_at = attended ? new Date().toISOString() : null;
+        }
+        if (remarks !== undefined) {
+          updatePayload.remarks = trimmedRemarks || null;
+        }
+      } else {
+        // Self-registration ('register') must never downgrade an owner-confirmed
+        // guest; it only refreshes contact details. Owner actions set status.
+        if (action !== 'register') {
+          updatePayload.status = status || null;
+        }
+        if (trimmedFbLink) updatePayload.fb_link = trimmedFbLink;
+        if (trimmedEmail) updatePayload.email = trimmedEmail;
+        if (trimmedContact) updatePayload.contact = trimmedContact;
       }
-      if (trimmedFbLink) updatePayload.fb_link = trimmedFbLink;
-      if (trimmedEmail) updatePayload.email = trimmedEmail;
-      if (trimmedContact) updatePayload.contact = trimmedContact;
 
       // Nothing to change (e.g. re-register with no new contact) — return as-is.
       if (Object.keys(updatePayload).length === 0) {
@@ -97,6 +110,11 @@ export async function POST(req: Request) {
     }
 
     // --- NEW GUEST ---
+    // Attendance check-in only applies to guests already on the list.
+    if (action === 'set_attendance') {
+      return NextResponse.json({ error: 'Guest not found for attendance check-in.' }, { status: 404 });
+    }
+
     if (action === 'owner_add') {
       // Owner adding a confirmed guest: respect the going cap.
       if (wantsGoing && goingCount >= MAX_GOING) {
