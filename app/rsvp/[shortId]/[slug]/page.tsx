@@ -71,7 +71,7 @@ export default async function RsvpOwnerPage({ params }: { params: Promise<{ shor
           </div>
         ) : (
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8">
-            <RsvpOwnerManager invitationId={invitation.id} />
+            <RsvpOwnerManager invitationId={invitation.id} eventDate={config.eventDate || null} />
           </div>
         )}
 

@@ -1,6 +1,6 @@
 "use client";
-import React, { useEffect, useState, useCallback } from 'react';
-import { UserCheck, UserX, Trash2, Loader2, Link2, Mail, Phone, RefreshCw, Undo2, Search, CheckCircle2, ClipboardList, Users, Save } from 'lucide-react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import { UserCheck, UserX, Trash2, Loader2, Link2, Mail, Phone, RefreshCw, Undo2, Search, CheckCircle2, ClipboardList, Users, Save, Lock, CalendarClock } from 'lucide-react';
 
 interface Guest {
   id: string;
@@ -20,13 +20,30 @@ const MAX_GOING = 100;
 
 type Mode = 'manage' | 'attendance';
 
-export default function RsvpOwnerManager({ invitationId }: { invitationId: string }) {
+export default function RsvpOwnerManager({ invitationId, eventDate }: { invitationId: string; eventDate?: string | null }) {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [busyId, setBusyId] = useState<string | null>(null);
   const [mode, setMode] = useState<Mode>('manage');
   const [search, setSearch] = useState('');
+
+  // Attendance check-in is only available ON the event day (locked before & after).
+  // Uses the owner's local device date, since check-in happens physically at the event.
+  const eventStatus: 'before' | 'day' | 'after' | 'unknown' = useMemo(() => {
+    if (!eventDate) return 'unknown';
+    const [y, m, d] = String(eventDate).slice(0, 10).split('-').map(Number);
+    if (!y || !m || !d) return 'unknown';
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const event = new Date(y, m - 1, d);
+    event.setHours(0, 0, 0, 0);
+    if (today.getTime() < event.getTime()) return 'before';
+    if (today.getTime() > event.getTime()) return 'after';
+    return 'day';
+  }, [eventDate]);
+
+  const isEventDay = eventStatus === 'day';
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -100,7 +117,9 @@ export default function RsvpOwnerManager({ invitationId }: { invitationId: strin
   const goingCount = guests.filter((g) => g.status === 'going').length;
   const pendingCount = guests.filter((g) => !g.status).length;
   const declinedCount = guests.filter((g) => g.status === 'declined').length;
-  const presentCount = guests.filter((g) => g.attended).length;
+  // Attendance only concerns accepted guests.
+  const acceptedGuests = guests.filter((g) => g.status === 'going');
+  const presentCount = acceptedGuests.filter((g) => g.attended).length;
   const full = goingCount >= MAX_GOING;
 
   const statusBadge = (status: string | null) => {
@@ -133,7 +152,8 @@ export default function RsvpOwnerManager({ invitationId }: { invitationId: strin
 
   const attendanceList = (() => {
     const q = search.trim().toLowerCase();
-    const list = q ? guests.filter((g) => g.name.toLowerCase().includes(q)) : guests;
+    // Only accepted (going) guests are eligible for event-day check-in.
+    const list = q ? acceptedGuests.filter((g) => g.name.toLowerCase().includes(q)) : acceptedGuests;
     // Not-yet-present first, then present; alphabetical within each group.
     return [...list].sort((a, b) => {
       if (a.attended !== b.attended) return a.attended ? 1 : -1;
@@ -174,6 +194,25 @@ export default function RsvpOwnerManager({ invitationId }: { invitationId: strin
         </button>
       </div>
 
+      {/* ATTENDANCE LOCKED (only usable on the event day) */}
+      {mode === 'attendance' && !isEventDay && (
+        <div className="p-8 text-center bg-slate-50 border border-slate-200 rounded-2xl">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-slate-200 flex items-center justify-center text-slate-500">
+            {eventStatus === 'after' ? <Lock size={24} /> : <CalendarClock size={24} />}
+          </div>
+          <p className="text-sm font-black uppercase tracking-wide text-slate-900 mb-1">
+            {eventStatus === 'after' ? 'Check-In Closed' : 'Check-In Locked'}
+          </p>
+          <p className="text-[11px] font-medium text-slate-500 leading-relaxed">
+            {eventStatus === 'after'
+              ? 'The event has ended. Attendance check-in is no longer available.'
+              : eventStatus === 'before'
+              ? 'Attendance check-in unlocks on the day of your event. Please come back on the event date.'
+              : 'Attendance check-in is only available on the day of your event.'}
+          </p>
+        </div>
+      )}
+
       {/* STATS */}
       {mode === 'manage' ? (
         <div className="grid grid-cols-4 gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
@@ -194,7 +233,7 @@ export default function RsvpOwnerManager({ invitationId }: { invitationId: strin
             <p className="text-[7px] font-black text-slate-400 uppercase">Total</p>
           </div>
         </div>
-      ) : (
+      ) : isEventDay ? (
         <div className="grid grid-cols-3 gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
           <div className="text-center">
             <p className="text-[14px] font-black text-emerald-600">{presentCount}</p>
@@ -209,7 +248,7 @@ export default function RsvpOwnerManager({ invitationId }: { invitationId: strin
             <p className="text-[7px] font-black text-slate-400 uppercase">Total</p>
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* FULL BANNER (manage only) */}
       {mode === 'manage' && full && (
@@ -220,7 +259,7 @@ export default function RsvpOwnerManager({ invitationId }: { invitationId: strin
       )}
 
       {/* SEARCH (attendance only) */}
-      {mode === 'attendance' && (
+      {mode === 'attendance' && isEventDay && (
         <div className="relative">
           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -239,7 +278,7 @@ export default function RsvpOwnerManager({ invitationId }: { invitationId: strin
       )}
 
       {/* LIST */}
-      {loading ? (
+      {(mode === 'manage' || isEventDay) && (loading ? (
         <div className="flex items-center justify-center gap-2 py-8 text-slate-400">
           <Loader2 size={14} className="animate-spin" />
           <span className="text-[9px] font-black uppercase tracking-wider">Loading guests...</span>
@@ -307,8 +346,8 @@ export default function RsvpOwnerManager({ invitationId }: { invitationId: strin
         /* ================= ATTENDANCE MODE ================= */
         attendanceList.length === 0 ? (
           <div className="p-6 text-center border-2 border-dashed border-slate-200 rounded-2xl">
-            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">No match found</p>
-            <p className="text-[8px] font-bold text-slate-300 uppercase tracking-wider mt-1">Try a different name</p>
+            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{search.trim() ? 'No match found' : 'No accepted guests yet'}</p>
+            <p className="text-[8px] font-bold text-slate-300 uppercase tracking-wider mt-1">{search.trim() ? 'Try a different name' : 'Only accepted guests appear here'}</p>
           </div>
         ) : (
           <div className="space-y-2 max-h-[520px] overflow-y-auto">
@@ -326,7 +365,7 @@ export default function RsvpOwnerManager({ invitationId }: { invitationId: strin
             ))}
           </div>
         )
-      )}
+      ))}
     </div>
   );
 }
