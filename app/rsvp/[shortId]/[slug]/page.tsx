@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
+import { cookies } from 'next/headers';
 import { Metadata } from 'next';
 import React from 'react';
 import RsvpOwnerManager from './RsvpOwnerManager';
@@ -28,13 +29,21 @@ export default async function RsvpOwnerPage({ params }: { params: Promise<{ shor
 
   const { data: invitation, error } = await supabase
     .from('invitations')
-    .select('id, short_id, slug, status, config_data, customer_name')
+    .select('id, short_id, slug, status, config_data, customer_name, token_id')
     .eq('short_id', shortId)
     .single();
 
   // Must exist and be a paid invitation.
   if (error || !invitation || invitation.status !== 'paid') {
     return notFound();
+  }
+
+  // 🔒 Owner-only: require the verified session cookie (set after the email+OTP
+  // flow in /verify-access). Without it, redirect to verify ownership.
+  const cookieStore = await cookies();
+  const isVerified = cookieStore.get(`verified_${invitation.token_id}`)?.value === 'true';
+  if (!isVerified) {
+    return redirect('/verify-access');
   }
 
   const config = invitation.config_data || {};

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
 import { createClient } from '@supabase/supabase-js';
+import { calculatePricing } from '../../../lib/pricing';
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -18,11 +19,13 @@ const generateTokenId = () => {
 
 export async function POST(req: Request) {
   try {
-    const { config, amount, bgName } = await req.json();
+    const { config, bgName } = await req.json();
+    // 🔒 SECURITY: server-computed price only; ignore any client-supplied amount.
+    const amount = calculatePricing(config).total;
     const tokenId = generateTokenId();
 
     const baseAmountCentavos = 50 * 100;
-    const lineItems: any[] = [
+    const lineItems: Array<{ currency: string; amount: number; name: string; quantity: number }> = [
       {
         currency: 'PHP',
         amount: baseAmountCentavos,
@@ -120,7 +123,7 @@ export async function POST(req: Request) {
             line_items: lineItems,
             payment_method_types: ['card', 'paymaya', 'gcash', 'grab_pay'], 
             description: `Invitation: ${config.title} | Token: ${tokenId}`,
-            success_url: `${process.env.NEXT_PUBLIC_URL}/success?slug=${config.slug}`,
+            success_url: `${process.env.NEXT_PUBLIC_URL}/success?token=${tokenId}`,
             cancel_url: `${process.env.NEXT_PUBLIC_URL}/create`
           }
         }
@@ -137,7 +140,8 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ checkout_url: checkoutUrl });
 
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    console.error('CHECKOUT ERROR:', error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: 'Could not start checkout. Please try again.' }, { status: 500 });
   }
 }

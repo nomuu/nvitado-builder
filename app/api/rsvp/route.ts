@@ -36,7 +36,7 @@ export async function POST(req: Request) {
       .select('id, name, status')
       .eq('invitation_id', invitation_id);
 
-    if (loadError) return NextResponse.json({ error: loadError.message }, { status: 500 });
+    if (loadError) return NextResponse.json({ error: 'Could not load RSVP list.' }, { status: 500 });
 
     const guests = allGuests || [];
     const existing = guests.find((g) => normalizeName(g.name) === normName);
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
     if (action === 'delete') {
       if (existing) {
         const { error } = await supabase.from('rsvp_guests').delete().eq('id', existing.id);
-        if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+        if (error) return NextResponse.json({ error: 'Could not update RSVP.' }, { status: 500 });
       }
       return NextResponse.json({ success: true, action: 'deleted' });
     }
@@ -105,7 +105,7 @@ export async function POST(req: Request) {
         .select()
         .single();
 
-      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      if (error) return NextResponse.json({ error: 'Could not update RSVP.' }, { status: 500 });
       return NextResponse.json({ success: true, action: 'updated', guest: data });
     }
 
@@ -161,9 +161,10 @@ export async function POST(req: Request) {
       .select()
       .single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: 'Could not save RSVP.' }, { status: 500 });
     return NextResponse.json({ success: true, action: 'created', guest: data });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    console.error('RSVP ERROR:', error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: 'Could not process RSVP. Please try again.' }, { status: 500 });
   }
 }

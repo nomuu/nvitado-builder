@@ -1,13 +1,48 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import crypto from 'crypto';
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// Escape user-derived values before embedding them in email HTML.
+const escapeHtml = (s: unknown) =>
+  String(s ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const rawBody = await req.text();
+
+    // 🔒 SECURITY: verify the Lemon Squeezy webhook signature before trusting
+    // anything in the payload. Without this, anyone could POST a forged
+    // "order_created" event to mark invitations as paid for free.
+    const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET;
+    if (!secret) {
+      console.error('WEBHOOK: LEMONSQUEEZY_WEBHOOK_SECRET is not configured — rejecting.');
+      return NextResponse.json({ error: 'Webhook not configured.' }, { status: 500 });
+    }
+
+    const signature = req.headers.get('x-signature') || '';
+    const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+    let signatureValid = false;
+    try {
+      const sigBuf = Buffer.from(signature, 'hex');
+      const expBuf = Buffer.from(expected, 'hex');
+      signatureValid = sigBuf.length === expBuf.length && crypto.timingSafeEqual(sigBuf, expBuf);
+    } catch {
+      signatureValid = false;
+    }
+    if (!signatureValid) {
+      return NextResponse.json({ error: 'Invalid signature.' }, { status: 401 });
+    }
+
+    const body = JSON.parse(rawBody);
     const eventName = body.meta?.event_name;
 
     if (eventName === 'order_created') {
@@ -33,7 +68,7 @@ export async function POST(req: Request) {
             .update({
               revision_count: (currentInv.revision_count || 0) + 3,
               purchasable_revision_count: Math.max(0, (currentInv.purchasable_revision_count || 3) - 3)
-            } as any)
+            })
             .eq('token_id', tokenId);
 
           if (revisionUpdateError) {
@@ -48,7 +83,20 @@ export async function POST(req: Request) {
       // 📍 ORIGINAL LOGIC: New Invitations Activation
       const invId = customData?.invitation_id;
       if (invId) {
-        console.log(`WEBHOOK DATA: Email: ${email}, Name: ${name}, ID: ${invId}`);
+        console.log(`WEBHOOK: Processing activation for invitation ${invId}`);
+
+        // Idempotency: if this invitation is already paid, skip re-activation
+        // and the duplicate email (Lemon Squeezy may retry deliveries).
+        const { data: existingInv } = await supabase
+          .from('invitations')
+          .select('status')
+          .eq('id', invId)
+          .maybeSingle();
+
+        if (existingInv?.status === 'paid') {
+          console.log('WEBHOOK: Invitation already paid — skipping duplicate processing.');
+          return NextResponse.json({ received: true }, { status: 200 });
+        }
 
         // 1. SAFE UPDATE PROCESO: I-set ang status into paid
         const { error: updateError } = await supabase
@@ -57,12 +105,12 @@ export async function POST(req: Request) {
             status: 'paid', 
             email: email,
             customer_name: name 
-          } as any) 
+          }) 
           .eq('id', invId);
 
         if (updateError) {
           console.error("WEBHOOK DB UPDATE ERROR:", updateError.message);
-          return NextResponse.json({ error: updateError.message }, { status: 500 });
+          return NextResponse.json({ error: 'Processing failed.' }, { status: 500 });
         }
         
         console.log("DATABASE UPDATE SUCCESSFUL");
@@ -79,14 +127,14 @@ export async function POST(req: Request) {
         // 3. DATA EXTRACTION: Kunin ang short_id at slug nang ligtas
         const { data: targetInv, error: fetchError } = await supabase
           .from('invitations')
-          .select('short_id, slug, config_data')
+          .select('short_id, slug, config_data, token_id')
           .eq('id', invId)
           .maybeSingle();
 
         if (!fetchError && targetInv) {
           // 🆕 RSVP BULK INSERT: Insert pre-loaded guests into rsvp_guests table
           if (targetInv.config_data?.showRSVP && targetInv.config_data?.rsvpGuests?.length > 0) {
-            const rsvpRows = targetInv.config_data.rsvpGuests.map((guest: any) => ({
+            const rsvpRows = targetInv.config_data.rsvpGuests.map((guest: { name: string; status?: string | null }) => ({
               invitation_id: invId,
               name: guest.name,
               status: guest.status || null,
@@ -107,8 +155,8 @@ export async function POST(req: Request) {
             const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://nvitado.com';
             const invitationLink = `${appUrl}/${targetInv.short_id}/${targetInv.slug}`;
             
-            // 🎯 FIXED URL STRUCTURE: Sinama na natin si shortId at slug sa query para tugma sa success page ninyo!
-            const successPageLink = `${appUrl}/success?shortId=${targetInv.short_id}&slug=${targetInv.slug}`;
+            // 🔒 Success/receipt page keyed by the unguessable token, not the public slug.
+            const successPageLink = `${appUrl}/success?token=${encodeURIComponent(targetInv.token_id)}`;
 
             // 🆕 RSVP MANAGER LINK — ipapakita lang sa email kung naka-enable ang RSVP.
             const rsvpManagerLink = `${appUrl}/rsvp/${targetInv.short_id}/${targetInv.slug}`;
@@ -121,9 +169,10 @@ export async function POST(req: Request) {
                   </div>`
               : '';
 
-            const eventTitle = targetInv.config_data?.title || "Your Event";
+            const eventTitle = escapeHtml(targetInv.config_data?.title || "Your Event");
+            const safeName = escapeHtml(name);
 
-            console.log(`WEBHOOK EMAIL: Sending custom email with exact success query to ${email}`);
+            console.log(`WEBHOOK EMAIL: Sending activation email for invitation ${invId}`);
 
             await resend.emails.send({
               from: 'Nvitado <inquiry@nvitado.com>',
@@ -136,7 +185,7 @@ export async function POST(req: Request) {
                     <p style="font-size: 9px; font-weight: 800; color: #f59e0b; text-transform: uppercase; tracking: 2px; margin-top: 4px; margin-bottom: 0;">Digital Invitation Builder</p>
                   </div>
                   
-                  <h2 style="font-size: 20px; font-weight: 900; color: #0f172a; margin-bottom: 10px; margin-top: 0;">Hi ${name}!</h2>
+                  <h2 style="font-size: 20px; font-weight: 900; color: #0f172a; margin-bottom: 10px; margin-top: 0;">Hi ${safeName}!</h2>
                   <p style="font-size: 14px; color: #64748b; line-height: 1.6; margin-bottom: 28px; margin-top: 0;">
                     Success ang iyong pagbabayad! Live at handa nang i-share ang digital invitation para sa <strong>${eventTitle}</strong>. Maaari mong i-access ang iyong link at opisyal na resibo sa ibaba.
                   </p>
@@ -167,16 +216,16 @@ export async function POST(req: Request) {
               `
             });
             console.log("WEBHOOK EMAIL: Mail sent successfully via Resend!");
-          } catch (mailErr: any) {
-            console.error("WEBHOOK MAIL ERROR:", mailErr.message);
+          } catch (mailErr: unknown) {
+            console.error("WEBHOOK MAIL ERROR:", mailErr instanceof Error ? mailErr.message : mailErr);
           }
         }
       }
     }
 
     return NextResponse.json({ received: true }, { status: 200 });
-  } catch (err: any) {
-    console.error("WEBHOOK CATCH ERROR:", err.message);
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    console.error("WEBHOOK CATCH ERROR:", err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Webhook processing error.' }, { status: 400 });
   }
 }

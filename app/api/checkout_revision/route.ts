@@ -65,11 +65,11 @@ export async function GET(req: Request) {
     const lemonCheckoutUrl = response.data.data.attributes.url;
     return NextResponse.redirect(lemonCheckoutUrl);
 
-  } catch (error: any) {
-    console.error("LEMON REVISION CHECKOUT ERROR:", error.response?.data || error.message);
+  } catch (error: unknown) {
+    const err = error as { response?: { data?: unknown }; message?: string };
+    console.error("LEMON REVISION CHECKOUT ERROR:", err.response?.data || err.message);
     return NextResponse.json({ 
-      error: "Failed to generate revision checkout link.",
-      details: error.response?.data?.errors?.[0]?.detail || error.message
+      error: "Failed to generate revision checkout link."
     }, { status: 500 });
   }
 }

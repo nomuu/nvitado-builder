@@ -88,22 +88,26 @@ export default function GracePeriodCountdown({ expirationTime, title, initialCus
     try {
       const currentFullUrl = window.location.href;
 
-      const { error } = await supabase
-        .from('reviews')
-        .insert({
+      const res = await fetch('/api/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           customer_name: customerName,
           review: reviewText,
           stars: stars,
-          invitation_link: currentFullUrl
-        });
+          invitation_link: currentFullUrl,
+        }),
+      });
 
-      if (error) throw error;
-      
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save review');
+
       setReviewSuccess(true);
       setHasExistingReview(true);
-    } catch (err: any) {
-      console.error("Review Submission Error:", err.message);
-      alert("Failed to save review: " + err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to save review';
+      console.error("Review Submission Error:", message);
+      alert("Failed to save review: " + message);
     } finally {
       setIsSubmitting(false);
     }

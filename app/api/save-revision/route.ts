@@ -50,7 +50,7 @@ export async function POST(req: Request) {
       .update({ 
         config_data: config,
         revision_count: currentInv.revision_count - 1 
-      } as any)
+      })
       .eq('token_id', tokenId)
       .select()
       .single();
@@ -80,8 +80,8 @@ export async function POST(req: Request) {
       newCount: updated.revision_count 
     });
 
-  } catch (err: any) {
-    console.error("API Error:", err.message);
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    console.error("API Error:", err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Could not save revision. Please try again.' }, { status: 500 });
   }
 }

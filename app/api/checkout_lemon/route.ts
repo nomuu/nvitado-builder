@@ -3,12 +3,16 @@ import { createClient } from '@supabase/supabase-js';
 import axios from 'axios';
 import crypto from 'crypto';
 import { BACKGROUNDS } from '../../constants/backgrounds'; // 🎯 NAAYOS NA PATH
+import { calculatePricing } from '../../../lib/pricing';
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
 export async function POST(req: Request) {
   try {
-    const { config, amount } = await req.json();
+    const { config } = await req.json();
+    // 🔒 SECURITY: the price is computed on the server from the config only.
+    // Any client-supplied amount is ignored to prevent price tampering.
+    const amount = calculatePricing(config).total;
     const hashedId = crypto.createHash('sha256').update(new Date().toISOString() + config.slug + Math.random()).digest('hex');
     const tokenId = `NVI-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
 
@@ -27,7 +31,7 @@ export async function POST(req: Request) {
     if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });
 
     // 2. GENERATE PROFESSIONAL BREAKDOWN (MATCHING SIDEBAR)
-    const selectedBg = BACKGROUNDS.find((bg: any) => bg.id === config.animationId);
+    const selectedBg = BACKGROUNDS.find((bg) => bg.id === config.animationId);
     const effectPrice = selectedBg?.price || 0;
 
     const storyPrice = config.showStory ? 5 : 0;
@@ -59,7 +63,8 @@ export async function POST(req: Request) {
     
     const origin = req.headers.get('origin') || 'https://nvitado.com'; 
     
-    const finalReturnUrl = `${origin}/success?shortId=${config.shortId}&slug=${config.slug}`;
+    // 🔒 Use the unguessable token as the success lookup key (not the public slug).
+    const finalReturnUrl = `${origin}/success?token=${tokenId}`;
 
     // 3. LEMON SQUEEZY CALL
     const response = await axios.post('https://api.lemonsqueezy.com/v1/checkouts', {
@@ -99,7 +104,8 @@ export async function POST(req: Request) {
     await supabase.from('invitations').update({ checkout_id: lemonCheckoutId }).eq('id', hashedId);
 
     return NextResponse.json({ checkout_url: response.data.data.attributes.url });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    console.error('CHECKOUT_LEMON ERROR:', error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: 'Could not start checkout. Please try again.' }, { status: 500 });
   }
 }

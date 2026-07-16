@@ -12,13 +12,21 @@ export async function POST(req: Request) {
     // 1. Hugutin ang data (Kasama na ang purchasable_revision_count)
     const { data: inv, error: fetchError } = await supabase
       .from('invitations')
-      .select('id, customer_name, token_id, config_data, revision_count, purchasable_revision_count') 
+      .select('id, customer_name, token_id, config_data, revision_count, purchasable_revision_count, otp_last_sent_at') 
       .eq('email', email)
       .eq('token_id', tokenId)
       .single();
 
     if (fetchError || !inv) {
       return NextResponse.json({ error: "Invalid credentials. Double check your Email and Token ID." }, { status: 404 });
+    }
+
+    // 🔒 Throttle: block rapid OTP resends (email bombing / cost abuse).
+    if (inv.otp_last_sent_at && Date.now() - new Date(inv.otp_last_sent_at).getTime() < 60_000) {
+      return NextResponse.json(
+        { error: "Please wait a moment before requesting another code." },
+        { status: 429 }
+      );
     }
 
     // Kunin ang details mula sa config_data
@@ -29,10 +37,15 @@ export async function POST(req: Request) {
     // 2. Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // 3. I-save ang OTP sa DB
+    // 3. I-save ang OTP sa DB (with 10-minute expiry + reset attempt counter)
     const { error: updateError } = await supabase
       .from('invitations')
-      .update({ otp_code: otp } as any)
+      .update({
+        otp_code: otp,
+        otp_expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+        otp_attempts: 0,
+        otp_last_sent_at: new Date().toISOString(),
+      })
       .eq('token_id', tokenId);
 
     if (updateError) {
@@ -85,7 +98,8 @@ export async function POST(req: Request) {
     });
 
     return NextResponse.json({ success: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('VERIFY-INVITATION ERROR:', err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Could not process request. Please try again.' }, { status: 500 });
   }
 }

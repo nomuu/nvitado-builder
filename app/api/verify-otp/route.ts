@@ -7,34 +7,59 @@ export async function POST(req: Request) {
   try {
     const { email, tokenId, otp } = await req.json();
 
-    // 1. I-check kung match ang OTP, Email, at Token sa DB
+    const MAX_ATTEMPTS = 5;
+
+    // 1. Fetch by email + token (NOT by otp) so we can enforce expiry & attempts.
     const { data: inv, error } = await supabase
       .from('invitations')
-      .select('id, slug')
+      .select('id, slug, token_id, otp_code, otp_expires_at, otp_attempts')
       .eq('email', email)
       .eq('token_id', tokenId)
-      .eq('otp_code', otp) 
-      .single();
+      .maybeSingle();
 
     if (error || !inv) {
       return NextResponse.json({ error: "Invalid or expired verification code." }, { status: 401 });
     }
 
-    // 2. SUCCESS: Burahin ang OTP code sa DB
+    // No active OTP — must request a new one.
+    if (!inv.otp_code || !inv.otp_expires_at) {
+      return NextResponse.json({ error: "No active code. Please request a new one." }, { status: 401 });
+    }
+
+    // Expired.
+    if (new Date(inv.otp_expires_at).getTime() < Date.now()) {
+      await supabase.from('invitations').update({ otp_code: null }).eq('token_id', tokenId);
+      return NextResponse.json({ error: "This code has expired. Please request a new one." }, { status: 401 });
+    }
+
+    // Too many failed attempts — lock this OTP.
+    if ((inv.otp_attempts || 0) >= MAX_ATTEMPTS) {
+      await supabase.from('invitations').update({ otp_code: null }).eq('token_id', tokenId);
+      return NextResponse.json({ error: "Too many attempts. Please request a new code." }, { status: 429 });
+    }
+
+    // Wrong code — count the attempt.
+    if (String(inv.otp_code) !== String(otp)) {
+      await supabase
+        .from('invitations')
+        .update({ otp_attempts: (inv.otp_attempts || 0) + 1 })
+        .eq('token_id', tokenId);
+      return NextResponse.json({ error: "Invalid verification code." }, { status: 401 });
+    }
+
+    // 2. SUCCESS: clear the OTP + attempt state.
     await supabase
       .from('invitations')
-      .update({ otp_code: null } as any)
+      .update({ otp_code: null, otp_attempts: 0, otp_expires_at: null })
       .eq('token_id', tokenId);
 
     // 3. 🛡️ SET SECURITY COOKIE
-    // Gagawa tayo ng response object muna para malagyan ng cookie
     const response = NextResponse.json({ 
       success: true, 
       slug: inv.slug,
       message: "Verified successfully" 
     });
 
-    // Isasalpak ang cookie na tinitingnan ng revise/page.tsx natin
     response.cookies.set(`verified_${tokenId}`, 'true', {
       httpOnly: true, // 🔒 Crucial: Hindi ito mababasa/mananakaw ng JS scripts
       secure: process.env.NODE_ENV === 'production', // 🔒 HTTPS only sa production
@@ -45,7 +70,8 @@ export async function POST(req: Request) {
 
     return response;
 
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+  } catch (err: unknown) {
+    console.error('VERIFY-OTP ERROR:', err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: 'Could not verify code. Please try again.' }, { status: 500 });
   }
 }

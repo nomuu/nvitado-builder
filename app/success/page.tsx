@@ -7,26 +7,33 @@ import QRCodeSection from '../components/QRCodeSection';
 
 export const dynamic = 'force-dynamic';
 
-async function getSuccessDetails(slug: string) {
-  if (!slug) return null;
+const maskEmail = (email?: string | null) => {
+  if (!email || !email.includes('@')) return null;
+  const [local, domain] = email.split('@');
+  const shown = local.slice(0, 2);
+  return `${shown}${'*'.repeat(Math.max(1, local.length - shown.length))}@${domain}`;
+};
+
+async function getSuccessDetails(token: string) {
+  if (!token) return null;
   const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
   
   // Wait ng 1.5 seconds para masiguradong tapos na ang webhook mag-save
   await new Promise(resolve => setTimeout(resolve, 1500));
 
+  // 🔒 Look up by the unguessable token (not the public slug), so only the buyer
+  // who was redirected here (or holds the token) can view the receipt.
   const { data: inv, error } = await supabase
     .from('invitations')
     .select('*')
-    .eq('slug', slug)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .single();
+    .eq('token_id', token)
+    .maybeSingle();
 
   if (error || !inv) return null;
 
   const payerInfo = { 
     name: inv.customer_name || 'Valued Customer', // 📍 BASAHIN ANG PANGALAN DITO
-    email: inv.email || 'Confirmation pending...', 
+    email: maskEmail(inv.email) || 'Confirmation pending...', 
     method: 'CARD/E-WALLET' 
   };
   return { inv, payerInfo };
@@ -34,9 +41,9 @@ async function getSuccessDetails(slug: string) {
 
 export default async function SuccessPage(props: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
   const sParams = await props.searchParams;
-  const slug = typeof sParams.slug === 'string' ? sParams.slug : null;
-  const data = await getSuccessDetails(slug as string);
-  if (!data) return <div className="p-20 text-center font-black italic text-rose-500 uppercase">404 | NOT FOUND</div>;
+  const token = typeof sParams.token === 'string' ? sParams.token : null;
+  const data = await getSuccessDetails(token as string);
+  if (!data) return <div className="p-20 text-center font-black italic text-rose-500 uppercase">Receipt not available. Please use the link from your confirmation email.</div>;
 
   const { inv, payerInfo } = data;
   const config = inv.config_data || {};

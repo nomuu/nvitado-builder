@@ -23,10 +23,11 @@ export async function GET(
       .eq('invitation_id', invitationId)
       .order('created_at', { ascending: true });
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: 'Could not load guests.' }, { status: 500 });
 
     return NextResponse.json({ guests: data || [] });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    console.error('RSVP GET ERROR:', error instanceof Error ? error.message : error);
+    return NextResponse.json({ error: 'Could not load guests.' }, { status: 500 });
   }
 }
