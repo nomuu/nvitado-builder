@@ -109,7 +109,18 @@ export async function POST(req: Request) {
             
             // 🎯 FIXED URL STRUCTURE: Sinama na natin si shortId at slug sa query para tugma sa success page ninyo!
             const successPageLink = `${appUrl}/success?shortId=${targetInv.short_id}&slug=${targetInv.slug}`;
-            
+
+            // 🆕 RSVP MANAGER LINK — ipapakita lang sa email kung naka-enable ang RSVP.
+            const rsvpManagerLink = `${appUrl}/rsvp/${targetInv.short_id}/${targetInv.slug}`;
+            const rsvpButtonHtml = targetInv.config_data?.showRSVP
+              ? `
+                  <div style="margin-bottom: 24px;">
+                    <a href="${rsvpManagerLink}" target="_blank" style="display: inline-block; width: 100%; box-sizing: border-box; background-color: #ffffff; color: #0f172a; padding: 16px 0; border-radius: 16px; font-weight: 900; font-size: 13px; text-decoration: none; text-transform: uppercase; letter-spacing: 0.5px; border: 2px solid #0f172a;">
+                      👥 View RSVP
+                    </a>
+                  </div>`
+              : '';
+
             const eventTitle = targetInv.config_data?.title || "Your Event";
 
             console.log(`WEBHOOK EMAIL: Sending custom email with exact success query to ${email}`);
@@ -141,6 +152,8 @@ export async function POST(req: Request) {
                       📄 View Full Receipt & QR Code
                     </a>
                   </div>
+
+                  ${rsvpButtonHtml}
 
                   <p style="font-size: 11px; color: #94a3b8; line-height: 1.6; text-align: left; border-top: 1px solid #f1f5f9; padding-top: 20px; margin-top: 0; margin-bottom: 0;">
                     <strong>Invitation Link:</strong> <a href="${invitationLink}" style="color: #f59e0b; text-decoration: none;">${invitationLink}</a><br/>
