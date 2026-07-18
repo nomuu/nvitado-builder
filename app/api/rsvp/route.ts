@@ -1,10 +1,22 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { cookies } from 'next/headers';
+import { rateLimit, tooManyRequests, getClientIp } from '../../../lib/ratelimit';
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
+
+// Owner-only mutations. These must come from a verified owner session
+// (the /revise and /rsvp owner surfaces are both cookie-gated).
+const OWNER_ACTIONS = new Set(['owner_add', 'set_status', 'set_attendance', 'delete']);
+
+// Field length caps (defense-in-depth input validation).
+const MAX_NAME_LEN = 100;
+const MAX_CONTACT_LEN = 200;
+const MAX_LINK_LEN = 500;
+const MAX_REMARKS_LEN = 500;
 
 // Maximum number of CONFIRMED (going) guests allowed per invitation.
 const MAX_GOING = 100;
@@ -22,8 +34,52 @@ export async function POST(req: Request) {
   try {
     const { invitation_id, name, status, action, fb_link, email, contact, attended, remarks } = await req.json();
 
-    if (!invitation_id || !name) {
+    // --- INPUT VALIDATION ---
+    if (typeof invitation_id !== 'string' || typeof name !== 'string') {
       return NextResponse.json({ error: 'invitation_id and name are required' }, { status: 400 });
+    }
+    if (!invitation_id.trim() || !name.trim()) {
+      return NextResponse.json({ error: 'invitation_id and name are required' }, { status: 400 });
+    }
+    if (
+      name.length > MAX_NAME_LEN ||
+      (typeof contact === 'string' && contact.length > MAX_CONTACT_LEN) ||
+      (typeof email === 'string' && email.length > MAX_CONTACT_LEN) ||
+      (typeof fb_link === 'string' && fb_link.length > MAX_LINK_LEN) ||
+      (typeof remarks === 'string' && remarks.length > MAX_REMARKS_LEN)
+    ) {
+      return NextResponse.json({ error: 'One or more fields are too long.' }, { status: 400 });
+    }
+
+    const isOwnerAction = typeof action === 'string' && OWNER_ACTIONS.has(action);
+    const ip = getClientIp(req);
+
+    // --- RATE LIMITING ---
+    if (isOwnerAction) {
+      // Owner actions are authenticated below; a generous cap guards the DB.
+      const { allowed, retryAfter } = await rateLimit(`rsvp_owner:${ip}`, 60, 60);
+      if (!allowed) return tooManyRequests(retryAfter);
+    } else {
+      // Public self-registration: strict cap (a real guest registers once).
+      const { allowed, retryAfter } = await rateLimit(`rsvp_reg:${ip}`, 6, 60);
+      if (!allowed) return tooManyRequests(retryAfter);
+    }
+
+    // --- OWNER AUTHORIZATION ---
+    // Owner mutations require the verified session cookie for this invitation.
+    // This blocks forged owner_add / set_status requests (e.g. filling the
+    // guest list with fake "going" entries).
+    if (isOwnerAction) {
+      const { data: invRow } = await supabase
+        .from('invitations')
+        .select('token_id')
+        .eq('id', invitation_id)
+        .maybeSingle();
+      const cookieStore = await cookies();
+      const verified = !!invRow?.token_id && cookieStore.get(`verified_${invRow.token_id}`)?.value === 'true';
+      if (!verified) {
+        return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+      }
     }
 
     const trimmedName = name.trim();

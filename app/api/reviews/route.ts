@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { rateLimit, tooManyRequests, getClientIp } from '../../../lib/ratelimit';
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
@@ -10,6 +11,9 @@ const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SE
  */
 export async function POST(req: Request) {
   try {
+    const { allowed, retryAfter } = await rateLimit(`reviews:${getClientIp(req)}`, 5, 60);
+    if (!allowed) return tooManyRequests(retryAfter);
+
     const { customer_name, review, stars, invitation_link } = await req.json();
 
     if (!invitation_link || typeof invitation_link !== 'string') {

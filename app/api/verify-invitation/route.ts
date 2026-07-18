@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { rateLimit, tooManyRequests, getClientIp } from '../../../lib/ratelimit';
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
   try {
+    // Rate limit OTP requests per IP (email bombing / cost abuse).
+    const { allowed, retryAfter } = await rateLimit(`otp_req:${getClientIp(req)}`, 5, 60);
+    if (!allowed) return tooManyRequests(retryAfter);
+
     const { email, tokenId } = await req.json();
 
     // 1. Hugutin ang data (Kasama na ang purchasable_revision_count)

@@ -4,11 +4,16 @@ import axios from 'axios';
 import crypto from 'crypto';
 import { BACKGROUNDS } from '../../constants/backgrounds'; // 🎯 NAAYOS NA PATH
 import { calculatePricing } from '../../../lib/pricing';
+import { rateLimit, tooManyRequests, getClientIp } from '../../../lib/ratelimit';
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
 export async function POST(req: Request) {
   try {
+    // Rate limit checkout creation (creates DB rows + external API calls).
+    const { allowed, retryAfter } = await rateLimit(`checkout:${getClientIp(req)}`, 10, 60);
+    if (!allowed) return tooManyRequests(retryAfter);
+
     const { config } = await req.json();
     // 🔒 SECURITY: the price is computed on the server from the config only.
     // Any client-supplied amount is ignored to prevent price tampering.
