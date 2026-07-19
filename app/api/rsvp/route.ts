@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
-import { rateLimit, tooManyRequests, getClientIp } from '../../../lib/ratelimit';
 
 const supabase = createClient(
   process.env.SUPABASE_URL!,
@@ -52,23 +51,12 @@ export async function POST(req: Request) {
     }
 
     const isOwnerAction = typeof action === 'string' && OWNER_ACTIONS.has(action);
-    const ip = getClientIp(req);
-
-    // --- RATE LIMITING ---
-    if (isOwnerAction) {
-      // Owner actions are authenticated below; a generous cap guards the DB.
-      const { allowed, retryAfter } = await rateLimit(`rsvp_owner:${ip}`, 60, 60);
-      if (!allowed) return tooManyRequests(retryAfter);
-    } else {
-      // Public self-registration: strict cap (a real guest registers once).
-      const { allowed, retryAfter } = await rateLimit(`rsvp_reg:${ip}`, 6, 60);
-      if (!allowed) return tooManyRequests(retryAfter);
-    }
 
     // --- OWNER AUTHORIZATION ---
     // Owner mutations require the verified session cookie for this invitation.
     // This blocks forged owner_add / set_status requests (e.g. filling the
-    // guest list with fake "going" entries).
+    // guest list with fake "going" entries). Rate limiting is handled at the
+    // edge in middleware.ts (before this route / the DB is touched).
     if (isOwnerAction) {
       const { data: invRow } = await supabase
         .from('invitations')

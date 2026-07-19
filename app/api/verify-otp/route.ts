@@ -1,16 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { rateLimit, tooManyRequests, getClientIp } from '../../../lib/ratelimit';
 
 const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
 export async function POST(req: Request) {
   try {
-    // Rate limit OTP verification per IP (brute-force protection, in addition
-    // to the per-record attempt counter).
-    const { allowed, retryAfter } = await rateLimit(`otp_verify:${getClientIp(req)}`, 10, 60);
-    if (!allowed) return tooManyRequests(retryAfter);
-
+    // Edge middleware rate-limits this endpoint; the per-record attempt counter
+    // below adds brute-force protection.
     const { email, tokenId, otp } = await req.json();
 
     const MAX_ATTEMPTS = 5;
