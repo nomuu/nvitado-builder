@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, AlertCircle, Link2, Mail, Phone } from 'lucide-react';
 
@@ -17,6 +17,17 @@ export default function RSVPSection({ invitationId, message, rules }: RSVPSectio
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+
+  // 🐝 ANTI-SPAM-BOT (no external service needed):
+  //  - honeypot: a hidden field real users never see/fill; bots that blindly
+  //    fill every input will populate it.
+  //  - time-trap: record when the form mounted so the API can reject
+  //    submissions that arrive implausibly fast (instant = automated).
+  const [hp, setHp] = useState('');
+  const loadedAtRef = useRef<number>(0);
+  useEffect(() => {
+    loadedAtRef.current = Date.now();
+  }, []);
 
   const handleSubmit = async () => {
     const trimmedName = name.trim();
@@ -45,6 +56,9 @@ export default function RSVPSection({ invitationId, message, rules }: RSVPSectio
           fb_link: fbLink.trim(),
           email: email.trim(),
           contact: contact.trim(),
+          // 🐝 anti-spam signals (see honeypot/time-trap notes above)
+          _hp: hp,
+          _elapsed: loadedAtRef.current ? Date.now() - loadedAtRef.current : 0,
         }),
       });
 
@@ -71,6 +85,8 @@ export default function RSVPSection({ invitationId, message, rules }: RSVPSectio
     setEmail('');
     setContact('');
     setError('');
+    setHp('');
+    loadedAtRef.current = Date.now();
   };
 
   return (
@@ -84,6 +100,20 @@ export default function RSVPSection({ invitationId, message, rules }: RSVPSectio
             exit={{ opacity: 0, y: -10 }}
             className="space-y-5"
           >
+            {/* 🐝 HONEYPOT — hidden from real users (off-screen, not tabbable,
+                autocomplete disabled, aria-hidden). Bots that auto-fill every
+                field will populate it, and the API silently drops those. */}
+            <input
+              type="text"
+              name="website"
+              value={hp}
+              onChange={(e) => setHp(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{ position: 'absolute', left: '-9999px', top: 0, width: '1px', height: '1px', opacity: 0 }}
+            />
+
             {/* OWNER MESSAGE */}
             {message && message.trim() && (
               <p className="text-[11px] font-medium text-slate-600 leading-relaxed whitespace-pre-line text-center bg-white/40 border border-white/30 rounded-2xl p-4">

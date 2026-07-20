@@ -25,13 +25,18 @@ const MAX_GOING = 100;
 // confirmation, new self-registrations are held until the owner accommodates them.
 const MAX_PENDING = 10;
 
+// Anti-spam-bot (no external CAPTCHA): a genuine guest needs at least this long
+// to read the form and type a name + a contact detail. Submissions faster than
+// this are almost certainly automated, so they're silently dropped.
+const MIN_SUBMIT_MS = 2000;
+
 // Normalize a name for duplicate detection: lowercase + strip ALL whitespace,
 // so "Ronald Mendoza", "RONALD MENDOZA" and "RONALDMENDOZA" all collide.
 const normalizeName = (s: string) => s.toLowerCase().replace(/\s+/g, '');
 
 export async function POST(req: Request) {
   try {
-    const { invitation_id, name, status, action, fb_link, email, contact, attended, remarks } = await req.json();
+    const { invitation_id, name, status, action, fb_link, email, contact, attended, remarks, _hp, _elapsed } = await req.json();
 
     // --- INPUT VALIDATION ---
     if (typeof invitation_id !== 'string' || typeof name !== 'string') {
@@ -67,6 +72,24 @@ export async function POST(req: Request) {
       const verified = !!invRow?.token_id && cookieStore.get(`verified_${invRow.token_id}`)?.value === 'true';
       if (!verified) {
         return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+      }
+    }
+
+    // --- ANTI-SPAM-BOT (guest self-registration only) ---
+    // Owner actions come from an authenticated, cookie-gated surface, so we only
+    // screen public self-registrations. Two no-account signals:
+    //   1) honeypot (`_hp`): must be empty for a real user (the field is hidden).
+    //   2) time-trap (`_elapsed`): a real submission takes at least MIN_SUBMIT_MS.
+    // On a bot hit we SILENTLY DROP: respond with a normal-looking success so the
+    // bot believes it worked and won't retry/tune, but nothing is written to the DB.
+    if (!isOwnerAction) {
+      const honeypotTripped = typeof _hp === 'string' && _hp.trim() !== '';
+      const tooFast = typeof _elapsed === 'number' && _elapsed >= 0 && _elapsed < MIN_SUBMIT_MS;
+      if (honeypotTripped || tooFast) {
+        console.warn(
+          `RSVP SPAM-DROP: invitation=${invitation_id} honeypot=${honeypotTripped} elapsed=${_elapsed}`
+        );
+        return NextResponse.json({ success: true, action: 'created' });
       }
     }
 
