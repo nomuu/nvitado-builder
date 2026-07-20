@@ -1,12 +1,26 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Key, ShieldCheck, ArrowRight, Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
 import Navbar from '../components/Navbar';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function VerifyAccess() {
+// Only allow internal owner surfaces as a post-verify destination. This blocks
+// open-redirect abuse (e.g. ?next=https://evil.com or ?next=//evil.com) — we
+// accept a relative path that points at the builder or the RSVP manager only.
+function safeNext(next: string | null, fallback: string): string {
+  if (!next) return fallback;
+  // Must be a plain internal absolute path: single leading slash, no host,
+  // no protocol-relative (`//`) or backslash tricks.
+  if (!next.startsWith('/') || next.startsWith('//') || next.startsWith('/\\')) return fallback;
+  if (next.startsWith('/revise/') || next.startsWith('/rsvp/')) return next;
+  return fallback;
+}
+
+function VerifyAccessInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextParam = searchParams.get('next');
   const [step, setStep] = useState(1); // 1: Credentials, 2: OTP
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -69,8 +83,11 @@ export default function VerifyAccess() {
       const data = await res.json();
 
       if (res.ok) {
-        // SUCCESS! Redirect sa revision page gamit ang buong token string extension link
-        router.push(`/revise/${fullTokenId}`);
+        // SUCCESS! Ibalik sa pinanggalingang surface:
+        //  - galing sa RSVP manager  → /rsvp/[shortId]/[slug]
+        //  - galing sa revision       → /revise/[tokenId] (builder)
+        // Default pa rin ang builder kung walang (o hindi valid na) `next`.
+        router.push(safeNext(nextParam, `/revise/${fullTokenId}`));
       } else {
         setError(data.error || "Invalid verification code.");
       }
@@ -229,5 +246,15 @@ export default function VerifyAccess() {
         </div>
       </main>
     </div>
+  );
+}
+
+// `useSearchParams` (used inside VerifyAccessInner) must sit under a Suspense
+// boundary, otherwise the build fails during prerendering (Next 16 requirement).
+export default function VerifyAccess() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#FFFDF8]" />}>
+      <VerifyAccessInner />
+    </Suspense>
   );
 }

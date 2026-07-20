@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ shortId: 
 }
 
 export default async function RsvpOwnerPage({ params }: { params: Promise<{ shortId: string; slug: string }> }) {
-  const { shortId } = await params;
+  const { shortId, slug } = await params;
 
   const { data: invitation, error } = await supabase
     .from('invitations')
@@ -39,11 +39,13 @@ export default async function RsvpOwnerPage({ params }: { params: Promise<{ shor
   }
 
   // 🔒 Owner-only: require the verified session cookie (set after the email+OTP
-  // flow in /verify-access). Without it, redirect to verify ownership.
+  // flow in /verify-access). Without it, redirect to verify ownership — and pass
+  // a `next` return-path so the owner lands back HERE (RSVP manager) after
+  // verifying, instead of the revision builder.
   const cookieStore = await cookies();
   const isVerified = cookieStore.get(`verified_${invitation.token_id}`)?.value === 'true';
   if (!isVerified) {
-    return redirect('/verify-access');
+    return redirect(`/verify-access?next=${encodeURIComponent(`/rsvp/${shortId}/${slug}`)}`);
   }
 
   const config = invitation.config_data || {};

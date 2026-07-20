@@ -17,9 +17,10 @@ export default async function Page({ params }: { params: Promise<{ tokenId: stri
   const isVerified = cookieStore.get(`verified_${tokenId}`)?.value === 'true';
 
   if (!isVerified) {
-    // Kung walang session/cookie, itatapon sila sa malinis na path ng verification page
-    // base sa folder mo: app/verify-access/page.tsx
-    return redirect('/verify-access');
+    // Kung walang session/cookie, itatapon sila sa verification page.
+    // Ipapasa ang `next` return-path para pagkatapos mag-verify, dito sa builder
+    // (revision editor) sila ibabalik — hindi sa RSVP manager.
+    return redirect(`/verify-access?next=${encodeURIComponent(`/revise/${tokenId}`)}`);
   }
 
   // 4. Pag nakalusot sa bouncer, hugutin ang data sa Supabase
